@@ -1,0 +1,23 @@
+---
+title: "Report"
+author: "Derl Clausen, Bruno Komel, Rakeen Tanvir"
+date: "3/21/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+'''
+# Generate a RW model with a drift uing arima.sim
+rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = 1)
+
+# Plot rw_drift
+hist(rw_drift)
+
+# Calculate the first difference series
+rw_drift_diff <-
+
+# Plot rw_drift_diff
+'''
