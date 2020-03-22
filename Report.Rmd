@@ -45,8 +45,7 @@ hist(rw_drift)
 3. A shorter .Rmd with compiled .pdf or .html file that presents highlights in ten minutes. (Report.Rmd file)
 4. A one-page handout that explains the dataset and summarizes the analysis. (Not started)
 
-## Additional points for creativity or complexity (You may attempt as many as you
-like, for a maximum possible of 10 points)
+## Additional points for creativity or complexity (You may attempt as many as you like, for a maximum possible of 10 points)
 1. A data set with lots of columns, allowing comparison of many different variables.
 2. A data set that is so large that it can be used as a population from which samples are taken.
 3. A one-page document that discusses ethical issues related to collection of the dataset.
@@ -55,7 +54,7 @@ like, for a maximum possible of 10 points)
 6. Appropriate use of R functions for a probability distribution other than binomial, normal, or chi-square. (Random walk model, possibly also Cauchy, Levy, Pareto, T)
 7. Appropriate use of integration to calculate a significant result.
 8. A convincing demonstration of a relationship that might not have been statistically significant but that turns out to be so.
-A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.
+9. A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.
 10. Professional-looking software engineering (e.g defining and using your own functions).
 11. Nicely labeled graphics using ggplot, with good use of color, line styles, etc., that tell a convincing story.
 12. An example where permutation tests or other computational techniques clearly work better than classical methods.
