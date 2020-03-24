@@ -15,6 +15,7 @@ DJI[dates >= as.Date("2001-01-20") & dates < as.Date("2009-01-20"), "Regime"] <-
 DJI[dates >= as.Date("2009-01-20") & dates < as.Date("2017-01-20"), "Regime"] <- "BO"
 DJI[dates >= as.Date("2017-01-20"), "Regime"] <- "DJT"
 
-
-
+#Create a binary category for the political party in control of the White House (Republican = 1, Democrat = 0)
+Republican <- (DJI$Regime == "RR")|(DJI$Regime == "GHWB")|(DJI$Regime=="GWB")|(DJI$Regime=="DJT")
+DJI <- data.frame(DJI, Republican); head(DJI); sum(Republican); mean(Republican)
 
