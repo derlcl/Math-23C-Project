@@ -1,4 +1,5 @@
 #Note that we got this dataset from the FRED website, and this is real GDP growth (which had larger fluxes)
+#Note 2: I did this based on year over year fluxes, but the .csv file has data by quarter
 GDPb <- read.csv("GDPC1.csv"); head(GDP) 
 
 BOY <- subset(GDPb, format.Date(GDP$DATE, "%m")=="01"); head(BOY) #selecting only dates for beginning of year
