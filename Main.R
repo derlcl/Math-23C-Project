@@ -58,12 +58,12 @@ for (i in 1:N) {
 }
 
 #Republican Result
-hist(result.Republican)
-abline(v = mu.RepDiffs, col = "red")
+hist(result.Republican, col = "red")
+abline(v = mu.RepDiffs, col = "black", lwd = 3)
 mean(result >= mu.RepDiffs) #97% chance of seeing this statistic thus it is not statistically significant.
 
 #Democrat Result
-hist(result.Democrat)
-abline(v = mu.DemDiffs, col = "red")
+hist(result.Democrat, col = "blue")
+abline(v = mu.DemDiffs, col = "black", lwd = 3)
 mean(result.Democrat >= mu.DemDiffs) #2% chance. Whoa, the mean is statistically significant....
 
