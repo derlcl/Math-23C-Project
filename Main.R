@@ -74,7 +74,7 @@ for (i in 1:N) {
 #Republican Result
 hist(result.Republican, col = "red")
 abline(v = mu.RepDiffs, col = "black", lwd = 3)
-mean(result >= mu.RepDiffs) #97% chance of seeing this statistic thus it is not statistically significant.
+mean(result.Republican >= mu.RepDiffs) #97% chance of seeing this statistic thus it is not statistically significant.
 
 #Democrat Result
 hist(result.Democrat, col = "blue")
