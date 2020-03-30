@@ -40,8 +40,30 @@ for (i in 1:N - 1) {
 head(diffs) ; length(diffs) ; mean(diffs) ; var(diffs) ; sum(diffs) # whopping 13760.49 for variance
 
 diffs.Republican <- diffs[index.Republican[-1]]
-mean(diffs.Republican) # -.006959248
+mu.RepDiffs <- mean(diffs.Republican) # -.006959248
 diffs.Democrat <- diffs[!(index.Republican[-1])]
+mu.DemDiffs <- mean(diffs.Democrat)
 mean(diffs.Democrat) # 4.709857
 # The means seem different, but given the large variance, this is doubtful.
+
+
+#Permutation Test
+N <- 10^4; result.Republican <- numeric(N); result.Democrat <- numeric(N)
+for (i in 1:N) {
+  smpl <- sample(index.Republican[-1], replace = FALSE)
+  smpl.Republican <- diffs[smpl]
+  smpl.Democrat <- diffs[!smpl]
+  result.Republican[i] <- mean(smpl.Republican)
+  result.Democrat[i] <- mean(smpl.Democrat)
+}
+
+#Republican Result
+hist(result.Republican)
+abline(v = mu.RepDiffs, col = "red")
+mean(result >= mu.RepDiffs) #97% chance of seeing this statistic thus it is not statistically significant.
+
+#Democrat Result
+hist(result.Democrat)
+abline(v = mu.DemDiffs, col = "red")
+mean(result.Democrat >= mu.DemDiffs) #2% chance. Whoa, the mean is statistically significant....
 
