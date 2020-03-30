@@ -53,13 +53,16 @@ for (i in 1:N - 1) {
 }
 head(diffs) ; length(diffs) ; mean(diffs) ; var(diffs) ; sum(diffs) # whopping 13760.49 for variance
 
+chg <- numeric(nrow(DJI))
+chg[1] <- 0 ; chg[2:nrow(DJI)] <- diffs; chg <- data.frame(chg)
+DJI <- data.frame(DJI,chg); head(DJI)
+
 diffs.Republican <- diffs[index.Republican[-1]]
 mu.RepDiffs <- mean(diffs.Republican) # -.006959248
 diffs.Democrat <- diffs[!(index.Republican[-1])]
 mu.DemDiffs <- mean(diffs.Democrat)
 mean(diffs.Democrat) # 4.709857
 # The means seem different, but given the large variance, this is doubtful.
-
 
 #Permutation Test
 N <- 10^4; result.Republican <- numeric(N); result.Democrat <- numeric(N)
@@ -80,4 +83,23 @@ mean(result.Republican >= mu.RepDiffs) #97% chance of seeing this statistic thus
 hist(result.Democrat, col = "blue")
 abline(v = mu.DemDiffs, col = "black", lwd = 3)
 mean(result.Democrat >= mu.DemDiffs) #2% chance. Whoa, the mean is statistically significant....
+
+#Combined Attempt (I'm not sure if I did this right either! So you guys are welcome to check and delete if wrong)
+RepAvg <- sum(DJI$chg*(DJI$Republican==TRUE))/sum(DJI$Republican==TRUE) ; RepMu
+DemAvg <- sum(DJI$chg*(DJI$Republican==FALSE))/sum(DJI$Republican==FALSE) ; DemMu
+Obs <-  DemAvg - RepAvg; Obs
+
+N <- 10^4 #number of simulations
+diffs <- numeric(N) #this is the vector that will store our simmulated differences
+for(i in 1:N){
+  Rep <- sample(DJI$Republican) #This is our permuted party column
+  RepMu <- sum(DJI$chg*(Rep==TRUE))/sum(Rep==TRUE) ; RepMu
+  DemMu <- sum(DJI$chg*(Rep==FALSE))/sum(Rep==FALSE) ; DemMu
+  diffs[i] <- DemMu - RepMu
+}
+mean(diffs) #inspecting that these are indeed close to zero
+hist(diffs, breaks = "FD", probability = TRUE)
+abline(v = Obs, col = "red")
+pvalue <-  (sum(diffs >= Obs)+1)/(N+1) ; pvalue
+
 
