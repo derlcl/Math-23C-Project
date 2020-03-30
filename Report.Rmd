@@ -15,8 +15,22 @@ rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = 1)
 # include drift...
 # Plot rw_drift
 hist(rw_drift)
+plot(rw_drift, type = "l", xlab = "Time", ylab = "Random Daily Opens", main = "Random Walk Model")
 # Calculate the first difference series rw_drift_diff <-
-# Plot rw_drift_diff
+N <- length(rw_drift); rw_drift_diff <- numeric(N)
+for (i in 2:length(rw_drift)){
+  rw_drift_diff[i] <- rw_drift[i-1] - rw_drift[i]
+}
+#Mean of the First Difference Series
+mean(rw_drift_diff) #-0.8159029
+
+#Plot a histogram of the values and draw th mean using abline
+hist(rw_drift_diff); abline(v = mean(rw_drift_diff), col = "red", lwd = 3)
+
+#Plot the values of the time seriese and draw the mean using abline - and we get a constant mean!
+plot(rw_drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
+     main = "First Difference Series"); abline(h = mean(rw_drift_diff), col = "red", lwd = 3)
+
 ```
 
 

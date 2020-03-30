@@ -21,6 +21,20 @@ DJI[dates >= as.Date("2017-01-20"), "Regime"] <- "DJT"
 Republican <- (DJI$Regime == "RR") | (DJI$Regime == "GHWB") | (DJI$Regime == "GWB") | (DJI$Regime == "DJT")
 DJI <- data.frame(DJI, Republican); head(DJI); sum(Republican); mean(Republican)
 
+#Create a binary category for expansion vs recession year
+DJI["Recession"] <- FALSE
+
+#Extract years from date column
+DJI.year <- format(as.Date(DJI$Date),"%Y")
+
+#Set the dates
+DJI[DJI.year == 1980, "Recession"] <- TRUE
+DJI[DJI.year >= 1981 | DJI.year  <= 1981, "Recession"] <- TRUE
+DJI[DJI.year >= 1990 | DJI.year  <= 1991, "Recession"] <- TRUE
+DJI[DJI.year == 2001, "Recession"] <- TRUE
+DJI[DJI.year >= 2007 | DJI.year <= 2009, "Recession"] <- TRUE
+DJI[DJI.year >= 2020, "Recession"] <- TRUE
+
 #Set up indices for permutation test by party and president 
 index.Republican <- DJI$Republican ; sum(index.Republican) # 4822, matches
 index.RR <- (DJI$Regime == "RR") ; sum(index.RR) # 1005
