@@ -85,8 +85,8 @@ abline(v = mu.DemDiffs, col = "black", lwd = 3)
 mean(result.Democrat >= mu.DemDiffs) #2% chance. Whoa, the mean is statistically significant....
 
 #Combined Attempt (I'm not sure if I did this right either! So you guys are welcome to check and delete if wrong)
-RepAvg <- sum(DJI$chg*(DJI$Republican==TRUE))/sum(DJI$Republican==TRUE) ; RepMu
-DemAvg <- sum(DJI$chg*(DJI$Republican==FALSE))/sum(DJI$Republican==FALSE) ; DemMu
+RepAvg <- sum(DJI$chg*(DJI$Republican==TRUE))/sum(DJI$Republican==TRUE) ; RepAvg
+DemAvg <- sum(DJI$chg*(DJI$Republican==FALSE))/sum(DJI$Republican==FALSE) ; DemAvg
 Obs <-  DemAvg - RepAvg; Obs
 
 N <- 10^4 #number of simulations
