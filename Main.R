@@ -29,10 +29,10 @@ DJI.year <- format(as.Date(DJI$Date),"%Y")
 
 #Set the dates
 DJI[DJI.year == 1980, "Recession"] <- TRUE
-DJI[DJI.year >= 1981 | DJI.year  <= 1981, "Recession"] <- TRUE
-DJI[DJI.year >= 1990 | DJI.year  <= 1991, "Recession"] <- TRUE
+DJI[DJI.year >= 1981 & DJI.year  <= 1981, "Recession"] <- TRUE
+DJI[DJI.year >= 1990 & DJI.year  <= 1991, "Recession"] <- TRUE
 DJI[DJI.year == 2001, "Recession"] <- TRUE
-DJI[DJI.year >= 2007 | DJI.year <= 2009, "Recession"] <- TRUE
+DJI[DJI.year >= 2007 & DJI.year <= 2009, "Recession"] <- TRUE
 DJI[DJI.year >= 2020, "Recession"] <- TRUE
 
 #Set up indices for permutation test by party and president 
@@ -110,7 +110,17 @@ pvalue <- (sum(diffs >= Obs) + 1)/(N + 1) ; pvalue
 # 2.71% chance that this extreme of an observed difference would arise by chance .
 
 ## Contingency table with chi-square test for political party and recession. 
-obs.tbl <- table(DJI$Republican,DJI$Recession) ; obs.tbl
-sum(!DJI$Recession)
-## Can you replicate the previous contingency table by regime instead?
+sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
+obs.tbl <- table(DJI$Republican,DJI$Recession) # Republican has more Recession
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
+obs.tbl ; exp.tbl
+chisq.test(DJI$Republican,DJI$Recession)
+# p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
+# small chance that the observed contingency table would arise by chance.
+# Thus, the observations provide sufficient evidence to reject the null hypothesis
+# that Republican and Democratic regimes are equally likely to be associated with recession
+# years from 1985 to early 2020. 
+
+## Can you make this more granular by leveraging recession by quarter instead of year?
+## Can we do a contingency table that is larger than 2x2 by using regime intead of party?
 
