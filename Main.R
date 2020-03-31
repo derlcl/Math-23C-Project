@@ -51,7 +51,9 @@ N <- length(Open) ; diffs <- numeric(N - 1)
 for (i in 1:N - 1) {
   diffs[i] <- Open[i + 1] - Open[i]
 }
-head(diffs) ; length(diffs) ; mean(diffs) ; var(diffs) ; sum(diffs) # whopping 13760.49 for variance
+head(diffs) ; length(diffs) ; mean(diffs) ; var(diffs) ; sum(diffs) 
+# whopping 13760.49 for variance
+hist(diffs, breaks = "fd", prob = TRUE)
 
 chg <- numeric(nrow(DJI))
 chg[1] <- 0 ; chg[2:nrow(DJI)] <- diffs; chg <- data.frame(chg)
@@ -77,29 +79,38 @@ for (i in 1:N) {
 #Republican Result
 hist(result.Republican, col = "red")
 abline(v = mu.RepDiffs, col = "black", lwd = 3)
-mean(result.Republican >= mu.RepDiffs) #97% chance of seeing this statistic thus it is not statistically significant.
+mu.result.Republican <- mean(result.Republican) ; mu.result.Republican ; mu.RepDiffs
+mean(result.Republican <= mu.RepDiffs) 
+#2.88% chance of seeing this statistic thus it is statistically significant.
 
 #Democrat Result
 hist(result.Democrat, col = "blue")
 abline(v = mu.DemDiffs, col = "black", lwd = 3)
-mean(result.Democrat >= mu.DemDiffs) #2% chance. Whoa, the mean is statistically significant....
+mu.result.Democrat <- mean(result.Democrat) ; mu.result.Democrat ; mu.DemDiffs
+mean(result.Democrat >= mu.DemDiffs) 
+#2.88% chance. Whoa, both means are equally statistically significant.
 
 #Combined Attempt (I'm not sure if I did this right either! So you guys are welcome to check and delete if wrong)
-RepAvg <- sum(DJI$chg*(DJI$Republican==TRUE))/sum(DJI$Republican==TRUE) ; RepAvg
-DemAvg <- sum(DJI$chg*(DJI$Republican==FALSE))/sum(DJI$Republican==FALSE) ; DemAvg
+RepAvg <- sum(DJI$chg*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
+DemAvg <- sum(DJI$chg*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
 Obs <-  DemAvg - RepAvg; Obs
 
 N <- 10^4 #number of simulations
 diffs <- numeric(N) #this is the vector that will store our simmulated differences
-for(i in 1:N){
+for (i in 1:N) {
   Rep <- sample(DJI$Republican) #This is our permuted party column
-  RepMu <- sum(DJI$chg*(Rep==TRUE))/sum(Rep==TRUE) ; RepMu
-  DemMu <- sum(DJI$chg*(Rep==FALSE))/sum(Rep==FALSE) ; DemMu
+  RepMu <- sum(DJI$chg*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
+  DemMu <- sum(DJI$chg*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
   diffs[i] <- DemMu - RepMu
 }
 mean(diffs) #inspecting that these are indeed close to zero
 hist(diffs, breaks = "FD", probability = TRUE)
 abline(v = Obs, col = "red")
-pvalue <-  (sum(diffs >= Obs)+1)/(N+1) ; pvalue
+pvalue <- (sum(diffs >= Obs) + 1)/(N + 1) ; pvalue 
+# 2.71% chance that this extreme of an observed difference would arise by chance .
 
+## Contingency table with chi-square test for political party and recession. 
+obs.tbl <- table(DJI$Republican,DJI$Recession) ; obs.tbl
+sum(!DJI$Recession)
+## Can you replicate the previous contingency table by regime instead?
 
