@@ -58,7 +58,7 @@ plot(rw_drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Dai
 1. A .csv file with the dataset (DJI)
 2. A long, well-commented script that loads the dataset, explores it, and does all the analysis. (Main.R file)
 3. A shorter .Rmd with compiled .pdf or .html file that presents highlights in ten minutes. (Report.Rmd file)
-4. A one-page handout that explains the dataset and summarizes the analysis. (Not started)
+4. A one-page handout that explains the dataset and summarizes the analysis. (https://www.overleaf.com/project/5e7665484b0d3600011e16d0)
 
 structural breaks,  
 

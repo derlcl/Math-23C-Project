@@ -51,9 +51,16 @@ N <- length(Open) ; diffs <- numeric(N - 1)
 for (i in 1:N - 1) {
   diffs[i] <- Open[i + 1] - Open[i]
 }
-head(diffs) ; length(diffs) ; mean(diffs) ; var(diffs) ; sum(diffs) 
-# whopping 13760.49 for variance
-hist(diffs, breaks = "fd", prob = TRUE)
+head(diffs) # there are some rather large values with double digits before the decimal
+length(diffs) # 8857 as expected
+sum(diffs)  # 18975.43 so over double the number of observations
+mu.chg.open <- mean(diffs) # 2.142422 around what we expected based on the aforementioned values
+med.chg.open <- median(diffs) # 3.4297 is higher than mean, indicating more extreme lesser values
+var.chg.open <- var(diffs) # whopping 13760.49 for variance, we expect this to increase over time
+hist(diffs, breaks = "fd", prob = TRUE) 
+# resembles normal distribution with narrow concentration around sharp peak at mean 
+# and with long tails, with more extreme negative values
+abline(v = mu.chg.open, col = "turquoise")
 
 chg <- numeric(nrow(DJI))
 chg[1] <- 0 ; chg[2:nrow(DJI)] <- diffs; chg <- data.frame(chg)
@@ -90,13 +97,13 @@ mu.result.Democrat <- mean(result.Democrat) ; mu.result.Democrat ; mu.DemDiffs
 mean(result.Democrat >= mu.DemDiffs) 
 #2.88% chance. Whoa, both means are equally statistically significant.
 
-#Combined Attempt (I'm not sure if I did this right either! So you guys are welcome to check and delete if wrong)
+#Combined Attempt
 RepAvg <- sum(DJI$chg*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
 DemAvg <- sum(DJI$chg*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
 Obs <-  DemAvg - RepAvg; Obs
 
 N <- 10^4 #number of simulations
-diffs <- numeric(N) #this is the vector that will store our simmulated differences
+diffs <- numeric(N) #this is the vector that will store our simulated differences
 for (i in 1:N) {
   Rep <- sample(DJI$Republican) #This is our permuted party column
   RepMu <- sum(DJI$chg*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
@@ -124,3 +131,44 @@ chisq.test(DJI$Republican,DJI$Recession)
 ## Can you make this more granular by leveraging recession by quarter instead of year?
 ## Can we do a contingency table that is larger than 2x2 by using regime intead of party?
 
+## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
+## We can also run this and the previous analyses on the other numerical columns 
+## of DJI to see if we arise at similar or different results, 
+## once we finish the first round of analysis the DOD change in Open values. 
+## If we set up the simulations appropriately, we should expect to see in our results that 
+## a greater sample size or a greater number of simulations yields increasingly higher 
+## variance, potentially indicated by fat tails when plotting the distribution of the results. 
+## Can you figure out a way to leverage a chi-square test or CLT here?
+
+## Generate a RW model with a drift using arima.sim
+# Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
+rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = mu.chg.open)
+rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = med.chg.open)
+# Plot rw_drift
+plot(rw_drift, type = "l", xlab = "Time", ylab = "Random Daily Opens", main = "Random Walk Model")
+# this lacks the volatility of the DJI
+# Calculate the first difference series rw_drift_diff <-
+N <- length(rw_drift); rw_drift_diff <- numeric(N)
+for (i in 2:length(rw_drift)) {
+  rw_drift_diff[i] <- rw_drift[i] - rw_drift[i - 1] }
+rw_drift_diff # no negative values, does not model DJI DOD changes very well
+#Mean of the First Difference Series
+mean(rw_drift_diff) # 2.222279 when using mean, 3.263219 when using median
+#Plot a histogram of the values and draw the mean/median using abline
+hist(rw_drift_diff); abline(v = mean(rw_drift_diff), col = "red", lwd = 3)
+#Plot the values of the time series and draw the mean/median using abline - and we get a constant!
+plot(rw_drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
+     main = "First Difference Series"); abline(h = mean(rw_drift_diff), col = "red", lwd = 3)
+
+## Should we perform this analysis for High, Low or Close? Does it change anything?
+## Does using a logarithmic or exponential model make the data behave better?
+## Given that our observed DOD data produces low frequency, extreme values, particularly negative,
+## how do we do a better job of fitting a probability distribution model to our observed data? 
+## That is, can we slice our data differently, change the parameters of the random walk model,
+## or use a different distribution altogether to model our data? We could use Cauchy, Levy, Pareto, 
+## T or other distributions with infinite variance. Are there any that look like our histogram?
+## Is this necessary in order to test for infinite variance? 
+## Does the current random walk model invalidate our test for infinite variance on the observed data?
+## Or can we test for infinite variance without worrying about any model at all? 
+## Perhaps partial variance can help here?
+## Can we build out the partial variance model and visualization per the shared stackexchange post?
