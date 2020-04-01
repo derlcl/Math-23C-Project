@@ -19,6 +19,6 @@ GDPb <- data.frame(GDPb,GDPg, Recess) ; GDPb$DATE <- as.Date(GDPb$DATE); head(GD
 #selecting only the relevant years for our analysis
 GDP <- subset(GDPb, DATE >= "1989-01-01" & DATE <= "2019-01-01"); head(GDP) 
 sum(GDP$Recess) #So there have been 12 quarters with recessions
-
+GDP[GDP$Recess == 1,]
 
 
