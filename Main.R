@@ -113,8 +113,34 @@ for (i in 1:N) {
 mean(diffs) #inspecting that these are indeed close to zero
 hist(diffs, breaks = "FD", probability = TRUE)
 abline(v = Obs, col = "red")
-HEAD
+
 pvalue <-  (sum(diffs >= Obs)+1)/(N+1) ; pvalue
+pvalue <- (sum(diffs >= Obs) + 1)/(N + 1) ; pvalue 
+# 2.71% chance that this extreme of an observed difference would arise by chance .
+
+## Contingency table with chi-square test for political party and recession. 
+sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
+obs.tbl <- table(DJI$Republican,DJI$Recession) # Republican has more Recession
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
+obs.tbl ; exp.tbl
+chisq.test(DJI$Republican,DJI$Recession)
+# p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
+# small chance that the observed contingency table would arise by chance.
+# Thus, the observations provide sufficient evidence to reject the null hypothesis
+# that Republican and Democratic regimes are equally likely to be associated with recession
+# years from 1985 to early 2020. 
+
+## Can you make this more granular by leveraging recession by quarter instead of year?
+## Can we do a contingency table that is larger than 2x2 by using regime intead of party?
+
+## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
+## We can also run this and the previous analyses on the other numerical columns 
+## of DJI to see if we arise at similar or different results, 
+## once we finish the first round of analysis the DOD change in Open values. 
+## If we set up the simulations appropriately, we should expect to see in our results that 
+## a greater sample size or a greater number of simulations yields increasingly higher 
+## variance, potentially indicated by fat tails when plotting the distribution of the results. 
+## Can you figure out a way to leverage a chi-square test or CLT here?
 
 #Bruno: I think one good way to show that the data has infinite variance is to show that it cannot be
 #modeled with a Normal distribution. (Then we can fit something like a Cauchy distribution later)
@@ -144,32 +170,6 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #Given this extremely low chi-square value, it seems that the normal distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
-pvalue <- (sum(diffs >= Obs) + 1)/(N + 1) ; pvalue 
-# 2.71% chance that this extreme of an observed difference would arise by chance .
-
-## Contingency table with chi-square test for political party and recession. 
-sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
-obs.tbl <- table(DJI$Republican,DJI$Recession) # Republican has more Recession
-exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
-obs.tbl ; exp.tbl
-chisq.test(DJI$Republican,DJI$Recession)
-# p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
-# small chance that the observed contingency table would arise by chance.
-# Thus, the observations provide sufficient evidence to reject the null hypothesis
-# that Republican and Democratic regimes are equally likely to be associated with recession
-# years from 1985 to early 2020. 
-
-## Can you make this more granular by leveraging recession by quarter instead of year?
-## Can we do a contingency table that is larger than 2x2 by using regime intead of party?
-
-## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
-## We can also run this and the previous analyses on the other numerical columns 
-## of DJI to see if we arise at similar or different results, 
-## once we finish the first round of analysis the DOD change in Open values. 
-## If we set up the simulations appropriately, we should expect to see in our results that 
-## a greater sample size or a greater number of simulations yields increasingly higher 
-## variance, potentially indicated by fat tails when plotting the distribution of the results. 
-## Can you figure out a way to leverage a chi-square test or CLT here?
 
 ## Generate a RW model with a drift using arima.sim
 # Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
