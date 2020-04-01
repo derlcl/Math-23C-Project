@@ -102,4 +102,35 @@ hist(diffs, breaks = "FD", probability = TRUE)
 abline(v = Obs, col = "red")
 pvalue <-  (sum(diffs >= Obs)+1)/(N+1) ; pvalue
 
+#Bruno: I think one good way to show that the data has infinite variance is to show that it cannot be
+#modeled with a Normal distribution. (Then we can fit something like a Cauchy distribution later)
+#I'm open to taking this out, but I thought we could try to get feedback on it at least!
+#So what we are checking is if the daily price fluxes for the Dow Jones have infinite variance
+hist(DJI$chg, breaks = "FD", probability = TRUE) #already doesn't look super promising
+mu <- mean(DJI$chg)
+sigma <- sd(DJI$chg)
+curve(dnorm(x,mu,sigma), from = -2500, to = 1000, add = TRUE, col = "red")
+n1 <- qnorm(0.1, mu, sigma); n1    #10% of the normal distribution lies below this value
+pnorm(n1, mu, sigma)       
+mean(DJI$chg <= n1) #6.2%, not great, we would epxect something closer to 10% if it were Normal
+#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
+dec <- qnorm(seq(0.0,1,by = 0.1), mu,sigma); dec  #11 bins
+Exp <- rep(length(DJI$chg)/10,10); Exp 
+binchg <- numeric(10)
+for(i in 1:10){
+  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i+1] )) ; binchg
+}
+#Finally we can test for uniformity using a chi-squared test.
+ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #3581.397
+#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
+#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
+curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
+abline(v=ChiStat, col = "red") 
+pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
+#Given this extremely low chi-square value, it seems that the normal distribution is not a good model (at all)
+#for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
+#fits the data. 
+
+
+
 
