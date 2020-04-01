@@ -115,7 +115,6 @@ hist(diffs, breaks = "FD", probability = TRUE)
 abline(v = Obs, col = "red")
 
 pvalue <-  (sum(diffs >= Obs)+1)/(N+1) ; pvalue
-pvalue <- (sum(diffs >= Obs) + 1)/(N + 1) ; pvalue 
 # 2.71% chance that this extreme of an observed difference would arise by chance .
 
 ## Contingency table with chi-square test for political party and recession. 
