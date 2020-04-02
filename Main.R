@@ -147,7 +147,9 @@ chisq.test(DJI$Republican,DJI$Recession)
 #So what we are checking is if the daily price fluxes for the Dow Jones have infinite variance
 hist(DJI$chg, breaks = "FD", probability = TRUE) #already doesn't look super promising
 mu <- mean(DJI$chg)
-sigma <- sd(DJI$chg)
+sigma <- sd(DJI$chg) 
+# do we multiply by n the number of sample observations to estimate the population variance?
+# maybe not since this is the population? or is it?
 curve(dnorm(x,mu,sigma), from = -2500, to = 1000, add = TRUE, col = "red")
 n1 <- qnorm(0.1, mu, sigma); n1    #10% of the normal distribution lies below this value
 pnorm(n1, mu, sigma)       
