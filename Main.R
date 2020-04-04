@@ -172,10 +172,11 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
 
+n <- 365 * 35
 ## Generate a RW model with a drift using arima.sim
 # Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
-rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = mu.chg.open)
-rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = med.chg.open)
+rw_drift <- arima.sim(model = list(order = c(0,1,0)), n, mean = mu.chg.open)
+rw_drift <- arima.sim(model = list(order = c(0,1,0)), n, mean = med.chg.open)
 # Plot rw_drift
 plot(rw_drift, type = "l", xlab = "Time", ylab = "Random Daily Opens", main = "Random Walk Model")
 # this lacks the volatility of the DJI
@@ -191,6 +192,15 @@ hist(rw_drift_diff); abline(v = mean(rw_drift_diff), col = "red", lwd = 3)
 #Plot the values of the time series and draw the mean/median using abline - and we get a constant!
 plot(rw_drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
      main = "First Difference Series"); abline(h = mean(rw_drift_diff), col = "red", lwd = 3)
+hist(rw_drift_diff, prob = TRUE)
+
+# Chi-square test for diffs and rw_drift_diff, bins by deciles
+# Apply central limit theorem, if data is symmetric, should produce standard normal distribution
+# Partial variance
+# Normal seems to fit random walk, but not first differences (which model fits?) 
+# What is a narrow highly concentrated around the mean but with 
+# really large variance?
+# random walk doesn't seem to have infinite variance, but how does it theoretically?
 
 ## Should we perform this analysis for High, Low or Close? Does it change anything?
 ## Does using a logarithmic or exponential model make the data behave better?
