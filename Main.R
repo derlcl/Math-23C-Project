@@ -196,10 +196,37 @@ hist(rw_drift_diff, prob = TRUE)
 
 # Chi-square test for diffs and rw_drift_diff, bins by deciles
 # Apply central limit theorem, if data is symmetric, should produce standard normal distribution
+
 # Partial variance
+N <- length(Open) ; 
+variances.normal <- numeric(N - 1)
+variances.cauchy <- numeric(N - 1)
+variances.Open <- numeric(N - 1)
+variances.flux.Open <- numeric(N - 1)
+sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
+Open <- DJI$Open ; flux.Open <- DJI$chg
+index <- 1:(N - 1)
+for (i in 2:N)
+{
+ variances.normal[i - 1] <- var(sample.normal[1:i])
+ variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
+ variances.Open[i - 1] <- var(Open[1:i])
+ variances.flux.Open[i - 1] <- var(flux.Open[1:i])
+}
+variances.flux.Open <- variances.flux.Open[-1]
+par(mfrow = c(2,2))
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x")
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy")
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy")
+plot(head(index,-1),variances.flux.Open, type = "l", col = "slategray", log = "xy")
+par(mfrow = c(1,1))
+summary(variances.normal)
+summary(variances.cauchy)
+summary(variances.Open)
+summary(variances.flux.Open)
+
 # Normal seems to fit random walk, but not first differences (which model fits?) 
-# What is a narrow highly concentrated around the mean but with 
-# really large variance?
+# What is a narrow highly concentrated around the mean but with really large variance?
 # random walk doesn't seem to have infinite variance, but how does it theoretically?
 
 ## Should we perform this analysis for High, Low or Close? Does it change anything?
