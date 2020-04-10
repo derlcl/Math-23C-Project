@@ -47,10 +47,7 @@ dim(DJI) ; sum(c(index.RR, index.GHWB, index.BC, index.GWB, index.BO, index.DJT)
 
 # Create vector for difference between daily Open values
 Open <- DJI$Open
-N <- length(Open) ; diffs <- numeric(N - 1)
-for (i in 1:N - 1) {
-  diffs[i] <- Open[i + 1] - Open[i]
-}
+diffs <- diff(DJI$Open) #Get first difference of our data.
 head(diffs) # there are some rather large values with double digits before the decimal
 length(diffs) # 8857 as expected
 sum(diffs)  # 18975.43 so over double the number of observations
@@ -103,18 +100,18 @@ DemAvg <- sum(DJI$chg*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; 
 Obs <-  DemAvg - RepAvg; Obs
 
 N <- 10^4 #number of simulations
-diffs <- numeric(N) #this is the vector that will store our simulated differences
+result.Combined <- numeric(N) #this is the vector that will store our simulated differences
 for (i in 1:N) {
   Rep <- sample(DJI$Republican) #This is our permuted party column
   RepMu <- sum(DJI$chg*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
   DemMu <- sum(DJI$chg*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
-  diffs[i] <- DemMu - RepMu
+  result.Combined[i] <- DemMu - RepMu
 }
-mean(diffs) #inspecting that these are indeed close to zero
-hist(diffs, breaks = "FD", probability = TRUE)
+mean(result.Combined) #inspecting that these are indeed close to zero
+hist(result.Combined, breaks = "FD", probability = TRUE)
 abline(v = Obs, col = "red")
 
-pvalue <-  (sum(diffs >= Obs)+1)/(N+1) ; pvalue
+pvalue <-  (sum(result.Combined >= Obs)+1)/(N+1) ; pvalue
 # 2.71% chance that this extreme of an observed difference would arise by chance .
 
 ## Contingency table with chi-square test for political party and recession. 
@@ -172,15 +169,33 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
 
-n <- 365 * 35
 ## Generate a RW model with a drift using arima.sim
 # Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
-rw_drift <- arima.sim(model = list(order = c(0,1,0)), n, mean = mu.chg.open)
-rw_drift <- arima.sim(model = list(order = c(0,1,0)), n, mean = med.chg.open)
+#Get the standard dviation of our differences
+sd_diff <- sqrt(mean(diffs^2) - mean(diffs)); sd_diff
+
+#Set up rw_drift
+rw_drift <- arima.sim(model = list(order = c(0,1,0)), 
+                      length(diffs), mean = mu.chg.open,
+                      sd = sd_diff)
+
 # Plot rw_drift
-plot(rw_drift, type = "l", xlab = "Time", ylab = "Random Daily Opens", main = "Random Walk Model")
-# this lacks the volatility of the DJI
-# Calculate the first difference series rw_drift_diff <-
+plot(DJI$Open, type = "l", xlab = "Time", 
+     ylab = "Random Daily Opens", main = "Random Walk Model",
+     ylim = c(-10000,50000))
+lines(rw_drift, col = "red")
+
+#Graphical volatility test (This is a phrase I made up)
+for (i in 1:100){
+  rw_drift <- arima.sim(model = list(order = c(0,1,0)), 
+                        length(diffs), mean = mu.chg.open,
+                        sd = sd_diff)
+  lines(rw_drift, col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)))
+}
+#Extremely volatile -- Infinite variance
+
+
+# Calculate the first difference series rw_drift_diff
 N <- length(rw_drift); rw_drift_diff <- numeric(N)
 for (i in 2:length(rw_drift)) {
   rw_drift_diff[i] <- rw_drift[i] - rw_drift[i - 1] }
@@ -206,8 +221,7 @@ variances.flux.Open <- numeric(N - 1)
 sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
 Open <- DJI$Open ; flux.Open <- DJI$chg
 index <- 1:(N - 1)
-for (i in 2:N)
-{
+for (i in 2:N) {
  variances.normal[i - 1] <- var(sample.normal[1:i])
  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
  variances.Open[i - 1] <- var(Open[1:i])
