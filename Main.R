@@ -1,3 +1,6 @@
+#Retrieve any functions we have made for this project
+source("prj_functions.R")
+
 #This is where our main code for our project will go!
 DJI <- read.csv("DJI.csv"); head(DJI)
 
@@ -172,44 +175,68 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 ## Generate a RW model with a drift using arima.sim
 # Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
 #Get the standard dviation of our differences
-sd_diff <- sqrt(mean(diffs^2) - mean(diffs)); sd_diff
+sd.diff <- sqrt(mean(diffs^2) - mean(diffs)); sd_diff
 
-#Set up rw_drift
-rw_drift <- arima.sim(model = list(order = c(0,1,0)), 
+#The sequence we will use to cut our data with.
+rw.seq <- seq(from = 0, to = max(DJI$Open), by = max(DJI$Open) / 10); rw.seq
+
+#Observed values
+rw.obs <- as.vector(table(cut(DJI$Open, breaks = rw.seq))); rw.obs
+
+#Set up Random Walk Expectation for our model
+rw.exp <- rep(mean(rw.obs), 10); rw.expect
+
+#ChiSq test for our Observed and Expected data
+rw.cs <- ChiSq(rw.obs, rw.exp); rw.cs
+
+#Set up Random Walk Simulation
+N <- 10^4; results.RW <- numeric(N)
+for(i in 1:N){
+rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
                       length(diffs), mean = mu.chg.open,
                       sd = sd_diff)
+rw.sim <- as.vector(table(cut(rw.drift, breaks = rw.seq)))
+results.RW[i] <- ChiSq(rw.sim, rw.exp)
+}
 
-# Plot rw_drift
+hist(results.RW)
+abline(v = rw.cs, col = "red", lwd = 3)
+
+rw.pvalue <- mean(rw.cs >= results.RW); rw.pvalue #.3815
+#Fail to reject the null hypothesis. There is about a 40% chance that DJI$Open came
+#from a Random Walk.
+
+
+# Plot rw.drift
 plot(DJI$Open, type = "l", xlab = "Time", 
      ylab = "Random Daily Opens", main = "Random Walk Model",
      ylim = c(-10000,50000))
-lines(rw_drift, col = "red")
 
 #Graphical volatility test (This is a phrase I made up)
 for (i in 1:100){
-  rw_drift <- arima.sim(model = list(order = c(0,1,0)), 
+  rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
                         length(diffs), mean = mu.chg.open,
                         sd = sd_diff)
-  lines(rw_drift, col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)))
+  lines(rw.drift, col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)))
 }
-#Extremely volatile -- Infinite variance
+#Extremely volatile -- Infinite variance as time goes forward!!
 
 
-# Calculate the first difference series rw_drift_diff
-N <- length(rw_drift); rw_drift_diff <- numeric(N)
-for (i in 2:length(rw_drift)) {
-  rw_drift_diff[i] <- rw_drift[i] - rw_drift[i - 1] }
-rw_drift_diff # no negative values, does not model DJI DOD changes very well
+# Calculate the first difference series rw.drift_diff
+N <- length(rw.drift); rw.drift_diff <- numeric(N)
+for (i in 2:length(rw.drift)) {
+  rw.drift_diff[i] <- rw.drift[i] - rw.drift[i - 1] }
+rw.drift_diff # no negative values, does not model DJI DOD changes very well
 #Mean of the First Difference Series
-mean(rw_drift_diff) # 2.222279 when using mean, 3.263219 when using median
+mean(rw.drift_diff) # 2.222279 when using mean, 3.263219 when using median
 #Plot a histogram of the values and draw the mean/median using abline
-hist(rw_drift_diff); abline(v = mean(rw_drift_diff), col = "red", lwd = 3)
+hist(rw.drift_diff); abline(v = mean(rw.drift_diff), col = "red", lwd = 3)
 #Plot the values of the time series and draw the mean/median using abline - and we get a constant!
-plot(rw_drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
-     main = "First Difference Series"); abline(h = mean(rw_drift_diff), col = "red", lwd = 3)
-hist(rw_drift_diff, prob = TRUE)
+plot(rw.drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
+     main = "First Difference Series"); abline(h = mean(rw.drift_diff), col = "red", lwd = 3)
+hist(rw.drift_diff, prob = TRUE)
 
-# Chi-square test for diffs and rw_drift_diff, bins by deciles
+# Chi Square test for rw.drift_diff, bins by deciles
 # Apply central limit theorem, if data is symmetric, should produce standard normal distribution
 
 # Partial variance
