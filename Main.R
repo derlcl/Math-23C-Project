@@ -175,7 +175,7 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 ## Generate a RW model with a drift using arima.sim
 # Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
 #Get the standard dviation of our differences
-sd.diff <- sqrt(mean(diffs^2) - mean(diffs)); sd_diff
+sd.diff <- sqrt(mean(diffs^2) - mean(diffs)); sd.dff
 
 #The sequence we will use to cut our data with.
 rw.seq <- seq(from = 0, to = max(DJI$Open), by = max(DJI$Open) / 10); rw.seq
@@ -194,7 +194,7 @@ N <- 10^4; results.RW <- numeric(N)
 for(i in 1:N){
 rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
                       length(diffs), mean = mu.chg.open,
-                      sd = sd_diff)
+                      sd = sd.dff)
 rw.sim <- as.vector(table(cut(rw.drift, breaks = rw.seq)))
 results.RW[i] <- ChiSq(rw.sim, rw.exp)
 }
@@ -216,7 +216,7 @@ plot(DJI$Open, type = "l", xlab = "Time",
 for (i in 1:100){
   rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
                         length(diffs), mean = mu.chg.open,
-                        sd = sd_diff)
+                        sd = sd.dff)
   lines(rw.drift, col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)))
 }
 #Extremely volatile -- Infinite variance as time goes forward!!
