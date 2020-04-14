@@ -1,3 +1,6 @@
+#Retrieve any functions we have made for this project
+source("prj_functions.R")
+
 #This is where our main code for our project will go!
 DJI <- read.csv("DJI.csv"); head(DJI)
 
@@ -47,10 +50,7 @@ dim(DJI) ; sum(c(index.RR, index.GHWB, index.BC, index.GWB, index.BO, index.DJT)
 
 # Create vector for difference between daily Open values
 Open <- DJI$Open
-N <- length(Open) ; diffs <- numeric(N - 1)
-for (i in 1:N - 1) {
-  diffs[i] <- Open[i + 1] - Open[i]
-}
+diffs <- diff(DJI$Open) #Get first difference of our data.
 head(diffs) # there are some rather large values with double digits before the decimal
 length(diffs) # 8857 as expected
 sum(diffs)  # 18975.43 so over double the number of observations
@@ -103,18 +103,18 @@ DemAvg <- sum(DJI$chg*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; 
 Obs <-  DemAvg - RepAvg; Obs
 
 N <- 10^4 #number of simulations
-diffs <- numeric(N) #this is the vector that will store our simulated differences
+result.Combined <- numeric(N) #this is the vector that will store our simulated differences
 for (i in 1:N) {
   Rep <- sample(DJI$Republican) #This is our permuted party column
   RepMu <- sum(DJI$chg*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
   DemMu <- sum(DJI$chg*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
-  diffs[i] <- DemMu - RepMu
+  result.Combined[i] <- DemMu - RepMu
 }
-mean(diffs) #inspecting that these are indeed close to zero
-hist(diffs, breaks = "FD", probability = TRUE)
+mean(result.Combined) #inspecting that these are indeed close to zero
+hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 
-pvalue <-  (sum(diffs >= Obs)+1)/(N+1) ; pvalue
+pvalue <-  (sum(result.Combined >= Obs)+1)/(N+1) ; pvalue
 # 2.71% chance that this extreme of an observed difference would arise by chance .
 
 ## Contingency table with chi-square test for political party and recession. 
@@ -147,7 +147,9 @@ chisq.test(DJI$Republican,DJI$Recession)
 #So what we are checking is if the daily price fluxes for the Dow Jones have infinite variance
 hist(DJI$chg, breaks = "FD", probability = TRUE) #already doesn't look super promising
 mu <- mean(DJI$chg)
-sigma <- sd(DJI$chg)
+sigma <- sd(DJI$chg) 
+# do we multiply by n the number of sample observations to estimate the population variance?
+# maybe not since this is the population? or is it?
 curve(dnorm(x,mu,sigma), from = -2500, to = 1000, add = TRUE, col = "red")
 n1 <- qnorm(0.1, mu, sigma); n1    #10% of the normal distribution lies below this value
 pnorm(n1, mu, sigma)       
@@ -172,23 +174,100 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 
 ## Generate a RW model with a drift using arima.sim
 # Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
-rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = mu.chg.open)
-rw_drift <- arima.sim(model = list(order = c(0,1,0)), n = 100, mean = med.chg.open)
-# Plot rw_drift
-plot(rw_drift, type = "l", xlab = "Time", ylab = "Random Daily Opens", main = "Random Walk Model")
-# this lacks the volatility of the DJI
-# Calculate the first difference series rw_drift_diff <-
-N <- length(rw_drift); rw_drift_diff <- numeric(N)
-for (i in 2:length(rw_drift)) {
-  rw_drift_diff[i] <- rw_drift[i] - rw_drift[i - 1] }
-rw_drift_diff # no negative values, does not model DJI DOD changes very well
+#Get the standard dviation of our differences
+sd.diff <- sqrt(mean(diffs^2) - mean(diffs)); sd.diff
+
+#The sequence we will use to cut our data with.
+rw.seq <- seq(from = 0, to = max(DJI$Open), by = max(DJI$Open) / 10); rw.seq
+
+#Observed values
+rw.obs <- as.vector(table(cut(DJI$Open, breaks = rw.seq))); rw.obs
+
+#Set up Random Walk Expectation for our model
+rw.exp <- rep(mean(rw.obs), 10); rw.exp
+
+#ChiSq test for our Observed and Expected data
+rw.cs <- ChiSq(rw.obs, rw.exp); rw.cs
+
+#Set up Random Walk Simulation
+N <- 10^4; results.RW <- numeric(N)
+for(i in 1:N){
+rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
+                      length(diffs), mean = mu.chg.open,
+                      sd = sd.diff)
+rw.sim <- as.vector(table(cut(rw.drift, breaks = rw.seq)))
+results.RW[i] <- ChiSq(rw.sim, rw.exp)
+}
+
+hist(results.RW)
+abline(v = rw.cs, col = "red", lwd = 3)
+
+rw.pvalue <- mean(rw.cs >= results.RW); rw.pvalue #.3815
+#Fail to reject the null hypothesis. There is about a 40% chance that DJI$Open came
+#from a Random Walk.
+
+
+# Plot rw.drift
+plot(DJI$Open, type = "l", xlab = "Time", 
+     ylab = "Random Daily Opens", main = "Random Walk Model",
+     ylim = c(-10000,50000))
+
+#Graphical volatility test (This is a phrase I made up)
+for (i in 1:100){
+  rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
+                        length(diffs), mean = mu.chg.open,
+                        sd = sd.diff)
+  lines(rw.drift, col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)))
+}
+#Extremely volatile -- Infinite variance as time goes forward!!
+
+# Calculate the first difference series rw.drift_diff
+N <- length(rw.drift); rw.drift_diff <- numeric(N)
+for (i in 2:length(rw.drift)) {
+  rw.drift_diff[i] <- rw.drift[i] - rw.drift[i - 1] }
+rw.drift_diff # no negative values, does not model DJI DOD changes very well
 #Mean of the First Difference Series
-mean(rw_drift_diff) # 2.222279 when using mean, 3.263219 when using median
+mean(rw.drift_diff) # 2.222279 when using mean, 3.263219 when using median
 #Plot a histogram of the values and draw the mean/median using abline
-hist(rw_drift_diff); abline(v = mean(rw_drift_diff), col = "red", lwd = 3)
+hist(rw.drift_diff); abline(v = mean(rw.drift_diff), col = "red", lwd = 3)
 #Plot the values of the time series and draw the mean/median using abline - and we get a constant!
-plot(rw_drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
-     main = "First Difference Series"); abline(h = mean(rw_drift_diff), col = "red", lwd = 3)
+plot(rw.drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
+     main = "First Difference Series"); abline(h = mean(rw.drift_diff), col = "red", lwd = 3)
+hist(rw.drift_diff, prob = TRUE)
+
+# Chi Square test for rw.drift_diff, bins by deciles
+# Apply central limit theorem, if data is symmetric, should produce standard normal distribution
+
+# Partial variance
+N <- length(Open) ; 
+variances.normal <- numeric(N - 1)
+variances.cauchy <- numeric(N - 1)
+variances.Open <- numeric(N - 1)
+variances.flux.Open <- numeric(N - 1)
+sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
+Open <- DJI$Open ; flux.Open <- DJI$chg
+index <- 1:(N - 1)
+for (i in 2:N) {
+ variances.normal[i - 1] <- var(sample.normal[1:i])
+ variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
+ variances.Open[i - 1] <- var(Open[1:i])
+ variances.flux.Open[i - 1] <- var(flux.Open[1:i])
+}
+variances.flux.Open <- variances.flux.Open[-1]
+par(mfrow = c(2,2))
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x")
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy")
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy")
+plot(head(index,-1),variances.flux.Open, type = "l", col = "slategray", log = "xy")
+par(mfrow = c(1,1))
+summary(variances.normal)
+summary(variances.cauchy)
+summary(variances.Open)
+summary(variances.flux.Open)
+
+# Normal seems to fit random walk, but not first differences (which model fits?) 
+# What is a narrow highly concentrated around the mean but with really large variance?
+# random walk doesn't seem to have infinite variance, but how does it theoretically?
 
 ## Should we perform this analysis for High, Low or Close? Does it change anything?
 ## Does using a logarithmic or exponential model make the data behave better?
