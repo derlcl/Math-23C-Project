@@ -234,6 +234,9 @@ hist(rw.drift_diff); abline(v = mean(rw.drift_diff), col = "red", lwd = 3)
 plot(rw.drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
      main = "First Difference Series"); abline(h = mean(rw.drift_diff), col = "red", lwd = 3)
 hist(rw.drift_diff, prob = TRUE)
+rw.sigma <- sd(rw.drift_diff)
+rw.mu <- mean(rw.drift_diff)
+curve(dnorm(x,rw.mu,rw.sigma), from = -500, to = 500, add = TRUE, col = "red") 
 
 # Chi Square test for rw.drift_diff, bins by deciles
 # Apply central limit theorem, if data is symmetric, should produce standard normal distribution
@@ -244,6 +247,7 @@ variances.normal <- numeric(N - 1)
 variances.cauchy <- numeric(N - 1)
 variances.Open <- numeric(N - 1)
 variances.flux.Open <- numeric(N - 1)
+
 sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
 Open <- DJI$Open ; flux.Open <- DJI$chg
 index <- 1:(N - 1)
