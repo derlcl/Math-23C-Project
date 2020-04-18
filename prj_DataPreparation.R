@@ -32,3 +32,4 @@ DJI[DJI.year == 2001, "Recession"] <- TRUE
 DJI[DJI.year >= 2007 & DJI.year <= 2009, "Recession"] <- TRUE
 DJI[DJI.year >= 2020, "Recession"] <- TRUE
 
+# 

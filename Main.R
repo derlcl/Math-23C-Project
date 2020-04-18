@@ -99,8 +99,6 @@ chisq.test(DJI$Republican,DJI$Recession)
 # that Republican and Democratic regimes are equally likely to be associated with recession
 # years from 1985 to early 2020. 
 
-## Can you make this more granular by leveraging recession by quarter instead of year?
-## Can we do a contingency table that is larger than 2x2 by using regime intead of party?
 
 ## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
 ## We can also run this and the previous analyses on the other numerical columns 
@@ -168,7 +166,8 @@ rw.pvalue <- mean(rw.cs >= results.RW); rw.pvalue # .3815
 #There is a 38.15% probability that would we encounter this extreme of a test statistic by random chance
 #Our null hypothesis was that the daily flux in Open price values is well modeled by a random walk model. 
 #We fail to reject this null hypothesis due to the p-value being greater than our .05 threshold for rejection.
-# Plot rw.drift
+#
+# Simulate random walk model to assess variance graphically
 plot(DJI$Open, type = "l", xlab = "Time", 
      ylab = "Random Daily Opens", main = "Random Walk Model",
      ylim = c(-10000,50000))
@@ -239,3 +238,4 @@ summary(variances.flux.Open)
 ## Does the current random walk model invalidate our test for infinite variance on the observed data?
 ## Or can we test for infinite variance without worrying about any model at all? 
 
+ 
