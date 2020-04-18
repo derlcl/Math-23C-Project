@@ -9,6 +9,18 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Additional, ideal list of comprehensive data analysis workflows I'd like to include:
+1. Relevant data and case studies for introduction of topic and discussion of results. 
+2. Exploratory data analysis with numeric summaries including center, spread and shape. Basic plots including boxplot, normal quantile plot, empirical cumulative distribution function and scatter plot. 
+3. Hypothesis testing with and without permutation tests. 
+4. Demonstrate sampling distributions, central limit theorem (CLT) for binomial data, continuity correction for discrete random variables, and CLT for sampling without replacement. 
+5. Bootstrapping to demonstrate the plug-in principle to estimate the population mean, bootstrapping percentile intervals, two-sample bootstrap including matched pairs, estimation of bias, monte carlo sampling (the second boostrap principle), sample mean with both large and small sample sizes, sample median and the mean-variance relationship.
+6. Estimation. 
+7. Confidence intervals with and without bootstrapping.
+8. Regression.
+9. Categorical data analysis.
+10. Bayesian methods.
+11. One-way ANOVA.
 
 # The points below are broken into required and additional points. To achieve full credit, you must do all of the required points, and a subset of 10 of the additional points. To facilitate grading, leave an index/comment in your long script identifying where/how you think you earned your points within your analysis.
 
