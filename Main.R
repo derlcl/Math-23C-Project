@@ -2,44 +2,13 @@
 
 #Retrieve any functions we have made for this project
 source("prj_functions.R")
-#Load Dow Jones Industrial dataset.
+#Load Dow Jones Industrial dataset and prepare it for analysis
 DJI <- read.csv("DJI.csv"); head(DJI)
+source("prj_DataPreparation.R")
+head(DJI)
 
-## Prepare data for analysis
-#
-#Create 'Regime' Categories (Regan, Bush, etc.)
-DJI["Regime"] <- "None" #Set blank column
-#Set the dates for each regime. Each 'term' is denoted from inaugaration day to the day 
-#before the next regime's inaugaration day.
-dates <- sapply(DJI["Date"], function(x) as.Date(x)) 
-#Convert CSV date character objects to date objects.
-DJI[dates < as.Date("1989-01-20"), "Regime"] <- "RR"
-DJI[dates >= as.Date("1989-01-20") & dates < as.Date("1993-01-20"), "Regime"] <- "GHWB"
-DJI[dates >= as.Date("1993-01-20") & dates < as.Date("2001-01-20"), "Regime"] <- "BC"
-DJI[dates >= as.Date("2001-01-20") & dates < as.Date("2009-01-20"), "Regime"] <- "GWB"
-DJI[dates >= as.Date("2009-01-20") & dates < as.Date("2017-01-20"), "Regime"] <- "BO"
-DJI[dates >= as.Date("2017-01-20"), "Regime"] <- "DJT"
-#
-#Create a binary category for the political party in control of the White House 
-#(Republican = 1, Democrat = 0)
-Republican <- (DJI$Regime == "RR") | (DJI$Regime == "GHWB") | (DJI$Regime == "GWB") | (DJI$Regime == "DJT")
-DJI <- data.frame(DJI, Republican); head(DJI); sum(Republican); mean(Republican)
-#
-#Create a binary category for expansion vs recession year
-DJI["Recession"] <- FALSE
-#Extract years from date column
-DJI.year <- format(as.Date(DJI$Date),"%Y")
-#Set the dates
-DJI[DJI.year == 1980, "Recession"] <- TRUE
-DJI[DJI.year >= 1981 & DJI.year  <= 1981, "Recession"] <- TRUE
-DJI[DJI.year >= 1990 & DJI.year  <= 1991, "Recession"] <- TRUE
-DJI[DJI.year == 2001, "Recession"] <- TRUE
-DJI[DJI.year >= 2007 & DJI.year <= 2009, "Recession"] <- TRUE
-DJI[DJI.year >= 2020, "Recession"] <- TRUE
-
-## Preliminary data exploration
-#
-# Create vector for difference between daily Open values and add as new column to data frame
+## Preliminary Data Exploration
+#Create vector for difference between daily Open values and add as new column to data frame
 Open <- DJI$Open
 diffs <- diff(DJI$Open) #Get first difference of our data.
 head(diffs) # there are some rather large values with double digits before the decimal
@@ -117,7 +86,7 @@ abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
 # 2.71% chance that this extreme of an observed difference would arise by chance .
 
-## Contingency table with chi-square test for political party and recession. 
+## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
 sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
 obs.tbl <- table(DJI$Republican,DJI$Recession) # Republican has more Recession
