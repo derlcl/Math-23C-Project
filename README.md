@@ -10,3 +10,7 @@ https://www.scientificamerican.com/article/multifractals-explain-wall-street/
 https://www.investopedia.com/terms/f/fractal-markets-hypothesis-fmh.asp
 https://towardsdatascience.com/how-the-mathematics-of-fractals-can-help-predict-stock-markets-shifts-19fee5dd6574
 
+Papers:
+How to Define Mean, Variance, etc., for
+Heavy-Tailed Distributions: A Fractal-Motivated
+Approach - http://www.cs.utep.edu/vladik/2012/tr12-32.pdf
