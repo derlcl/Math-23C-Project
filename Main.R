@@ -1,7 +1,7 @@
 #This is where our main code for our project will go!
 
 #Retrieve any functions we have made for this project
-source("prj_functions.R")
+source("prj_Functions.R")
 #Load Dow Jones Industrial dataset and prepare it for analysis
 DJI <- read.csv("DJI.csv"); head(DJI)
 source("prj_DataPreparation.R")
@@ -108,95 +108,6 @@ chisq.test(DJI$Republican,DJI$Recession)
 ## a greater sample size or a greater number of simulations yields increasingly higher 
 ## variance, potentially indicated by fat tails when plotting the distribution of the results. 
 ## Can you figure out a way to leverage a chi-square test or CLT here?
-
-#Bruno: Demonstrate infinite variance by showing that the model is not well modeled by a Normal distribution.
-#Then try an alternate model like Cauchy later. Check if daily price fluxes have infinite variance.
-hist(DJI$chg, breaks = "FD", probability = TRUE) #already doesn't look super promising
-mu <- mean(DJI$chg)
-sigma <- sd(DJI$chg) 
-# do we multiply by n the number of sample observations to estimate the population variance?
-# maybe not since this is the population? or is it?
-curve(dnorm(x,mu,sigma), from = -2500, to = 1000, add = TRUE, col = "red")
-n1 <- qnorm(0.1, mu, sigma); n1    #10% of the normal distribution lies below this value
-pnorm(n1, mu, sigma)       
-mean(DJI$chg <= n1) #6.2%, not great, we would epxect something closer to 10% if it were Normal
-#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qnorm(seq(0.0,1,by = 0.1), mu,sigma); dec  #11 bins
-Exp <- rep(length(DJI$chg)/10,10); Exp 
-binchg <- numeric(10)
-for (i in 1:10) {
-  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i + 1] )) ; binchg
-}
-#Finally we can test for uniformity using a chi-squared test.
-ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #3581.397
-#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
-#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
-curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
-abline(v = ChiStat, col = "red") 
-pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the normal distribution is not a good model (at all)
-#for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
-#fits the data. 
-
-## Chi Square test to test Random Walk model for daily flux in Open price values
-## 
-# Choose one of the two lines of code below, one for mean and one for median of our DOD value changes.
-#Get the standard dviation of our differences
-sd.diff <- sqrt(mean(diffs^2) - mean(diffs)); sd.diff
-#The sequence we will use to cut our data with.
-rw.seq <- seq(from = 0, to = max(DJI$Open), by = max(DJI$Open) / 10); rw.seq
-#Observed values
-rw.obs <- as.vector(table(cut(DJI$Open, breaks = rw.seq))); rw.obs
-#Set up Random Walk Expectation for our model
-rw.exp <- rep(mean(rw.obs), 10); rw.exp
-#ChiSq test for our Observed and Expected data
-rw.cs <- ChiSq(rw.obs, rw.exp); rw.cs
-#Set up Random Walk Simulation
-N <- 10^4; results.RW <- numeric(N)
-for (i in 1:N) {
-rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
-                      length(diffs), mean = mu.chg.open,
-                      sd = sd.diff)
-rw.sim <- as.vector(table(cut(rw.drift, breaks = rw.seq)))
-results.RW[i] <- ChiSq(rw.sim, rw.exp)
-}
-hist(results.RW)
-abline(v = rw.cs, col = "red", lwd = 3)
-rw.pvalue <- mean(rw.cs >= results.RW); rw.pvalue # .3815
-#There is a 38.15% probability that would we encounter this extreme of a test statistic by random chance
-#Our null hypothesis was that the daily flux in Open price values is well modeled by a random walk model. 
-#We fail to reject this null hypothesis due to the p-value being greater than our .05 threshold for rejection.
-#
-# Simulate random walk model to assess variance graphically
-plot(DJI$Open, type = "l", xlab = "Time", 
-     ylab = "Random Daily Opens", main = "Random Walk Model",
-     ylim = c(-10000,50000))
-#Graphical volatility test (This is a phrase I made up)
-for (i in 1:100) {
-  rw.drift <- arima.sim(model = list(order = c(0,1,0)), 
-                        length(diffs), mean = mu.chg.open,
-                        sd = sd.diff)
-  lines(rw.drift, col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)))
-}
-#Extremely volatile -- Infinite variance as time goes forward!!
-#
-# Calculate the first difference series rw.drift_diff
-N <- length(rw.drift); rw.drift_diff <- numeric(N)
-for (i in 2:length(rw.drift)) {
-  rw.drift_diff[i] <- rw.drift[i] - rw.drift[i - 1] }
-rw.drift_diff # no negative values, does not model DJI DOD changes very well
-#Mean of the First Difference Series
-mean(rw.drift_diff) # 2.222279 when using mean, 3.263219 when using median
-#Plot a histogram of the values and draw the mean/median using abline
-hist(rw.drift_diff); abline(v = mean(rw.drift_diff), col = "red", lwd = 3)
-#Plot the values of the time series and draw the mean/median using abline - and we get a constant!
-plot(rw.drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
-     main = "First Difference Series"); abline(h = mean(rw.drift_diff), col = "red", lwd = 3)
-hist(rw.drift_diff, prob = TRUE)
-rw.sigma <- sd(rw.drift_diff)
-rw.mu <- mean(rw.drift_diff)
-curve(dnorm(x,rw.mu,rw.sigma), from = -500, to = 500, add = TRUE, col = "red") 
-# Apply central limit theorem, if data is symmetric, should produce standard normal distribution
 
 # Exploratory Data Analysis of Partial Variance to test for convergence of variance
 N <- length(Open) ; 
