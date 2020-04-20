@@ -4,6 +4,7 @@ library('MASS')
 library('ggplot2')
 library('gganimate')
 library('gifski')
+library('fractaldim')
 
 #Import Cleaned Data
 source("prj_DataPreparation.R")
@@ -13,6 +14,9 @@ source("prj_Functions.R")
 plot(DJI$Open, type = "l", xlab = "Time", 
      ylab = "Random Daily Opens", main = "Random Walk Model",
      ylim = c(-10000,50000))
+
+#Get the first difference of the time series data
+diffs <- diff(DJI$Open)
 
 #Bruno: Demonstrate infinite variance by showing that the model is not well modeled by a Normal distribution.
 #Then try an alternate model like Cauchy later. Check if daily price fluxes have infinite variance.
@@ -42,9 +46,6 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #Given this extremely low chi-square value, it seems that the normal distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
-
-#Get the first difference of the time series data
-diffs <- diff(DJI$Open)
 
 #The first step in testing to see if the Dow Jones Index has infinite variance
 #is to see if the the index follows a Random Walk.
@@ -96,9 +97,95 @@ for (i in 1:100) {
 #increases.
 
 #Fractal Analysis
-#Using the hurst exponent, we can analyze whether our data is a random walk 
-hurstexp(diffs) #Approximately .5 across all of the analysis. This indicates that our data is,
+#Using the hurst exponent, we can analyze whether our data is a random walk.
+
+#We will be using the R/S Method to find the Hurst Exponent:
+#Set the maximum number of divisons that will occur as we divide our data set in 1/2^n divisions
+N <- floor(log(length(diffs), base = 2)) - 1
+
+#Create a table to store the size of each divison (2^0, 2^1, 2^2,..., 2^n)
+n <- numeric(N)
+
+#Create table for our R/S result from each 
+result.hexp <- numeric(N)
+
+#Loop through each divison
+for(i in 1:N){
+  #Set division size
+  n[i] <- floor(length(diffs)/2^(i-1))
+  
+  #"Chunk" our data into 2^n chunks
+  ch <- split(diffs, cut_number(1:length(diffs), 2^(i - 1)), drop = TRUE)
+  
+  #Create table for R/S analysis average from each chunk for each division
+  rs_avgs <- numeric(length(ch))
+  
+  #Loop through each chunk
+  for (k in 1:length(ch)){
+    
+    #Set X = to the chunk
+    X <- ch[[k]]
+    
+    #Get the mean of the chunk
+    m <- mean(X)
+    
+    #Mean Adjusted Series:
+    Y <- X - m; Y
+    
+    #Table for Cumulative Deviate Series:
+    Z <- numeric(length(Y))
+    
+    #Calculate Cumulative Deviate Series
+    for (j in 1:length(Z)){
+      Z[j] <- sum(Y[1:j])
+    }
+    
+    #Calculate range
+    r <- max(Z) - min(Z); r
+    
+    #Calculate standard deviation of the the mean adjusted series:
+    s <- sqrt(mean(Y^2))
+    
+    #Store R/S Analysis average
+    rs_avgs[k] <- (r/s)
+  }
+  
+  #Store the mean of the R/S analysis Average for each chunk
+  result.hexp[i] <- mean(rs_avgs)
+  
+}
+
+#Plot the log of the R/S analysis across the log of the size of the division
+plot(log(result.hexp) ~ log(n))
+
+#Plot Regression line
+rl <- lm(log(result.hexp) ~ log(n)); rl
+abline(rl$coefficients[1], rl$coefficients[2])
+
+#Hurst Exponent:
+hexp <- rl$coefficients[2]; hexp
+
+#Sanity Test using the built in R Hurst Exponent:
+hurstexp(diffs)
+
+#Approximately .5 across all of the analysis. This indicates that our data is,
 #in fact, a random walk.
+
+#Since H = 2 - D where H is our Hurst Exponent and D is fractal dimension, our fractal dimension
+#of our stock prices should be approximately 1.5
+#Using the fractal dimensions package, we can see that our fractal dimension is approximately
+#1.5 across 4 separate methods of fractal analysis:
+#(For this analysis, we use the stock prices not the stationary first difference)
+fracd.estimates <- fd.estimate(DJI$Open, methods = c("variogram", "madogram",
+                                                     "hallwood", "wavelet")); fracd.estimates$fd
+
+#One final check for our Hurst Exponent:
+2 - fracd.estimates$fd
+
+#Correct again. We get .5 across all 4 methods. The Down Jones Index seems to be following a
+#random walk.
+
+
 
 #Checking a 5 sigma Event:
 hist(diffs, prob = TRUE, breaks = "FD")
@@ -131,5 +218,8 @@ ggplot(DJI[,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +sca
 ggplot(DJI[8000:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
 ggplot(DJI[8850:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
 
-abs(mean(diffs[8851:8857]) / sd.diff) #Approximately 5 Sigma Event
-abs(min(diffs) / sd.diff) #Approximately 20 sigma event
+#Approximately 5 Sigma Event for the average drop of the last 7 days in our data set:
+abs(mean(diffs[8851:8857]) / sd.diff) 
+
+#Approximately 20 sigma event for the biggest drop
+abs(min(diffs) / sd.diff) 
