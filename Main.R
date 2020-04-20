@@ -1,4 +1,4 @@
-#This is where our main code for our project will go!
+#Math 23C Term Project by Rakeen Tanveer, Bruno Kömel, and Derl Clausen
 
 #Retrieve any functions we have made for this project
 source("prj_Functions.R")
