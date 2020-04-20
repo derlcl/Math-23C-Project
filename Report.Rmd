@@ -14,7 +14,8 @@ Rakeen
 1. Compare different price variables (?) including volume vs. first difference. 
 2. [Bootstrap] Sampling distribution from our data and find a model that fits the data and use it to estimate the population variance (check if this can be estimated using bootstrapping). Variance increases as sample size increases? (Find in lecture, notes from Alek). Barplot, pdf overlaid on histogram. Compare classical (CLT, chi-square) vs. simulation (permutation), which works better? Leverage theoretical knowledge. 
 3.  Read https://stats.stackexchange.com/questions/2504/test-for-finite-variance, ecdf
-4. Integration on infinite variance to demonstrate divergence. 
+4. Integration on infinite variance to demonstrate divergence. Select data to model with a continuous distribution (exponential, gamma, chi square, beta). Dispaly a histogram of your data and overlay on it a graph of the density function for your hypothesized distribution. Then use integration is R to compute the expected number of counts in various bins, and compare
+with the observed number of counts.
 
 Derl
 1. Test if data is well modeled by random walk with fractal analysis (https://blog.quantinsti.com/hurst-exponent/). 
