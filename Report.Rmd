@@ -23,6 +23,7 @@ Derl
 2. Analysis of contingency table with recession by more granular than annual period. Repeat chi-square test by party, and also repeat for regime. (Surprising that Democratic regimes bore brunt of recession(s) but have higher first differences and less recession time periods. Interesting if recession seems to be more associated with one categorical response than another, that we have so much variance, reflecting a random walk. Regime, recession, cycles, Fourier, random walk.)
 3. Fourier analysis, signal processing on First Difference Series. 
 4. Report, Overleaf (include effect of policy write-up), Video
+5. Hurst Exponent vs time. Different time frames within DJI. Run the same analysis on the two other big boy indices (S&P 500, NASDAQ)
 
 Bruno
 1. Test Opens and diffs for normal, Cauchy, Pareto, stable/Levy, student's t. Barplot, pdf overlaid on histogram. Use bins, quantiles to compare distributions. 
