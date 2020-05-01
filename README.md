@@ -20,3 +20,7 @@ Approach - http://www.cs.utep.edu/vladik/2012/tr12-32.pdf
 MEASURING THE EFFECTS OF MONETARY POLICY:
 A FACTOR-AUGMENTED VECTOR
 AUTOREGRESSIVE (FAVAR) APPROACH - https://www.nber.org/papers/w10220.pdf
+
+Books:
+The (Mis)behavior of Markets by Benoit Mandelbrot:
+https://dichgiacamchi.files.wordpress.com/2015/01/the_misbehavior_of_markets_-_benoit_mandelbrot.pdf
