@@ -58,14 +58,14 @@ hist(result.Republican, col = "red")
 abline(v = mu.RepDiffs, col = "black", lwd = 3)
 mu.result.Republican <- mean(result.Republican) ; mu.result.Republican ; mu.RepDiffs
 mean(result.Republican <= mu.RepDiffs) 
-#2.88% chance of seeing this statistic thus it is statistically significant.
+#2.83% chance of seeing this statistic thus it is statistically significant.
 #
 #Democrat Result
 hist(result.Democrat, col = "blue")
 abline(v = mu.DemDiffs, col = "black", lwd = 3)
 mu.result.Democrat <- mean(result.Democrat) ; mu.result.Democrat ; mu.DemDiffs
 mean(result.Democrat >= mu.DemDiffs) 
-#2.88% chance. Whoa, both means are equally statistically significant.
+#2.83% chance. Whoa, both means are equally statistically significant.
 #
 #A Combined 
 RepAvg <- sum(DJI$chg*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
@@ -84,7 +84,7 @@ mean(result.Combined) #inspecting that these are indeed close to zero
 hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
-# 2.71% chance that this extreme of an observed difference would arise by chance .
+# 3.08% chance that this extreme of an observed difference would arise by chance .
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
@@ -99,6 +99,18 @@ chisq.test(DJI$Republican,DJI$Recession)
 # that Republican and Democratic regimes are equally likely to be associated with recession
 # years from 1985 to early 2020. 
 
+#Running this analysis per Regime:
+obs.tbl <- table(DJI$Recession, DJI$Regime); obs.tbl #GWB had the most recession days
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); exp.tbl
+
+for (i in unique(DJI$Regime)){
+  print(chisq.test(DJI$Recession, DJI$Regime == i))
+}
+
+#Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
+#that no individual regime is equally likely to be associated with recessions
+#from the years 1985 to early 2020. (We should look into if our statistical methods
+#are correct here.)
 
 ## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
 ## We can also run this and the previous analyses on the other numerical columns 
