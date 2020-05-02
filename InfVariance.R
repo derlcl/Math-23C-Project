@@ -18,6 +18,23 @@ plot(DJI$Open, type = "l", xlab = "Time",
 #Get the first difference of the time series data
 diffs <- diff(DJI$Open)
 
+#Can we capture DJI$Open by Fourier Analysis?
+RunFourier(length(DJI$Open)/2, DJI$Open) #Perfect Reconstruction 
+RunFourier(10, DJI$Open) #Using approx 1/400th of th basis vectors
+#We capture a general trend of the market using very few basis vectors in our analysis.
+#However, the information that has been captureed is relatively useless as there is no
+#cyclical pattern to follow. 
+
+#Can the first differences be captured by fourier analysis?
+RunFourier(length(diffs) /2, diffs) #Perfect Reconstruction
+RunFourier(1000, diffs) #Pretty good reconstruction using only a fraction of the basis vectors
+RunFourier(10, diffs) #Useless
+#The first difference of the time series does even worst under the Fourier analysis.
+#Using a minmum numbere of basis vectors yields almost no information. Although we can
+#perfectly reconstruct the data, the more basis vectors added to our analysis mostly just
+#pick up what I would consider "white noise". There is no noticeable trend or cycle.
+#This is our first indication that the market is acting as a random walk.
+
 #Bruno: Demonstrate infinite variance by showing that the model is not well modeled by a Normal distribution.
 #Then try an alternate model like Cauchy later. Check if daily price fluxes have infinite variance.
 hist(diffs, breaks = "FD", probability = TRUE) #already doesn't look super promising
@@ -223,3 +240,5 @@ abs(mean(diffs[8851:8857]) / sd.diff)
 
 #Approximately 20 sigma event for the biggest drop
 abs(min(diffs) / sd.diff) 
+
+
