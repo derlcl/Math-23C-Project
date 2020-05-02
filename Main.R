@@ -102,10 +102,19 @@ chisq.test(DJI$Republican,DJI$Recession)
 #Running this analysis per Regime:
 obs.tbl <- table(DJI$Recession, DJI$Regime); obs.tbl #GWB had the most recession days
 exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); exp.tbl
+chisqvalue <- sum((obs.tbl - exp.tbl)^2/exp.tbl)
+pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE)
 
-for (i in unique(DJI$Regime)){
-  print(chisq.test(DJI$Recession, DJI$Regime == i))
+p <- sum(DJI$Recession)/length(DJI$Recession)
+q <- 1 - p
+prob <- (DJI$Recession*p + (!DJI$Recession)*q) / sum(DJI$Recession*p + (!DJI$Recession)*q) 
+min(prob) ; max(prob) ; sum(prob)
+
+for (i in unique(DJI$Regime)) {
+  print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
 }
+
+# Carryover/lingering effects from previous regime. 
 
 #Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
 #that no individual regime is equally likely to be associated with recessions
