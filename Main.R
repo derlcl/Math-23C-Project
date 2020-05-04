@@ -13,29 +13,58 @@ head(DJI)
 Open <- DJI$Open
 diffs <- diff(DJI$Open) #Get first difference of our data.
 head(diffs) # there are some rather large values with double digits before the decimal
-length(diffs) # 8857 as expected
+diffs.length <- length(diffs) # 8857 as expected
 sum(diffs)  # 18975.43 so over double the number of observations
 mu.chg.open <- mean(diffs) # 2.142422 around what we expected based on the aforementioned values
-med.chg.open <- median(diffs) # 3.4297 is higher than mean, indicating more extreme lesser values
+med.chg.open <- median(diffs) # 3.4297 is higher than mean, indicating extreme lower values
 var.chg.open <- var(diffs) # whopping 13760.49 for variance, we expect this to increase over time
 hist(diffs, breaks = "fd", prob = TRUE) 
 # resembles normal distribution with narrow concentration around sharp peak at mean 
-# and with long tails, with more extreme negative values
+# and with long tails, with more extreme negative values than positive values
 abline(v = mu.chg.open, col = "turquoise")
 chg <- numeric(nrow(DJI))
 chg[1] <- 0 ; chg[2:nrow(DJI)] <- diffs; chg <- data.frame(chg)
 DJI <- data.frame(DJI,chg); head(DJI)
+
+## Linear and logistic regression models
 #
 # Compare open price first difference and trade volume variables
 x <- log(DJI$Volume)
 y <- log(abs(DJI$chg))
-plot(x~y)
+plot(x~y) # interesting shape to the graph
 linmod <- lm(y~x)
 summary(linmod) # R-squared value is only .1854, low explanation for residual errors
+
+
+## Magnitude of First Differences
 #
+AbsDiffs <- abs(diffs) # the absolute value of the first differences
+mu.AbsDiffs <- mean(AbsDiffs) # 69 is the empirical mean
+sum(AbsDiffs/diffs.length) # 69 is also the total value of the contributions to the mean
+sum(AbsDiffs[AbsDiffs <= mu.AbsDiffs]/diffs.length)/mu.AbsDiffs 
+# only 23.9% of the contributions to the mean come from values at or below the mean
+sum(AbsDiffs <= mu.AbsDiffs)/diffs.length
+# 67.7% of the values are at or below the mean value
+# yet 76.1% of the contributions to the mean value come from values above the mean
+max.AbsDiffs <- max(AbsDiffs) # 2419.92 is the max value
+max(AbsDiffs)/diffs.length / mu.AbsDiffs # single maximum value contributed .4% to the mean
+# there are long tails of extreme values with large contributions to the mean
+plot(AbsDiffs) # messy
+hist(AbsDiffs, breaks = "fd", prob = TRUE) 
+# could be modeled by a non-negative valued, long-tailed distribution
 
-
-
+## Empirical Cumulative Distributions
+#
+AbsDiffsCDF <- ecdf(AbsDiffs)
+plot(AbsDiffsCDF) # could be modeled by non-negative, long-tailed distribution
+#
+LogAbsDiffs <- log(AbsDiffs)
+plot(LogAbsDiffs) # could be modeled by random walk with positive drift value
+#
+CDF.diffs <- ecdf(diffs)
+plot(CDF.diffs) # logistic regression model could fit
+plot(Open) # exponential model could fit
+plot(log(Open)) # linear regression or polynomial model could fit
 
 
 ## Hypothesis Testing With Permutation Test
