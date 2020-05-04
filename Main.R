@@ -8,6 +8,7 @@ source("prj_DataPreparation.R")
 head(DJI)
 
 ## Preliminary Data Exploration
+#
 #Create vector for difference between daily Open values and add as new column to data frame
 Open <- DJI$Open
 diffs <- diff(DJI$Open) #Get first difference of our data.
@@ -24,6 +25,18 @@ abline(v = mu.chg.open, col = "turquoise")
 chg <- numeric(nrow(DJI))
 chg[1] <- 0 ; chg[2:nrow(DJI)] <- diffs; chg <- data.frame(chg)
 DJI <- data.frame(DJI,chg); head(DJI)
+#
+# Compare open price first difference and trade volume variables
+x <- log(DJI$Volume)
+y <- log(abs(DJI$chg))
+plot(x~y)
+linmod <- lm(y~x)
+summary(linmod) # R-squared value is only .1854, low explanation for residual errors
+#
+
+
+
+
 
 ## Hypothesis Testing With Permutation Test
 #
@@ -67,7 +80,7 @@ mu.result.Democrat <- mean(result.Democrat) ; mu.result.Democrat ; mu.DemDiffs
 mean(result.Democrat >= mu.DemDiffs) 
 #2.83% chance. Whoa, both means are equally statistically significant.
 #
-#A Combined 
+#Rerun as a Combined Permutation Test
 RepAvg <- sum(DJI$chg*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
 DemAvg <- sum(DJI$chg*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
 Obs <-  DemAvg - RepAvg; Obs
@@ -88,7 +101,7 @@ pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts bec
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
-sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
+p <- sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
 obs.tbl <- table(DJI$Republican,DJI$Recession) # Republican has more Recession
 exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
 obs.tbl ; exp.tbl
@@ -98,37 +111,27 @@ chisq.test(DJI$Republican,DJI$Recession)
 # Thus, the observations provide sufficient evidence to reject the null hypothesis
 # that Republican and Democratic regimes are equally likely to be associated with recession
 # years from 1985 to early 2020. 
-
-#Running this analysis per Regime:
+#
+#Running this as chi-square test of contingency table including all regimes:
 obs.tbl <- table(DJI$Recession, DJI$Regime); obs.tbl #GWB had the most recession days
 exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); exp.tbl
 chisqvalue <- sum((obs.tbl - exp.tbl)^2/exp.tbl)
-pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE)
-
-p <- sum(DJI$Recession)/length(DJI$Recession)
-q <- 1 - p
+pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE) # p-value is 0
+#We reject the null hypothesis that recession years arise by chance across regimes. 
+#
+#Running this as chi-square test specific to each regime with p the observed probabilty of recession:
+q <- 1 - p # 0.8233235 probability of not being in a recession
 prob <- (DJI$Recession*p + (!DJI$Recession)*q) / sum(DJI$Recession*p + (!DJI$Recession)*q) 
-min(prob) ; max(prob) ; sum(prob)
-
+min(prob) ; max(prob) ; sum(prob) 
 for (i in unique(DJI$Regime)) {
   print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
 }
-
-# Carryover/lingering effects from previous regime. 
-
+# Null hypothesis is that each regime has the observed probability p of recession across regimes. 
+# Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next..
 #Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
 #that no individual regime is equally likely to be associated with recessions
 #from the years 1985 to early 2020. (We should look into if our statistical methods
 #are correct here.)
-
-## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
-## We can also run this and the previous analyses on the other numerical columns 
-## of DJI to see if we arise at similar or different results, 
-## once we finish the first round of analysis the DOD change in Open values. 
-## If we set up the simulations appropriately, we should expect to see in our results that 
-## a greater sample size or a greater number of simulations yields increasingly higher 
-## variance, potentially indicated by fat tails when plotting the distribution of the results. 
-## Can you figure out a way to leverage a chi-square test or CLT here?
 
 # Exploratory Data Analysis of Partial Variance to test for convergence of variance
 N <- length(Open) ; 
@@ -156,6 +159,7 @@ summary(variances.normal)
 summary(variances.cauchy)
 summary(variances.Open)
 summary(variances.flux.Open)
+#
 # Normal seems to fit random walk, but not first differences (which model fits?) 
 # What is a narrow highly concentrated around the mean but with really large variance?
 # random walk doesn't seem to have infinite variance, but how does it theoretically?
@@ -170,4 +174,11 @@ summary(variances.flux.Open)
 ## Does the current random walk model invalidate our test for infinite variance on the observed data?
 ## Or can we test for infinite variance without worrying about any model at all? 
 
- 
+## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
+## We can also run this and the previous analyses on the other numerical columns 
+## of DJI to see if we arise at similar or different results, 
+## once we finish the first round of analysis the DOD change in Open values. 
+## If we set up the simulations appropriately, we should expect to see in our results that 
+## a greater sample size or a greater number of simulations yields increasingly higher 
+## variance, potentially indicated by fat tails when plotting the distribution of the results. 
+## Can you figure out a way to leverage a chi-square test or CLT here? 
