@@ -329,31 +329,6 @@ rare <- max(pvals) #2.306794e-07, which is pretty much 0.
 #of these rare events once in 11,876 years.
 (1/rare)/365
 
-#Let's see what we get by drawing successive samples from the population:
-sampvar<- function(x,m)  return(var(sample(x,m, replace = FALSE)))
-
-
-N <- length(diffs)
-seq.variances <- numeric(N)
-for(i in 1:N){
-  seq.variances[i] <- sampvar(diffs,i)
-}
-
-head(seq.variances); tail(seq.variances)
-
-#I feel like we should use replace = TRUE, but I left both so we could decide
-sampvar.repl <- function(x,m)   return(var(sample(x,m, replace = TRUE)))
-
-
-N <- length(diffs)
-seq.variances.repl <- numeric(N)
-for(i in 1:N){
-  seq.variances.repl[i] <- sampvar.repl(diffs,i)
-}
-
-head(seq.variances.repl); tail(seq.variances.repl)
-
-
 
 # Normal seems to fit random walk, but not first differences (which model fits?) 
 # What is a narrow highly concentrated around the mean but with really large variance?
