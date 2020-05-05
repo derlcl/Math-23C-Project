@@ -197,25 +197,25 @@ summary(variances.flux.Open)
 #install.packages("fitdistrplus")
 library("fitdistrplus")
 
-fitdist(DJI$chg, distr = "cauchy", method = c("mle"))
+fitdist(diffs, distr = "cauchy", method = c("mle"))
 
-hist(DJI$chg, breaks = "FD", probability = TRUE) 
+hist(diffs, breaks = "FD", probability = TRUE) 
 
-locat <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[1]
-shap <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[2]
+locat <- fitdist(diffs, distr = "cauchy", method = c("mle"))$estimate[1]
+shap <- fitdist(diffs, distr = "cauchy", method = c("mle"))$estimate[2]
 
 curve(dcauchy(x, location = locat, scale = shap, log = FALSE), col = "blue", add = TRUE)
 n1 <- qcauchy(.1, location = locat, scale = shap, lower.tail = TRUE); n1
 pcauchy(n1, location = locat, scale = shap)
-mean(DJI$chg <= n1) #about 10.1% of the data is in this bin
+mean(diffs <= n1) #about 10.1% of the data is in this bin
 abline(v = n1, col = "red")
 
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
 dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #10 binned intervals
-Exp <- rep(length(DJI$chg)/10,10); Exp 
+Exp <- rep(length(diffs)/10,10); Exp 
 binchg <- numeric(10)
 for(i in 1:10) {
-  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i + 1] )) ; binchg
+  binchg[i] <- sum((diffs >= dec[i]) & (diffs <= dec[i + 1] )) ; binchg
 }
 #Finally we can test for uniformity using a chi-squared test.
 ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
