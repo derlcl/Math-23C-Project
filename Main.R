@@ -298,6 +298,38 @@ pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
 #Given this extremely low chi-square value, it seems that the pareto distribution is not a good model (at all)
 #for the absolute daily fluxes in the Dow Jones Industrial Average. 
 
+#Taking a look at rare events:
+#Let's consider each of the days in our data and examine how far from the mean flux in value each of
+#them was. 
+mu <- mean(diffs); mu
+sigma <- sd(diffs); sigma
+
+N <- length(diffs)
+SDs <- numeric(N)
+for (i in 1:N){
+  SDs[i] <- (diffs[i]-mu)/sigma
+}
+head(SDs)
+head(diffs)
+
+SDs.data <- c(0,SDs); head(SDs.data) 
+DJI <- data.frame(DJI,SDs.data)
+idx <- which(abs(SDs.data) > 5); head(idx)
+unusual <- DJI[idx,]; View(unusual) 
+#As we can see, there are 32 days in which the price flux for the Dow Jones was larger than 5 standard 
+#deviations away from the mean. To show just how bad of a fit the normal distribution is for our data
+#consider the p-values for each of these events. 
+N <- nrow(unusual)
+pvals <- numeric(N)
+for (i in 1:(N)) {
+ pvals[i] <- pnorm(abs(unusual$SDs.data[i]*sigma), mean = mu, sd = sigma, lower.tail = FALSE)
+}
+head(pvals)
+rare <- max(pvals) #2.306794e-07, which is pretty much 0. 
+
+#In other words, if the DJI proces followed a normal distribution, we would expect to see the least rare
+#of these rare events once in 4,335,021 years.
+1/rare
 
 # Normal seems to fit random walk, but not first differences (which model fits?) 
 # What is a narrow highly concentrated around the mean but with really large variance?

@@ -30,6 +30,7 @@ Bruno
 1. Test Opens and diffs for normal, Cauchy, Pareto, stable/Levy, student's t. Barplot, pdf overlaid on histogram. Use bins, quantiles to compare distributions. 
 2. Linear and multiple regression analysis to predict values by regime and party. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday). Logistic regression analysis on probabilities for recession, party. Include covariance and correlation calculations, Rsquared. 
 3. What is the standard deviation of the COVID-19 crash? Its significance? How many 5sigma events do we have in the data? 2007-8 market crash?
+ - I added some stuff on this. There are 32 days where the flux was greater than 5 sigma. How do we want to discuss this?
 
 # Additional, ideal list of comprehensive data analysis workflows I'd like to include:
 1. Relevant data and case studies for introduction of topic and discussion of results. 
