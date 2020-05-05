@@ -195,24 +195,24 @@ summary(variances.flux.Open)
 #with some distribution with infinite variance. Thus, we will see how well our data is modeled by a 
 #Cauchy distribution. 
 #
-install.packages("fitdistrplus")
+#install.packages("fitdistrplus")
 library("fitdistrplus")
 
 fitdist(DJI$chg, distr = "cauchy", method = c("mle"))
-fitdist(DJI$chg, distr = "cauchy", method = c("mge"))
-#
-hist(DJI$chg, breaks = "FD", probability = TRUE) 
-mu <- mean(DJI$chg)
-sigma <- sd(DJI$chg) 
 
-curve(dcauchy(x, location = mu, scale = 30, log = FALSE), col = "blue", add = TRUE)
-n1 <- qcauchy(.1, location = mu, scale = 30, lower.tail = TRUE); n1
-pcauchy(n1, location = 0, scale = 3)
-mean(DJI$chg <= n1) #about 11.8% of the data is in this bin
+hist(DJI$chg, breaks = "FD", probability = TRUE) 
+
+locat <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[1]
+shap <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[2]
+
+curve(dcauchy(x, location = locat, scale = shap, log = FALSE), col = "blue", add = TRUE)
+n1 <- qcauchy(.1, location = locat, scale = shap, lower.tail = TRUE); n1
+pcauchy(n1, location = locat, scale = shap)
+mean(DJI$chg <= n1) #about 10.1% of the data is in this bin
 abline(v = n1, col = "red")
 
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qcauchy(seq(0.0,1,by = 0.1), location = mu, scale = 30); dec  #11 bins
+dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #11 bins
 Exp <- rep(length(DJI$chg)/10,10); Exp 
 binchg <- numeric(10)
 for(i in 1:10){
@@ -229,6 +229,39 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
 
+#Pareto
+library(MASS)
+#install.packages("actuar")
+library(actuar)
+
+hist(AbsDiffs , breaks = "FD", probability = TRUE) 
+
+curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE)
+
+shape.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[1]
+scale.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[2]
+
+n1 <- qpareto(.1, shape = shape.pareto, scale = scale.pareto); n1
+ppareto(n1,shape = shape.pareto, scale = scale.pareto)
+mean(AbsDiffs <= n1) #about 11% of the data is in this bin
+abline(v = n1, col = "blue") #very close to 0, as expected from a pareto distribution
+
+#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
+dec <- qpareto(seq(0.0,1,by = 0.1), shape = shape.pareto, scale = scale.pareto); dec  #11 bins
+Exp <- rep(length(AbsDiffs)/10,10); Exp 
+binabschg <- numeric(10)
+for(i in 1:10){
+  binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
+}
+#Finally we can test for uniformity using a chi-squared test.
+ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
+#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
+#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
+curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
+abline(v=ChiStatAbs, col = "red") 
+pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
+#Given this extremely low chi-square value, it seems that the pareto distribution is not a good model (at all)
+#for the absolute daily fluxes in the Dow Jones Industrial Average. 
 
 
 # Normal seems to fit random walk, but not first differences (which model fits?) 
