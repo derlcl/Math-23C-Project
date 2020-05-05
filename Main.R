@@ -31,7 +31,7 @@ DJI <- data.frame(DJI,chg); head(DJI)
 # Compare open price first difference and trade volume variables
 x <- log(DJI$Volume)
 y <- log(abs(DJI$chg))
-plot(x~y) # interesting shape to the graph
+plot(y~x) # interesting shape to the graph
 linmod <- lm(y~x)
 summary(linmod) # R-squared value is only .1854, low explanation for residual errors
 

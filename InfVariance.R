@@ -1,5 +1,6 @@
 #Import library
 library('pracma')
+library('fitdistrplus')
 library('MASS')
 library('ggplot2')
 library('gganimate')
