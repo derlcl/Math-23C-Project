@@ -189,6 +189,48 @@ summary(variances.cauchy)
 summary(variances.Open)
 summary(variances.flux.Open)
 #
+
+#Let us now try to fit our DJI data with some other distribution whose properties are familiar:
+#Given the lack of convergence in the variance shown above, it appears that we should model the data
+#with some distribution with infinite variance. Thus, we will see how well our data is modeled by a 
+#Cauchy distribution. 
+#
+install.packages("fitdistrplus")
+library("fitdistrplus")
+
+fitdist(DJI$chg, distr = "cauchy", method = c("mle"))
+fitdist(DJI$chg, distr = "cauchy", method = c("mge"))
+#
+hist(DJI$chg, breaks = "FD", probability = TRUE) 
+mu <- mean(DJI$chg)
+sigma <- sd(DJI$chg) 
+
+curve(dcauchy(x, location = mu, scale = 30, log = FALSE), col = "blue", add = TRUE)
+n1 <- qcauchy(.1, location = mu, scale = 30, lower.tail = TRUE); n1
+pcauchy(n1, location = 0, scale = 3)
+mean(DJI$chg <= n1) #about 11.8% of the data is in this bin
+abline(v = n1, col = "red")
+
+#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
+dec <- qcauchy(seq(0.0,1,by = 0.1), location = mu, scale = 30); dec  #11 bins
+Exp <- rep(length(DJI$chg)/10,10); Exp 
+binchg <- numeric(10)
+for(i in 1:10){
+  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i+1] )) ; binchg
+}
+#Finally we can test for uniformity using a chi-squared test.
+ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
+#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
+#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
+curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
+abline(v=ChiStat, col = "red") 
+pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
+#Given this extremely low chi-square value, it seems that the cauchy distribution is not a good model (at all)
+#for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
+#fits the data. 
+
+
+
 # Normal seems to fit random walk, but not first differences (which model fits?) 
 # What is a narrow highly concentrated around the mean but with really large variance?
 # random walk doesn't seem to have infinite variance, but how does it theoretically?
