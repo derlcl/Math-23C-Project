@@ -210,6 +210,7 @@ fracd.estimates <- fd.estimate(DJI$Open, methods = c("variogram", "madogram",
 #Checking a 5 sigma Event:
 hist(diffs, prob = TRUE, breaks = "FD")
 #Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
+#https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
 #Median:
 diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
@@ -250,6 +251,7 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 #using Octiles
 hist(diffs, prob = TRUE, breaks = "FD")
 #Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
+#https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
 #Median:
 diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
