@@ -285,8 +285,24 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 #We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
 #from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
 #NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
-#have infinite varianc, it appears our data's distribution also has infinite variance.
+#have infinite variance, it appears our data's distribution also has infinite variance.
 
+#Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
+#scale parameters above, that it does indeed have infinite variance. 
+#To do that, we'll need to define funcitons that will describe the integrands that will allow us to
+#use the tail-integral theorem. First, we'll define the integrand that will give us E(X).
+#Since the underlying distribution can be modeled by a Cauchy distribution, we will use 
+#dcauchy with the right parameters as our mu_x:
+integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
+#and now we have E(X):
+exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
+
+#In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
+integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
+#And E(X^2)
+exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
+#And it appears that the integral is divergent! This means that 
+#Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
 
 
 #Standard deviation and expectation are undefined for our model because it is a Cauchy distribution.
