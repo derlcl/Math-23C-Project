@@ -57,9 +57,9 @@ Basic plots including boxplot, normal quantile plot, empirical cumulative distri
 4. At least 20 rows, preferably more, but real-world data may be limited. (8858 rows)
 
 ## Required graphical displays (all graphs must be colored and nicely labeled) (TD)
-1. A barplot. (with fitdistr model overlaid on barplot of data)
+1. A barplot. (with fitdistr model overlaid on barplot of data) (suggestions herE??)
 2. A histogram. (DONE)
-3. A probability density graph overlaid on a histogram. (fitdistr)
+3. A probability density graph overlaid on a histogram. (fitdistr) (DONE)
 4. A contingency table. (DONE)
 
 ## Required analysis (TD)

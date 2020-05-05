@@ -194,7 +194,6 @@ summary(variances.flux.Open)
 #Given the lack of convergence in the variance shown above, it appears that we should model the data
 #with some distribution with infinite variance. Thus, we will see how well our data is modeled by a 
 #Cauchy distribution. 
-#
 #install.packages("fitdistrplus")
 library("fitdistrplus")
 
@@ -227,7 +226,8 @@ abline(v = ChiStat, col = "red")
 pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #Given this extremely low chi-square value, it seems that the cauchy distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
-#fits the data. 
+#fits the data.
+
 
 #Pareto
 library(MASS)
@@ -252,42 +252,7 @@ for(i in 1:10){
   binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
 }
 #Finally we can test for uniformity using a chi-squared test.
-ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
-#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
-#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
-curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
-abline(v=ChiStatAbs, col = "red") 
-pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the pareto distribution is not a good model (at all)
-#for the absolute daily fluxes in the Dow Jones Industrial Average. 
-
-
-#Pareto
-library(MASS)
-#install.packages("actuar")
-library(actuar)
-
-hist(AbsDiffs , breaks = "FD", probability = TRUE) 
-
-curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE)
-
-shape.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[1]
-scale.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[2]
-
-n1 <- qpareto(.1, shape = shape.pareto, scale = scale.pareto); n1
-ppareto(n1,shape = shape.pareto, scale = scale.pareto)
-mean(AbsDiffs <= n1) #about 11% of the data is in this bin
-abline(v = n1, col = "blue") #very close to 0, as expected from a pareto distribution
-
-#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qpareto(seq(0.0,1,by = 0.1), shape = shape.pareto, scale = scale.pareto); dec  #11 bins
-Exp <- rep(length(AbsDiffs)/10,10); Exp 
-binabschg <- numeric(10)
-for(i in 1:10){
-  binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
-}
-#Finally we can test for uniformity using a chi-squared test.
-ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
+ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #73.3071
 #We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
 #and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
 curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
