@@ -1,4 +1,4 @@
-#Math 23C Term Project by Rakeen Tanveer, Bruno Kömel, and Derl Clausen
+#Math 23C Term Project by Rakeen Tanvir, Bruno Kömel, and Derl Clausen
 
 #Retrieve any functions we have made for this project
 source("prj_Functions.R")
@@ -188,7 +188,7 @@ summary(variances.normal)
 summary(variances.cauchy)
 summary(variances.Open)
 summary(variances.flux.Open)
-#
+# variance does not converge neither for our Open values nor for our first differences
 
 #Let us now try to fit our DJI data with some other distribution whose properties are familiar:
 #Given the lack of convergence in the variance shown above, it appears that we should model the data
@@ -212,18 +212,18 @@ mean(DJI$chg <= n1) #about 10.1% of the data is in this bin
 abline(v = n1, col = "red")
 
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #11 bins
+dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #10 binned intervals
 Exp <- rep(length(DJI$chg)/10,10); Exp 
 binchg <- numeric(10)
-for(i in 1:10){
-  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i+1] )) ; binchg
+for(i in 1:10) {
+  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i + 1] )) ; binchg
 }
 #Finally we can test for uniformity using a chi-squared test.
 ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
 #We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
 #and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
 curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
-abline(v=ChiStat, col = "red") 
+abline(v = ChiStat, col = "red") 
 pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #Given this extremely low chi-square value, it seems that the cauchy distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
@@ -235,11 +235,9 @@ library(MASS)
 library(actuar)
 
 hist(AbsDiffs , breaks = "FD", probability = TRUE) 
-
-curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE)
-
 shape.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[1]
 scale.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[2]
+curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE)
 
 n1 <- qpareto(.1, shape = shape.pareto, scale = scale.pareto); n1
 ppareto(n1,shape = shape.pareto, scale = scale.pareto)
@@ -247,7 +245,7 @@ mean(AbsDiffs <= n1) #about 11% of the data is in this bin
 abline(v = n1, col = "blue") #very close to 0, as expected from a pareto distribution
 
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qpareto(seq(0.0,1,by = 0.1), shape = shape.pareto, scale = scale.pareto); dec  #11 bins
+dec <- qpareto(seq(0.0,1,by = 0.1), shape = shape.pareto, scale = scale.pareto); dec  #10 bins
 Exp <- rep(length(AbsDiffs)/10,10); Exp 
 binabschg <- numeric(10)
 for(i in 1:10){
