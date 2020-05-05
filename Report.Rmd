@@ -1,7 +1,7 @@
 ---
 title: "Report"
 author: "Derl Clausen, Bruno Komel, Rakeen Tanvir"
-date: "3/21/2020"
+date: "5/11/2020"
 output: pdf_document
 ---
 
@@ -11,10 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # TD
 Rakeen
-1. Compare different price variables (?) including volume vs. first difference. 
-2. [Bootstrap] Sampling distribution from our data and find a model that fits the data and use it to estimate the population variance (check if this can be estimated using bootstrapping). Variance increases as sample size increases? (Find in lecture, notes from Alek). Barplot, pdf overlaid on histogram. Compare classical (CLT, chi-square) vs. simulation (permutation), which works better? Leverage theoretical knowledge. 
-3.  Read https://stats.stackexchange.com/questions/2504/test-for-finite-variance, ecdf
-4. Integration on infinite variance to demonstrate divergence. Select data to model with a continuous distribution (exponential, gamma, chi square, beta). Dispaly a histogram of your data and overlay on it a graph of the density function for your hypothesized distribution. Then use integration is R to compute the expected number of counts in various bins, and compare with the observed number of counts.
+1. Compare different price variables (?) including volume vs. first difference. (DONE)
+2. [Bootstrap] Sampling distribution from our data and find a model that fits the data and use it to estimate the population variance (check if this can be estimated using bootstrapping). Variance increases as sample size increases? (Find in lecture, notes from Alek). Barplot, pdf overlaid on histogram. Compare classical (CLT, chi-square) vs. simulation (permutation), which works better? Leverage theoretical knowledge. (In Progress)
+3.  Read https://stats.stackexchange.com/questions/2504/test-for-finite-variance, ecdf (DONE)
+4. Integration on infinite variance to demonstrate divergence. Select data to model with a continuous distribution (exponential, gamma, chi square, beta). Dispaly a histogram of your data and overlay on it a graph of the density function for your hypothesized distribution. Then use integration is R to compute the expected number of counts in various bins, and compare with the observed number of counts. (Bruno?)
 
 Derl
 1. [X]Test if data is well modeled by random walk with fractal analysis (https://blog.quantinsti.com/hurst-exponent/). 
@@ -49,11 +49,11 @@ Basic plots including boxplot, normal quantile plot, empirical cumulative distri
 ## Required dataset standards (DONE)
 1. A dataframe. (DJI)
 2. At least two categorical or logical columns. (political regime, year of expansion vs. recession)
-3. At least two numeric columns. (open, close, high, low, volume, %change)
-4. At least 20 rows, preferably more, but real-world data may be limited. (sufficient)
+3. At least two numeric columns. (open, close, high, low, volume, diffs)
+4. At least 20 rows, preferably more, but real-world data may be limited. (8858 rows)
 
 ## Required graphical displays (all graphs must be colored and nicely labeled) (TD)
-1. A barplot. 
+1. A barplot. (with fitdistr model overlaid on barplot of data)
 2. A histogram. (DONE)
 3. A probability density graph overlaid on a histogram. (fitdistr)
 4. A contingency table. (DONE)
