@@ -6,16 +6,16 @@ ChiSq <- function(Obs,Exp){
 }
 
 RunFourier <- function(ncoeff, data){
-  myCos <- function(m) cos((1:ncoeff)*m*2*pi/ncoeff)
-  mySin <- function(m) sin((1:ncoeff)*m*2*pi/ncoeff)
+  myCos <- function(m) cos((1:length(data))*m*2*pi/length(data))
+  mySin <- function(m) sin((1:length(data))*m*2*pi/length(data))
   
   #This function gives the Fourier coefficient a_m
   coeffA <- function(m){
-    sum(data*2*myCos(m)/ncoeff)
+    sum(data*2*myCos(m)/length(data))
   }
   #This function gives the Fourier coefficient b_m
   coeffB <- function(m){
-    sum(data*2*mySin(m)/ncoeff)
+    sum(data*2*mySin(m)/length(data))
   }
   
   #Evaluate ncoeff coefficients
@@ -34,3 +34,5 @@ RunFourier <- function(ncoeff, data){
   plot(data,type = "l")
   points(1:length(data),recon, type = "l", col = "red",lwd = 2) 
 }
+
+

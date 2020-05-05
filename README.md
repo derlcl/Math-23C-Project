@@ -21,6 +21,15 @@ MEASURING THE EFFECTS OF MONETARY POLICY:
 A FACTOR-AUGMENTED VECTOR
 AUTOREGRESSIVE (FAVAR) APPROACH - https://www.nber.org/papers/w10220.pdf
 
+M. Mahdizadeh, Ehsan Zamanzade,
+Goodness-of-fit testing for the Cauchy distribution with application to financial modeling,
+Journal of King Saud University - Science,
+Volume 31, Issue 4,
+2019,
+Pages 1167-1174,
+ISSN 1018-3647,
+https://doi.org/10.1016/j.jksus.2019.01.015.
+
 Books:
 The (Mis)behavior of Markets by Benoit Mandelbrot:
 https://dichgiacamchi.files.wordpress.com/2015/01/the_misbehavior_of_markets_-_benoit_mandelbrot.pdf
