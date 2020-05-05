@@ -215,6 +215,7 @@ diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
 diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq #-36.41016
 
+
 #Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
 #uses better paramater estimation, we will use our fit.diffs values.
 fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
@@ -244,6 +245,47 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 #from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
 #NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
 #have infinite varianc, it appears our data's distribution also has infinite variance.
+
+#################
+#using Octiles
+hist(diffs, prob = TRUE, breaks = "FD")
+#Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
+#Median:
+diffs.median <- median(diffs); diffs.median #
+#Half Interquartile Range:
+diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq2 #44.32993
+
+#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
+#uses better paramater estimation, we will use our fit.diffs values.
+fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
+
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
+#Get observed data
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
+#Get expected data:
+cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
+
+#Get initial Chi Square Statistic:
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+
+#Run simulation: 
+N <- 10^4; results.Cauchy <- numeric(N)
+for (i in 1:N) {
+  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
+  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+}
+hist(results.Cauchy, breaks = "FD")
+abline(v = cauchy.cs, col = "red", lwd = 3)
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 12%.
+#We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
+#from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
+#NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
+#have infinite varianc, it appears our data's distribution also has infinite variance.
+
+
 
 #Standard deviation and expectation are undefined for our model because it is a Cauchy distribution.
 #Therefore, we will have to test our stock market drop against a gaussian random walk.
