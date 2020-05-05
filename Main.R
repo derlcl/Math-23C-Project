@@ -1,4 +1,4 @@
-#Math 23C Term Project by Rakeen Tanveer, Bruno Kömel, and Derl Clausen
+#Math 23C Term Project by Rakeen Tanvir, Bruno Kömel, and Derl Clausen
 
 #Retrieve any functions we have made for this project
 source("prj_Functions.R")
@@ -188,7 +188,173 @@ summary(variances.normal)
 summary(variances.cauchy)
 summary(variances.Open)
 summary(variances.flux.Open)
+# variance does not converge neither for our Open values nor for our first differences
+
+#Let us now try to fit our DJI data with some other distribution whose properties are familiar:
+#Given the lack of convergence in the variance shown above, it appears that we should model the data
+#with some distribution with infinite variance. Thus, we will see how well our data is modeled by a 
+#Cauchy distribution. 
 #
+#install.packages("fitdistrplus")
+library("fitdistrplus")
+
+fitdist(DJI$chg, distr = "cauchy", method = c("mle"))
+
+hist(DJI$chg, breaks = "FD", probability = TRUE) 
+
+locat <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[1]
+shap <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[2]
+
+curve(dcauchy(x, location = locat, scale = shap, log = FALSE), col = "blue", add = TRUE)
+n1 <- qcauchy(.1, location = locat, scale = shap, lower.tail = TRUE); n1
+pcauchy(n1, location = locat, scale = shap)
+mean(DJI$chg <= n1) #about 10.1% of the data is in this bin
+abline(v = n1, col = "red")
+
+#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
+dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #10 binned intervals
+Exp <- rep(length(DJI$chg)/10,10); Exp 
+binchg <- numeric(10)
+for(i in 1:10) {
+  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i + 1] )) ; binchg
+}
+#Finally we can test for uniformity using a chi-squared test.
+ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
+#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
+#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
+curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
+abline(v = ChiStat, col = "red") 
+pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
+#Given this extremely low chi-square value, it seems that the cauchy distribution is not a good model (at all)
+#for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
+#fits the data. 
+
+#Pareto
+library(MASS)
+#install.packages("actuar")
+library(actuar)
+
+hist(AbsDiffs , breaks = "FD", probability = TRUE) 
+shape.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[1]
+scale.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[2]
+curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE)
+
+n1 <- qpareto(.1, shape = shape.pareto, scale = scale.pareto); n1
+ppareto(n1,shape = shape.pareto, scale = scale.pareto)
+mean(AbsDiffs <= n1) #about 11% of the data is in this bin
+abline(v = n1, col = "blue") #very close to 0, as expected from a pareto distribution
+
+#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
+dec <- qpareto(seq(0.0,1,by = 0.1), shape = shape.pareto, scale = scale.pareto); dec  #10 bins
+Exp <- rep(length(AbsDiffs)/10,10); Exp 
+binabschg <- numeric(10)
+for(i in 1:10){
+  binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
+}
+#Finally we can test for uniformity using a chi-squared test.
+ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
+#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
+#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
+curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
+abline(v=ChiStatAbs, col = "red") 
+pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
+#Given this extremely low chi-square value, it seems that the pareto distribution is not a good model (at all)
+#for the absolute daily fluxes in the Dow Jones Industrial Average. 
+
+
+#Pareto
+library(MASS)
+#install.packages("actuar")
+library(actuar)
+
+hist(AbsDiffs , breaks = "FD", probability = TRUE) 
+
+curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE)
+
+shape.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[1]
+scale.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[2]
+
+n1 <- qpareto(.1, shape = shape.pareto, scale = scale.pareto); n1
+ppareto(n1,shape = shape.pareto, scale = scale.pareto)
+mean(AbsDiffs <= n1) #about 11% of the data is in this bin
+abline(v = n1, col = "blue") #very close to 0, as expected from a pareto distribution
+
+#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
+dec <- qpareto(seq(0.0,1,by = 0.1), shape = shape.pareto, scale = scale.pareto); dec  #11 bins
+Exp <- rep(length(AbsDiffs)/10,10); Exp 
+binabschg <- numeric(10)
+for(i in 1:10){
+  binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
+}
+#Finally we can test for uniformity using a chi-squared test.
+ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
+#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
+#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
+curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
+abline(v=ChiStatAbs, col = "red") 
+pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
+#Given this extremely low chi-square value, it seems that the pareto distribution is not a good model (at all)
+#for the absolute daily fluxes in the Dow Jones Industrial Average. 
+
+#Taking a look at rare events:
+#Let's consider each of the days in our data and examine how far from the mean flux in value each of
+#them was. 
+mu <- mean(diffs); mu
+sigma <- sd(diffs); sigma
+
+N <- length(diffs)
+SDs <- numeric(N)
+for (i in 1:N){
+  SDs[i] <- (diffs[i]-mu)/sigma
+}
+head(SDs)
+head(diffs)
+
+SDs.data <- c(0,SDs); head(SDs.data) 
+DJI <- data.frame(DJI,SDs.data)
+idx <- which(abs(SDs.data) > 5); head(idx)
+unusual <- DJI[idx,]; View(unusual) 
+#As we can see, there are 32 days in which the price flux for the Dow Jones was larger than 5 standard 
+#deviations away from the mean. To show just how bad of a fit the normal distribution is for our data
+#consider the p-values for each of these events. 
+N <- nrow(unusual)
+pvals <- numeric(N)
+for (i in 1:(N)) {
+ pvals[i] <- pnorm(abs(unusual$SDs.data[i]*sigma), mean = mu, sd = sigma, lower.tail = FALSE)
+}
+head(pvals)
+rare <- max(pvals) #2.306794e-07, which is pretty much 0. 
+
+#In other words, if the DJI proces followed a normal distribution, we would expect to see the least rare
+#of these rare events once in 11,876 years.
+(1/rare)/365
+
+#Let's see what we get by drawing successive samples from the population:
+sampvar<- function(x,m)  return(var(sample(x,m, replace = FALSE)))
+
+
+N <- length(diffs)
+seq.variances <- numeric(N)
+for(i in 1:N){
+  seq.variances[i] <- sampvar(diffs,i)
+}
+
+head(seq.variances); tail(seq.variances)
+
+#I feel like we should use replace = TRUE, but I left both so we could decide
+sampvar.repl <- function(x,m)   return(var(sample(x,m, replace = TRUE)))
+
+
+N <- length(diffs)
+seq.variances.repl <- numeric(N)
+for(i in 1:N){
+  seq.variances.repl[i] <- sampvar.repl(diffs,i)
+}
+
+head(seq.variances.repl); tail(seq.variances.repl)
+
+
+
 # Normal seems to fit random walk, but not first differences (which model fits?) 
 # What is a narrow highly concentrated around the mean but with really large variance?
 # random walk doesn't seem to have infinite variance, but how does it theoretically?
