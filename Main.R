@@ -83,7 +83,7 @@ for (i in 1:N) {
   Y <- sample(X,n,replace = TRUE) # Resample
   meanY[i] <- mean(Y)
   varY[i] <- var(Y)
-  Z[i] <- (mean(Y) - meanX) / (sd(Y)/sqrt(n)) # Compute Z test statistic
+  Z[i] <- (mean(Y) - meanX) / (sd(Y)/sqrt(n))# Compute Z test statistic
 }
 hist(Z, breaks = "fd", prob = TRUE) # approximates standard normal distribution by CLT
 hist(varY, breaks = "fd", prob = TRUE) # long tailed distribution with right skew

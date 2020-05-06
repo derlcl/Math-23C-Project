@@ -256,7 +256,7 @@ hist(diffs, prob = TRUE, breaks = "FD")
 #Median:
 diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
-diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq2 #44.32993
+diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
 
 #Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
 #uses better paramater estimation, we will use our fit.diffs values.
