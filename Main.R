@@ -292,4 +292,33 @@ rare <- max(pvals) #2.306794e-07, which is pretty much 0.
 
 #In other words, if the DJI first differences followed a normal distribution, 
 #we would expect to see the least rare of these rare events once in 4,335,021 years.
+
+#Now that we have seen that the data follows a model with infinite variance, which somewhat resembles 
+#that of a random walk, let us consider the hypothesis that political regimes have an impact on 
+#the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering
+#the impact of political party on the performance of the market. 
+
+lm(DJI$Open~DJI$Republican + DJI$Recession)
+
+GHWB <- DJI$Regime == "GHWB"
+BC<- DJI$Regime == "BC"
+GWB <- DJI$Regime == "GWB"
+BO <- DJI$Regime == "BO"
+DJT <- DJI$Regime == "DJT"
+
+pres.binary <- data.frame(GHWB, BC, GWB, BO, DJT)
+
+regress.data <- data.frame(DJI,pres.binary)
+
+#since we ommitted the Ronald Raegan variable, each of the coefficients for the various presidents 
+#represents the incremental surplus or deficit in the DJIA that occurred during each of the other 
+#presidents' terms
+lm(regress.data$chg ~ + regress.data$Recession + regress.data$GHWB + regress.data$BC + regress.data$BO + regress.data$DJT)
+
+regress.data.ne <- regress.data[-idx,]
+
+lm(regress.data.ne$chg ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$BO + regress.data.ne$DJT)
+
+
+nrow(regress.data); nrow(regress.data.ne)
 1/rare
