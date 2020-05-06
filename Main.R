@@ -31,7 +31,7 @@ DJI <- data.frame(DJI,chg); head(DJI)
 # Compare open price first difference and trade volume variables
 x <- log(DJI$Volume)
 y <- log(abs(DJI$chg))
-plot(y~x) # interesting shape to the graph
+plot(x~y) # interesting shape to the graph
 linmod <- lm(y~x)
 summary(linmod) # R-squared value is only .1854, low explanation for residual errors
 
@@ -65,6 +65,39 @@ CDF.diffs <- ecdf(diffs)
 plot(CDF.diffs) # logistic regression model could fit
 plot(Open) # exponential model could fit
 plot(log(Open)) # linear regression or polynomial model could fit
+
+
+## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
+## 
+## Sources: https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
+## and Chihara and Hesterberg's Mathematical Statistics with Resampling
+## 
+# If our sample is an independent and identically distributed realization 
+# from a light-tailed distribution, the central limit theorem should hold.
+# Use bootstrap resampling to demonstrate this.
+## Bootstrap For A Single Population
+N <- 10^4 ;  n <- 1000
+meanY <- varY <- Z <- numeric(N) ; X <- diffs ; meanX <- mean(X)
+# Perform N boostrap resamples of size n from sample X
+for (i in 1:N) {
+  Y <- sample(X,n,replace = TRUE) # Resample
+  meanY[i] <- mean(Y)
+  varY[i] <- var(Y)
+  Z[i] <- (mean(Y) - meanX) / (sd(Y)/sqrt(n))# Compute Z test statistic
+}
+hist(Z, breaks = "fd", prob = TRUE) # approximates standard normal distribution by CLT
+hist(varY, breaks = "fd", prob = TRUE) # long tailed distribution with right skew
+hist(meanY, breaks = "fd", prob = TRUE) # approximately normal with center around meanX
+# Boostrap resampling distribution of sample means has smaller spread than sample
+# This is expected since we expect Var(Ybar) = Var(diffs.mu)/n. And as N approaches infinity, 
+# the bootstrap sampling distribution of the sample mean of Y should 
+# be increasingly normally distributed according to the central limit theorem. 
+# It should also approximate the shape and spread of the sampling distribution 
+# of sample means from the underlying population,
+# though its center will retain the bias for sample mean from the original sample. 
+# Next: "perform a large number of bootstraps and compare the empirical distribution 
+# function of the observed Z's with the e.d.f. of a N(0,1). A natural way to make this 
+# comparison is the Kolmogorov–Smirnov test."
 
 
 ## Hypothesis Testing With Permutation Test
@@ -126,7 +159,7 @@ mean(result.Combined) #inspecting that these are indeed close to zero
 hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
-# 3.08% chance that this extreme of an observed difference would arise by chance .
+# 2.82% chance that this extreme of an observed difference would arise by chance .
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
@@ -167,55 +200,56 @@ N <- length(Open) ;
 variances.normal <- numeric(N - 1)
 variances.cauchy <- numeric(N - 1)
 variances.Open <- numeric(N - 1)
-variances.flux.Open <- numeric(N - 1)
+variances.diffs <- numeric(N - 1)
 sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
-Open <- DJI$Open ; flux.Open <- DJI$chg
+Open <- DJI$Open ; diffs.Open <- DJI$chg
 index <- 1:(N - 1)
 for (i in 2:N) {
  variances.normal[i - 1] <- var(sample.normal[1:i])
  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
  variances.Open[i - 1] <- var(Open[1:i])
- variances.flux.Open[i - 1] <- var(flux.Open[1:i])
+ variances.diffs[i - 1] <- var(diffs.Open[1:i])
 }
-variances.flux.Open <- variances.flux.Open[-1]
-par(mfrow = c(2,2))
-plot(index,variances.normal, type = "l", col = "steelblue", log = "x")
-plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy")
-plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy")
-plot(head(index,-1),variances.flux.Open, type = "l", col = "slategray", log = "xy")
-par(mfrow = c(1,1))
-summary(variances.normal)
-summary(variances.cauchy)
-summary(variances.Open)
-summary(variances.flux.Open)
-# variance does not converge neither for our Open values nor for our first differences
+variances.diffs <- variances.diffs[-1]
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x") # converges
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy") # diverges jagged
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy") # diverges
+plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy") # diverges
+par(mfrow = c(1,1)) # revert to 1x1 plot matrix
+summary(variances.normal) # data is centered closely around mean and median
+summary(variances.cauchy) # seems to be large spread
+summary(variances.Open) # extremely large spread
+summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
+# variance seems to diverge for both Open prices and for first differences
 
 #Let us now try to fit our DJI data with some other distribution whose properties are familiar:
 #Given the lack of convergence in the variance shown above, it appears that we should model the data
 #with some distribution with infinite variance. Thus, we will see how well our data is modeled by a 
 #Cauchy distribution. 
+#
 #install.packages("fitdistrplus")
 library("fitdistrplus")
 
-fitdist(diffs, distr = "cauchy", method = c("mle"))
+fitdist(DJI$chg, distr = "cauchy", method = c("mle"))
 
-hist(diffs, breaks = "FD", probability = TRUE) 
+hist(DJI$chg, breaks = "FD", probability = TRUE) 
 
-locat <- fitdist(diffs, distr = "cauchy", method = c("mle"))$estimate[1]
-shap <- fitdist(diffs, distr = "cauchy", method = c("mle"))$estimate[2]
+locat <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[1]
+shap <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[2]
 
 curve(dcauchy(x, location = locat, scale = shap, log = FALSE), col = "blue", add = TRUE)
 n1 <- qcauchy(.1, location = locat, scale = shap, lower.tail = TRUE); n1
 pcauchy(n1, location = locat, scale = shap)
-mean(diffs <= n1) #about 10.1% of the data is in this bin
+mean(DJI$chg <= n1) #about 10.1% of the data is in this bin
 abline(v = n1, col = "red")
 
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
 dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #10 binned intervals
-Exp <- rep(length(diffs)/10,10); Exp 
+Exp <- rep(length(DJI$chg)/10,10); Exp 
 binchg <- numeric(10)
 for(i in 1:10) {
-  binchg[i] <- sum((diffs >= dec[i]) & (diffs <= dec[i + 1] )) ; binchg
+  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i + 1] )) ; binchg
 }
 #Finally we can test for uniformity using a chi-squared test.
 ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
@@ -224,10 +258,9 @@ ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
 curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
 abline(v = ChiStat, col = "red") 
 pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the cauchy distribution is not a good model (at all)
+#Given this extremely low p-value, it seems that the cauchy distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
-#fits the data.
-
+#fits the data. 
 
 #Pareto
 library(MASS)
@@ -252,13 +285,13 @@ for(i in 1:10){
   binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
 }
 #Finally we can test for uniformity using a chi-squared test.
-ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #73.3071
+ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
 #We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
 #and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
 curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
 abline(v=ChiStatAbs, col = "red") 
 pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the pareto distribution is not a good model (at all)
+#Given this extremely low p-value, it seems that the pareto distribution is not a good model (at all)
 #for the absolute daily fluxes in the Dow Jones Industrial Average. 
 
 #Taking a look at rare events:
@@ -290,30 +323,63 @@ for (i in 1:(N)) {
 head(pvals)
 rare <- max(pvals) #2.306794e-07, which is pretty much 0. 
 
-#In other words, if the DJI proces followed a normal distribution, we would expect to see the least rare
-#of these rare events once in 11,876 years.
 (1/rare)/365
+#In other words, if the DJI first differences followed a normal distribution, 
+#we would expect to see the least rare of these rare events once in 11,876 years.
+
+#Now that we have seen that the data follows a model with infinite variance, which somewhat resembles 
+#that of a random walk, let us consider the hypothesis that political regimes have an impact on 
+#the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering
+#the impact of political party on the performance of the market. 
+
+lm(DJI$chg~DJI$Republican + DJI$Recession)
+
+GHWB <- DJI$Regime == "GHWB"
+BC<- DJI$Regime == "BC"
+GWB <- DJI$Regime == "GWB"
+BO <- DJI$Regime == "BO"
+DJT <- DJI$Regime == "DJT"
+
+pres.binary <- data.frame(GHWB, BC, GWB, BO, DJT)
+
+regress.data <- data.frame(DJI,pres.binary)
+
+#since we ommitted the Ronald Raegan variable, each of the coefficients for the various presidents 
+#represents the incremental surplus or deficit in the DJIA that occurred during each of the other 
+#presidents' terms
+lm(regress.data$chg ~ + regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
+#These results are interesting becuase they seem out of line with the recent (2018-2019) rethoric of the Donald 
+#Trump administration's success in boosting the DJIA to new heights.
+
+#So, let's exclude the days when 5 sigma + events took place, that way we'll keep only the data for "normal/typical"
+#days.
+regress.data.ne <- regress.data[-idx,]
+lm(regress.data.ne$chg ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
+#These results seem to indicate that, excluding days with extreme events, and controlling for recessions 
+#(and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, 
+#the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush.
+#It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis,
+#which took place in the final months of his second term. 
+
+#Logistic Regression
+#Let us inspect how economic recessions correlate with the performance of the DJIA. 
+plot(DJI$chg,DJI$Recession, xlim = c(-5000,5000))
+MLL<- function(alpha, beta) {
+  -sum( log( exp(alpha+beta*DJI$chg)/(1+exp(alpha+beta*DJI$chg)) )*DJI$Recession
+        + log(1/(1+exp(alpha+beta*DJI$chg)))*(1-DJI$Recession) )
+}
+#R has a function that will maximize this function of alpha and beta
+#install.packages("stats4")   #needs to be run at most once
+library(stats4)
+results<-mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
+results@coef
+curve( exp(results@coef[1]+results@coef[2]*x)/ (1+exp(results@coef[1]+results@coef[2]*x)),col = "blue", add=TRUE)
+#This is a fairly interesting result because its graph looks different than the normal logistic curve.
+#Of course, this becomes obvious when one considers the nature of the regression, namely that recessions
+#are events that are expected to correlate with negative values of first differences (i.e. price drops).
+#In any case, this provides some evidence confirm the hypothesis that negative fluxes in the Dow Jones
+#correlate with economic recessions.
 
 
-# Normal seems to fit random walk, but not first differences (which model fits?) 
-# What is a narrow highly concentrated around the mean but with really large variance?
-# random walk doesn't seem to have infinite variance, but how does it theoretically?
-## Should we perform this analysis for High, Low or Close? Does it change anything?
-## Does using a logarithmic or exponential model make the data behave better?
-## Given that our observed DOD data produces low frequency, extreme values, particularly negative,
-## how do we do a better job of fitting a probability distribution model to our observed data? 
-## That is, can we slice our data differently, change the parameters of the random walk model,
-## or use a different distribution altogether to model our data? We could use Cauchy, Levy, Pareto, 
-## T or other distributions with infinite variance. Are there any that look like our histogram?
-## Is this necessary in order to test for infinite variance? 
-## Does the current random walk model invalidate our test for infinite variance on the observed data?
-## Or can we test for infinite variance without worrying about any model at all? 
 
-## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
-## We can also run this and the previous analyses on the other numerical columns 
-## of DJI to see if we arise at similar or different results, 
-## once we finish the first round of analysis the DOD change in Open values. 
-## If we set up the simulations appropriately, we should expect to see in our results that 
-## a greater sample size or a greater number of simulations yields increasingly higher 
-## variance, potentially indicated by fat tails when plotting the distribution of the results. 
-## Can you figure out a way to leverage a chi-square test or CLT here? 
+

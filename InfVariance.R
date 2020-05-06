@@ -23,7 +23,7 @@ diffs <- diff(DJI$Open)
 
 #Can we capture DJI$Open by Fourier Analysis?
 RunFourier(length(DJI$Open)/2, DJI$Open) #Perfect Reconstruction 
-RunFourier(10, DJI$Open) #Using approx 1/400th of th basis vectors
+RunFourier(10, DJI$Open) #Using approx 1/400th of the basis vectors
 #We capture a general trend of the market using very few basis vectors in our analysis.
 #However, the information that has been captureed is relatively useless as there is no
 #cyclical pattern to follow. 
@@ -32,8 +32,8 @@ RunFourier(10, DJI$Open) #Using approx 1/400th of th basis vectors
 RunFourier(length(diffs) /2, diffs) #Perfect Reconstruction
 RunFourier(1000, diffs) #Pretty good reconstruction using only a fraction of the basis vectors
 RunFourier(10, diffs) #Useless
-#The first difference of the time series does even worst under the Fourier analysis.
-#Using a minmum numbere of basis vectors yields almost no information. Although we can
+#The first difference of the time series does even worse under the Fourier analysis.
+#Using a small number of basis vectors yields almost no information. Although we can
 #perfectly reconstruct the data, the more basis vectors added to our analysis mostly just
 #pick up what I would consider "white noise". There is no noticeable trend or cycle.
 #This is our first indication that the market is acting as a random walk.
@@ -41,16 +41,15 @@ RunFourier(10, diffs) #Useless
 #Bruno: Demonstrate infinite variance by showing that the model is not well modeled by a Normal distribution.
 #Then try an alternate model like Cauchy later. Check if daily price fluxes have infinite variance.
 hist(diffs, breaks = "FD", probability = TRUE) #already doesn't look super promising
-mu <- mean(diffs)
-sigma <- sd(diffs) 
-# do we multiply by n the number of sample observations to estimate the population variance?
-# maybe not since this is the population? or is it?
+mu <- mean(diffs) # may have to adjust for sample mean instead of population 
+sigma <- sd(diffs) # may have to adjust for sample standard deviation instead of population
+
 curve(dnorm(x,mu,sigma), from = -2500, to = 1000, add = TRUE, col = "red")
 n1 <- qnorm(0.1, mu, sigma); n1    #10% of the normal distribution lies below this value
 pnorm(n1, mu, sigma)       
-mean(diffs <= n1) #6.2%, not great, we would epxect something closer to 10% if it were Normal
+mean(diffs <= n1) #6.2%, not great, we would expect something closer to 10% if it were Normal
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qnorm(seq(0.0,1,by = 0.1), mu,sigma); dec  #11 bins
+dec <- qnorm(seq(0.0,1,by = 0.1), mu,sigma); dec  #10 bins
 Exp <- rep(length(diffs)/10,10); Exp 
 binchg <- numeric(10)
 for (i in 1:10) {
@@ -63,7 +62,7 @@ ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #3581.397
 curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
 abline(v = ChiStat, col = "red") 
 pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the normal distribution is not a good model (at all)
+#Given this extremely low p-value, it seems that the normal distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
 
@@ -74,7 +73,7 @@ pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #Get the mean of data
 mu.chg.open <- mean(diffs); mu.chg.open # 2.142422 around what we expected based on the aforementioned values
 
-#Get the standard dviation of our differences
+#Get the standard deviation of our differences
 sd.diff <- sqrt(mean(diffs^2) - mean(diffs)); sd.diff
 #The sequence we will use to cut our data with.
 rw.seq <- seq(from = 0, to = max(DJI$Open), by = max(DJI$Open) / 10); rw.seq
@@ -100,7 +99,7 @@ rw.pvalue <- mean(rw.cs >= results.RW); rw.pvalue # .3841
 #Our null hypothesis was that the daily flux in Open price values is well modeled by a random walk model. 
 #We fail to reject this null hypothesis due to the p-value being greater than our .05 threshold for rejection.
 
-# To demonstrat the idea of a random walk having infinit variance,
+# To demonstrate the idea of a random walk having infinite variance,
 # we simulate random walk model graphically
 plot(DJI$Open, type = "l", xlab = "Time", 
      ylab = "Random Daily Opens", main = "Random Walk Model",
@@ -196,13 +195,15 @@ hurstexp(diffs)
 #Using the fractal dimensions package, we can see that our fractal dimension is approximately
 #1.5 across 4 separate methods of fractal analysis:
 #(For this analysis, we use the stock prices not the stationary first difference)
+
+#install.packages("wavelets")
 fracd.estimates <- fd.estimate(DJI$Open, methods = c("variogram", "madogram",
                                                      "hallwood", "wavelet")); fracd.estimates$fd
 
 #One final check for our Hurst Exponent:
 2 - fracd.estimates$fd
 
-#Correct again. We get .5 across all 4 methods. The Down Jones Index seems to be following a
+#Correct again. We get .5 across all 4 methods. The Dow Jones Index seems to be following a
 #random walk.
 
 
@@ -214,7 +215,7 @@ hist(diffs, prob = TRUE, breaks = "FD")
 #Median:
 diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
-diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq #-36.41016
+diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq # 36.41016
 
 
 #Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
@@ -245,7 +246,7 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 #We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
 #from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
 #NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
-#have infinite varianc, it appears our data's distribution also has infinite variance.
+#have infinite variance, it appears our data's distribution also has infinite variance.
 
 #################
 #using Octiles
@@ -255,7 +256,7 @@ hist(diffs, prob = TRUE, breaks = "FD")
 #Median:
 diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
-diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq2 #44.32993
+diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
 
 #Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
 #uses better paramater estimation, we will use our fit.diffs values.
@@ -289,7 +290,7 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 
 #Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
 #scale parameters above, that it does indeed have infinite variance. 
-#To do that, we'll need to define funcitons that will describe the integrands that will allow us to
+#To do that, we'll need to define functions that will describe the integrands that will allow us to
 #use the tail-integral theorem. First, we'll define the integrand that will give us E(X).
 #Since the underlying distribution can be modeled by a Cauchy distribution, we will use 
 #dcauchy with the right parameters as our mu_x:

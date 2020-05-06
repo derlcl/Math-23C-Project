@@ -99,3 +99,30 @@ Basic plots including boxplot, normal quantile plot, empirical cumulative distri
 21. Appropriate use of quantiles to compare distributions. (random walk bins, quantiles)
 22. Team consists of exactly two members (otherwise, 1 or 3 is a possibility). (3)
 23. A video of the short script is posted on YouTube and a link to it is left in your long script. 
+
+```{r}
+## Old Comments
+## # Normal seems to fit random walk, but not first differences (which model fits?) 
+# What is a narrow highly concentrated around the mean but with really large variance?
+# random walk doesn't seem to have infinite variance, but how does it theoretically?
+## Should we perform this analysis for High, Low or Close? Does it change anything?
+## Does using a logarithmic or exponential model make the data behave better?
+## Given that our observed DOD data produces low frequency, extreme values, particularly negative,
+## how do we do a better job of fitting a probability distribution model to our observed data? 
+## That is, can we slice our data differently, change the parameters of the random walk model,
+## or use a different distribution altogether to model our data? We could use Cauchy, Levy, Pareto, 
+## T or other distributions with infinite variance. Are there any that look like our histogram?
+## Is this necessary in order to test for infinite variance? 
+## Does the current random walk model invalidate our test for infinite variance on the observed data?
+## Or can we test for infinite variance without worrying about any model at all? 
+## 
+## ## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
+## We can also run this and the previous analyses on the other numerical columns 
+## of DJI to see if we arise at similar or different results, 
+## once we finish the first round of analysis the DOD change in Open values. 
+## If we set up the simulations appropriately, we should expect to see in our results that 
+## a greater sample size or a greater number of simulations yields increasingly higher 
+## variance, potentially indicated by fat tails when plotting the distribution of the results. 
+## Can you figure out a way to leverage a chi-square test or CLT here? 
+```
+
