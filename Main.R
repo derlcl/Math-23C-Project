@@ -31,7 +31,7 @@ DJI <- data.frame(DJI,chg); head(DJI)
 # Compare open price first difference and trade volume variables
 x <- log(DJI$Volume)
 y <- log(abs(DJI$chg))
-plot(y~x) # interesting shape to the graph
+plot(x~y) # interesting shape to the graph
 linmod <- lm(y~x)
 summary(linmod) # R-squared value is only .1854, low explanation for residual errors
 
@@ -126,7 +126,7 @@ mean(result.Combined) #inspecting that these are indeed close to zero
 hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
-# 3.08% chance that this extreme of an observed difference would arise by chance .
+# 2.82% chance that this extreme of an observed difference would arise by chance .
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
@@ -167,55 +167,56 @@ N <- length(Open) ;
 variances.normal <- numeric(N - 1)
 variances.cauchy <- numeric(N - 1)
 variances.Open <- numeric(N - 1)
-variances.flux.Open <- numeric(N - 1)
+variances.diffs <- numeric(N - 1)
 sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
-Open <- DJI$Open ; flux.Open <- DJI$chg
+Open <- DJI$Open ; diffs.Open <- DJI$chg
 index <- 1:(N - 1)
 for (i in 2:N) {
  variances.normal[i - 1] <- var(sample.normal[1:i])
  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
  variances.Open[i - 1] <- var(Open[1:i])
- variances.flux.Open[i - 1] <- var(flux.Open[1:i])
+ variances.diffs[i - 1] <- var(diffs.Open[1:i])
 }
-variances.flux.Open <- variances.flux.Open[-1]
-par(mfrow = c(2,2))
-plot(index,variances.normal, type = "l", col = "steelblue", log = "x")
-plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy")
-plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy")
-plot(head(index,-1),variances.flux.Open, type = "l", col = "slategray", log = "xy")
-par(mfrow = c(1,1))
-summary(variances.normal)
-summary(variances.cauchy)
-summary(variances.Open)
-summary(variances.flux.Open)
-# variance does not converge neither for our Open values nor for our first differences
+variances.diffs <- variances.diffs[-1]
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x") # converges
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy") # diverges jagged
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy") # diverges
+plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy") # diverges
+par(mfrow = c(1,1)) # revert to 1x1 plot matrix
+summary(variances.normal) # data is centered closely around mean and median
+summary(variances.cauchy) # seems to be large spread
+summary(variances.Open) # extremely large spread
+summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
+# variance seems to diverge for both Open prices and for first differences
 
 #Let us now try to fit our DJI data with some other distribution whose properties are familiar:
 #Given the lack of convergence in the variance shown above, it appears that we should model the data
 #with some distribution with infinite variance. Thus, we will see how well our data is modeled by a 
 #Cauchy distribution. 
+#
 #install.packages("fitdistrplus")
 library("fitdistrplus")
 
-fitdist(diffs, distr = "cauchy", method = c("mle"))
+fitdist(DJI$chg, distr = "cauchy", method = c("mle"))
 
-hist(diffs, breaks = "FD", probability = TRUE) 
+hist(DJI$chg, breaks = "FD", probability = TRUE) 
 
-locat <- fitdist(diffs, distr = "cauchy", method = c("mle"))$estimate[1]
-shap <- fitdist(diffs, distr = "cauchy", method = c("mle"))$estimate[2]
+locat <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[1]
+shap <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[2]
 
 curve(dcauchy(x, location = locat, scale = shap, log = FALSE), col = "blue", add = TRUE)
 n1 <- qcauchy(.1, location = locat, scale = shap, lower.tail = TRUE); n1
 pcauchy(n1, location = locat, scale = shap)
-mean(diffs <= n1) #about 10.1% of the data is in this bin
+mean(DJI$chg <= n1) #about 10.1% of the data is in this bin
 abline(v = n1, col = "red")
 
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
 dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #10 binned intervals
-Exp <- rep(length(diffs)/10,10); Exp 
+Exp <- rep(length(DJI$chg)/10,10); Exp 
 binchg <- numeric(10)
 for(i in 1:10) {
-  binchg[i] <- sum((diffs >= dec[i]) & (diffs <= dec[i + 1] )) ; binchg
+  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i + 1] )) ; binchg
 }
 #Finally we can test for uniformity using a chi-squared test.
 ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
@@ -226,8 +227,7 @@ abline(v = ChiStat, col = "red")
 pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
 #Given this extremely low chi-square value, it seems that the cauchy distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
-#fits the data.
-
+#fits the data. 
 
 #Pareto
 library(MASS)
@@ -252,7 +252,7 @@ for(i in 1:10){
   binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
 }
 #Finally we can test for uniformity using a chi-squared test.
-ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #73.3071
+ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
 #We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
 #and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
 curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
@@ -290,30 +290,6 @@ for (i in 1:(N)) {
 head(pvals)
 rare <- max(pvals) #2.306794e-07, which is pretty much 0. 
 
-#In other words, if the DJI proces followed a normal distribution, we would expect to see the least rare
-#of these rare events once in 11,876 years.
-(1/rare)/365
-
-
-# Normal seems to fit random walk, but not first differences (which model fits?) 
-# What is a narrow highly concentrated around the mean but with really large variance?
-# random walk doesn't seem to have infinite variance, but how does it theoretically?
-## Should we perform this analysis for High, Low or Close? Does it change anything?
-## Does using a logarithmic or exponential model make the data behave better?
-## Given that our observed DOD data produces low frequency, extreme values, particularly negative,
-## how do we do a better job of fitting a probability distribution model to our observed data? 
-## That is, can we slice our data differently, change the parameters of the random walk model,
-## or use a different distribution altogether to model our data? We could use Cauchy, Levy, Pareto, 
-## T or other distributions with infinite variance. Are there any that look like our histogram?
-## Is this necessary in order to test for infinite variance? 
-## Does the current random walk model invalidate our test for infinite variance on the observed data?
-## Or can we test for infinite variance without worrying about any model at all? 
-
-## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
-## We can also run this and the previous analyses on the other numerical columns 
-## of DJI to see if we arise at similar or different results, 
-## once we finish the first round of analysis the DOD change in Open values. 
-## If we set up the simulations appropriately, we should expect to see in our results that 
-## a greater sample size or a greater number of simulations yields increasingly higher 
-## variance, potentially indicated by fat tails when plotting the distribution of the results. 
-## Can you figure out a way to leverage a chi-square test or CLT here? 
+#In other words, if the DJI first differences followed a normal distribution, 
+#we would expect to see the least rare of these rare events once in 4,335,021 years.
+1/rare
