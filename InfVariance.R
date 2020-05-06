@@ -381,3 +381,35 @@ for (i in 1:N) {
 mean(results.Stable >= stable.cs) #We reject the null hypothesis, our data fails to pull from the 
 #Stable distribution. Our data is therefore, between a Cauchy Distribution and a Gaussian Distribution
 #leaning toward a Cauchy distribution.
+
+
+#K-S Test
+nn <- length(diffs) #sample size. Basically each sample will be as large as our dataset
+rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
+hist(rand, probability = TRUE, breaks = "FD")
+curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")
+#doesn't look great, let's try with 8857 samples
+
+#using interquartile parameters
+N <- 10^4
+ks.stats <- numeric(N)
+for(i in 1:N){
+  rand[i] <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
+  ks.stats[i] <- ks.test(diffs,rand[i])$p.value
+}
+mean(ks.stats) #mean p-values = 0.5904525
+hist(ks.stats)
+
+#Using fitdist parameters
+rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
+hist(rand2, probability = TRUE, breaks = "FD")
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
+#doesn't look great, let's try with 8857 samples
+N <- 10^4
+ks.stats2 <- numeric(N)
+for(i in 1:N){
+  rand2[i] <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
+  ks.stats2[i] <- ks.test(diffs,rand2[i])$p.value
+}
+mean(ks.stats2) #mean pvalues =  0.6247468
+hist(ks.stats2)
