@@ -290,15 +290,16 @@ for (i in 1:(N)) {
 head(pvals)
 rare <- max(pvals) #2.306794e-07, which is pretty much 0. 
 
+(1/rare)/365
 #In other words, if the DJI first differences followed a normal distribution, 
-#we would expect to see the least rare of these rare events once in 4,335,021 years.
+#we would expect to see the least rare of these rare events once in 11,876 years.
 
 #Now that we have seen that the data follows a model with infinite variance, which somewhat resembles 
 #that of a random walk, let us consider the hypothesis that political regimes have an impact on 
 #the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering
 #the impact of political party on the performance of the market. 
 
-lm(DJI$Open~DJI$Republican + DJI$Recession)
+lm(DJI$chg~DJI$Republican + DJI$Recession)
 
 GHWB <- DJI$Regime == "GHWB"
 BC<- DJI$Regime == "BC"
@@ -313,12 +314,39 @@ regress.data <- data.frame(DJI,pres.binary)
 #since we ommitted the Ronald Raegan variable, each of the coefficients for the various presidents 
 #represents the incremental surplus or deficit in the DJIA that occurred during each of the other 
 #presidents' terms
-lm(regress.data$chg ~ + regress.data$Recession + regress.data$GHWB + regress.data$BC + regress.data$BO + regress.data$DJT)
+lm(regress.data$chg ~ + regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
+#These results are interesting becuase they seem out of line with the recent (2018-2019) rethoric of the Donald 
+#Trump administration's success in boosting the DJIA to new heights.
 
+#So, let's exclude the days when 5 sigma + events took place, that way we'll keep only the data for "normal/typical"
+#days.
 regress.data.ne <- regress.data[-idx,]
+lm(regress.data.ne$chg ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
+#These results seem to indicate that, excluding days with extreme events, and controlling for recessions 
+#(and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, 
+#the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush.
+#It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis,
+#which took place in the final months of his second term. 
 
-lm(regress.data.ne$chg ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$BO + regress.data.ne$DJT)
+#Logistic Regression
+#Let us inspect how economic recessions correlate with the performance of the DJIA. 
+plot(DJI$chg,DJI$Recession, xlim = c(-5000,5000))
+MLL<- function(alpha, beta) {
+  -sum( log( exp(alpha+beta*DJI$chg)/(1+exp(alpha+beta*DJI$chg)) )*DJI$Recession
+        + log(1/(1+exp(alpha+beta*DJI$chg)))*(1-DJI$Recession) )
+}
+#R has a function that will maximize this function of alpha and beta
+#install.packages("stats4")   #needs to be run at most once
+library(stats4)
+results<-mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
+results@coef
+curve( exp(results@coef[1]+results@coef[2]*x)/ (1+exp(results@coef[1]+results@coef[2]*x)),col = "blue", add=TRUE)
+#This is a fairly interesting result because its graph looks different than the normal logistic curve.
+#Of course, this becomes obvious when one considers the nature of the regression, namely that recessions
+#are events that are expected to correlate with negative values of first differences (i.e. price drops).
+#In any case, this provides some evidence confirm the hypothesis that negative fluxes in the Dow Jones
+#correlate with economic recessions.
 
 
-nrow(regress.data); nrow(regress.data.ne)
-1/rare
+
+
