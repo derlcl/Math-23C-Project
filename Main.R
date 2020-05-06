@@ -67,6 +67,39 @@ plot(Open) # exponential model could fit
 plot(log(Open)) # linear regression or polynomial model could fit
 
 
+## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
+## 
+## Sources: https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
+## and Chihara and Hesterberg's Mathematical Statistics with Resampling
+## 
+# If our sample is an independent and identically distributed realization 
+# from a light-tailed distribution, the central limit theorem should hold.
+# Use bootstrap resampling to demonstrate this.
+## Bootstrap For A Single Population
+N <- 10^4 ;  n <- 1000
+meanY <- varY <- Z <- numeric(N) ; X <- diffs ; meanX <- mean(X)
+# Perform N boostrap resamples of size n from sample X
+for (i in 1:N) {
+  Y <- sample(X,n,replace = TRUE) # Resample
+  meanY[i] <- mean(Y)
+  varY[i] <- var(Y)
+  Z[i] <- (mean(Y) - meanX) / (sd(Y)/sqrt(n)) # Compute Z test statistic
+}
+hist(Z, breaks = "fd", prob = TRUE) # approximates standard normal distribution by CLT
+hist(varY, breaks = "fd", prob = TRUE) # long tailed distribution with right skew
+hist(meanY, breaks = "fd", prob = TRUE) # approximately normal with center around meanX
+# Boostrap resampling distribution of sample means has smaller spread than sample
+# This is expected since we expect Var(Ybar) = Var(diffs.mu)/n. And as N approaches infinity, 
+# the bootstrap sampling distribution of the sample mean of Y should 
+# be increasingly normally distributed according to the central limit theorem. 
+# It should also approximate the shape and spread of the sampling distribution 
+# of sample means from the underlying population,
+# though its center will retain the bias for sample mean from the original sample. 
+# Next: "perform a large number of bootstraps and compare the empirical distribution 
+# function of the observed Z's with the e.d.f. of a N(0,1). A natural way to make this 
+# comparison is the Kolmogorov–Smirnov test."
+
+
 ## Hypothesis Testing With Permutation Test
 #
 #Set up indices for permutation test by party and president 
