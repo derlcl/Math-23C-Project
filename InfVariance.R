@@ -341,8 +341,8 @@ abs(min(diffs) / sd.diff)
 #https://www.asc.ohio-state.edu/mcculloch.2/papers/stabparm.pdf by J. Huston McCulloch
 stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
 
-#Calculat V's
-stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); V_a
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
 stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
 
 #Using Table we calculate alpha and beta
@@ -393,12 +393,13 @@ curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 
 #using interquartile parameters
 N <- 10^4
 ks.stats <- numeric(N)
-for(i in 1:N){
+for (i in 1:N) {
   rand[i] <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
   ks.stats[i] <- ks.test(diffs,rand[i])$p.value
 }
 mean(ks.stats) #mean p-values = 0.5904525
 hist(ks.stats)
+min(ks.stats) # 0.2700979, never a significant p-value below our .05 threshold
 
 #Using fitdist parameters
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
@@ -407,9 +408,10 @@ curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd
 #doesn't look great, let's try with 8857 samples
 N <- 10^4
 ks.stats2 <- numeric(N)
-for(i in 1:N){
+for (i in 1:N) {
   rand2[i] <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
   ks.stats2[i] <- ks.test(diffs,rand2[i])$p.value
 }
 mean(ks.stats2) #mean pvalues =  0.6247468
 hist(ks.stats2)
+min(ks.stats2) # 0.2700979, never a significant p-value below our .05 threshold

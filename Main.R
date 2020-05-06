@@ -335,7 +335,7 @@ rare <- max(pvals) #2.306794e-07, which is pretty much 0.
 lm(DJI$chg~DJI$Republican + DJI$Recession)
 
 GHWB <- DJI$Regime == "GHWB"
-BC<- DJI$Regime == "BC"
+BC <- DJI$Regime == "BC"
 GWB <- DJI$Regime == "GWB"
 BO <- DJI$Regime == "BO"
 DJT <- DJI$Regime == "DJT"
@@ -344,11 +344,11 @@ pres.binary <- data.frame(GHWB, BC, GWB, BO, DJT)
 
 regress.data <- data.frame(DJI,pres.binary)
 
-#since we ommitted the Ronald Raegan variable, each of the coefficients for the various presidents 
+#since we omitted the Ronald Reagan variable, each of the coefficients for the various presidents 
 #represents the incremental surplus or deficit in the DJIA that occurred during each of the other 
 #presidents' terms
 lm(regress.data$chg ~ + regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
-#These results are interesting becuase they seem out of line with the recent (2018-2019) rethoric of the Donald 
+#These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald 
 #Trump administration's success in boosting the DJIA to new heights.
 
 #So, let's exclude the days when 5 sigma + events took place, that way we'll keep only the data for "normal/typical"
@@ -364,20 +364,20 @@ lm(regress.data.ne$chg ~ + regress.data.ne$Recession + regress.data.ne$GHWB + re
 #Logistic Regression
 #Let us inspect how economic recessions correlate with the performance of the DJIA. 
 plot(DJI$chg,DJI$Recession, xlim = c(-5000,5000))
-MLL<- function(alpha, beta) {
+MLL <- function(alpha, beta) {
   -sum( log( exp(alpha+beta*DJI$chg)/(1+exp(alpha+beta*DJI$chg)) )*DJI$Recession
         + log(1/(1+exp(alpha+beta*DJI$chg)))*(1-DJI$Recession) )
 }
 #R has a function that will maximize this function of alpha and beta
 #install.packages("stats4")   #needs to be run at most once
 library(stats4)
-results<-mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
+results <- mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
 results@coef
-curve( exp(results@coef[1]+results@coef[2]*x)/ (1+exp(results@coef[1]+results@coef[2]*x)),col = "blue", add=TRUE)
+curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + results@coef[2]*x)),col = "blue", add=TRUE)
 #This is a fairly interesting result because its graph looks different than the normal logistic curve.
 #Of course, this becomes obvious when one considers the nature of the regression, namely that recessions
 #are events that are expected to correlate with negative values of first differences (i.e. price drops).
-#In any case, this provides some evidence confirm the hypothesis that negative fluxes in the Dow Jones
+#In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones
 #correlate with economic recessions.
 
 
