@@ -62,7 +62,7 @@ ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #3581.397
 curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
 abline(v = ChiStat, col = "red") 
 pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the normal distribution is not a good model (at all)
+#Given this extremely low p-value, it seems that the normal distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
 

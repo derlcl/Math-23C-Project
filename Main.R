@@ -258,7 +258,7 @@ ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
 curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
 abline(v = ChiStat, col = "red") 
 pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the cauchy distribution is not a good model (at all)
+#Given this extremely low p-value, it seems that the cauchy distribution is not a good model (at all)
 #for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
 #fits the data. 
 
@@ -291,7 +291,7 @@ ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
 curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
 abline(v=ChiStatAbs, col = "red") 
 pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low chi-square value, it seems that the pareto distribution is not a good model (at all)
+#Given this extremely low p-value, it seems that the pareto distribution is not a good model (at all)
 #for the absolute daily fluxes in the Dow Jones Industrial Average. 
 
 #Taking a look at rare events:
