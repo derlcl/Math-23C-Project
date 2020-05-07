@@ -28,9 +28,9 @@ Derl
 5. []Hurst Exponent vs time. Different time frames within DJI. Run the same analysis on the two other big boy indices (S&P 500, NASDAQ)
 
 Bruno
-1. Test Opens and diffs for normal, Cauchy, Pareto, stable/Levy, student's t. Barplot, pdf overlaid on histogram. Use bins, quantiles to compare distributions. 
-2. Linear and multiple regression analysis to predict values by regime and party. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday). Logistic regression analysis on probabilities for recession, party. Include covariance and correlation calculations, Rsquared. 
-3. What is the standard deviation of the COVID-19 crash? Its significance? How many 5sigma events do we have in the data? 2007-8 market crash?
+1. [x] Test Opens and diffs for normal, Cauchy, Pareto, stable/Levy, student's t. Barplot, pdf overlaid on histogram. Use bins, quantiles to compare distributions. 
+2. [x]Linear and multiple regression analysis to predict values by regime and party. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday). Logistic regression analysis on probabilities for recession, party. Include covariance and correlation calculations, Rsquared. 
+3. [x]What is the standard deviation of the COVID-19 crash? Its significance? How many 5sigma events do we have in the data? 2007-8 market crash?
  - I added some stuff on this. There are 32 days where the flux was greater than 5 sigma. How do we want to discuss this?
 
 # Additional, ideal list of comprehensive data analysis workflows I'd like to include:
@@ -57,15 +57,15 @@ Basic plots including boxplot, normal quantile plot, empirical cumulative distri
 4. At least 20 rows, preferably more, but real-world data may be limited. (8858 rows)
 
 ## Required graphical displays (all graphs must be colored and nicely labeled) (TD)
-1. A barplot. (with fitdistr model overlaid on barplot of data) (suggestions herE??)
+1. A barplot. (with fitdistr model overlaid on barplot of data) (Republican vs. Democratic gains, it's silly but it's what I got)
 2. A histogram. (DONE)
 3. A probability density graph overlaid on a histogram. (fitdistr) (DONE)
 4. A contingency table. (DONE)
 
 ## Required analysis (TD)
 1. A permutation test. (regime change, president permutation tests, effect of policy)
-2. A p-value or other statistic based on a distribution function.
-3. Analysis of a contingency table.
+2. A p-value or other statistic based on a distribution function. (all over)
+3. Analysis of a contingency table. 
 4. Comparison of analysis by classical methods (chi-square, CLT) and simulation methods. (set seed in R, if infinite variance then this can be seen with more simulations and fat tails)
 
 ## Required submission uploads (DONE)
@@ -77,26 +77,26 @@ Basic plots including boxplot, normal quantile plot, empirical cumulative distri
 
 ## Additional points for creativity or complexity (You may attempt as many as you like, for a maximum possible of 10 points)
 1. A data set with lots of columns, allowing comparison of many different variables. (by volume, decade, year, month) (Recession by Party and Regime)
-2. A data set that is so large that it can be used as a population from which samples are taken. (35 x ~365 rows) (Bootstrap sampling distribution)
+2.[x] A data set that is so large that it can be used as a population from which samples are taken. (35 x ~365 rows) (Bootstrap sampling distribution)
 3. A one-page document that discusses ethical issues related to collection of the dataset. (N/A)
-4. A one-page document that discusses ethical issues raised by conclusions reached from analysis of the data. (What would infinite variance in economic price indices mean for the long-term future of humanity?)
+4.[to-do] A one-page document that discusses ethical issues raised by conclusions reached from analysis of the data. (What would infinite variance in economic price indices mean for the long-term future of humanity?)
 5. A graphical display that is different from those in the textbook or in the class scripts.
-6. Appropriate use of R functions for a probability distribution other than binomial, normal, or chi-square. (Random walk model, possibly also Cauchy, Levy, Pareto, T)
-7. Appropriate use of integration to calculate a significant result.
-8. A convincing demonstration of a relationship that might not have been statistically significant but that turns out to be so.
-9. A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.
+6.[x] Appropriate use of R functions for a probability distribution other than binomial, normal, or chi-square. (Random walk model, possibly also Cauchy, Levy, Pareto, T)
+7.[x] Appropriate use of integration to calculate a significant result.
+8.[?] A convincing demonstration of a relationship that might not have been statistically significant but that turns out to be so.(DJT gains before Covid?)
+9.[?]A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.(Pareto)
 10. Professional-looking software engineering (e.g defining and using your own functions).
-11. Nicely labeled graphics using ggplot, with good use of color, line styles, etc., that tell a convincing story. 
+11.[?] Nicely labeled graphics using ggplot, with good use of color, line styles, etc., that tell a convincing story. (Do we need more here? Is labeling and coloring enough?)
 12. An example where permutation tests or other computational techniques clearly work better than classical methods. (?)
-13. Appropriate use of novel statistics (e.g. trimmed mean, maximum or minimum, skewness, ratios).
-14. Use of linear regression. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday)
-15. Calculation and display of a logistic regression curve. (?)
+13. Appropriate use of novel statistics (e.g. trimmed mean, maximum or minimum, skewness, ratios). (We consider max and min in several places)
+14.[x] Use of linear regression. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday)
+15.[x] Calculation and display of a logistic regression curve. (?)
 16. Appropriate use of covariance or correlation. (?)
 17. Use of theoretical knowledge of chi-square, gamma, or beta distributions.
-18. Use of theoretical knowledge of sampling distributions. (variance)
+18.[x] Use of theoretical knowledge of sampling distributions. (variance)
 19. A graphical display that is different from those in the class scripts.
-20. Calculation of a confidence interval. 
-21. Appropriate use of quantiles to compare distributions. (random walk bins, quantiles)
+20.[?] Calculation of a confidence interval. (could we calculate a confidence interval for the variance?)
+21.[x] Appropriate use of quantiles to compare distributions. (random walk bins, quantiles)
 22. Team consists of exactly two members (otherwise, 1 or 3 is a possibility). (3)
 23. A video of the short script is posted on YouTube and a link to it is left in your long script. 
 
