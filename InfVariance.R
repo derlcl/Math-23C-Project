@@ -13,6 +13,7 @@ library('stabledist')
 source("prj_DataPreparation.R")
 source("prj_Functions.R")
 
+
 #This is a graphical representation of the Dow Jones Index from 1985 to 2020
 plot(DJI$Open, type = "l", xlab = "Time", 
      ylab = "Random Daily Opens", main = "Random Walk Model",
@@ -236,7 +237,7 @@ cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
 #Run simulation: 
 N <- 10^4; results.Cauchy <- numeric(N)
 for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- rcauchy(1:length(diffs), diffs.median, diffs.hiq)
   obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
   results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
 }
@@ -261,7 +262,7 @@ diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c
 #Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
 #uses better paramater estimation, we will use our fit.diffs values.
 fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
+curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "red")
 
 #Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
 cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
@@ -276,7 +277,7 @@ cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
 #Run simulation: 
 N <- 10^4; results.Cauchy <- numeric(N)
 for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- rcauchy(1:length(diffs), diffs.median, diffs.hiq)
   obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
   results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
 }
