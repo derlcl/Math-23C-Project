@@ -209,7 +209,8 @@ fracd.estimates <- fd.estimate(DJI$Open, methods = c("variogram", "madogram",
 
 
 #Checking a 5 sigma Event:
-hist(diffs, prob = TRUE, breaks = "FD")
+hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
+     Cauchy Model", xlab = "First Differences")
 #Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
 #https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
 #Median:
@@ -240,7 +241,7 @@ for (i in 1:N) {
   obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
   results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
 }
-hist(results.Cauchy, breaks = "FD")
+hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
 abline(v = cauchy.cs, col = "red", lwd = 3)
 cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 24%.
 #We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
@@ -250,7 +251,8 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 
 #################
 #using Octiles
-hist(diffs, prob = TRUE, breaks = "FD")
+hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
+     Cauchy Model", xlab = "First Differences")
 #Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
 #https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
 #Median:
@@ -262,7 +264,7 @@ diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c
 #uses better paramater estimation, we will use our fit.diffs values.
 fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
-
+curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
 #Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
 cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
 #Get observed data
@@ -280,7 +282,7 @@ for (i in 1:N) {
   obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
   results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
 }
-hist(results.Cauchy, breaks = "FD")
+hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
 abline(v = cauchy.cs, col = "red", lwd = 3)
 cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 12%.
 #We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
