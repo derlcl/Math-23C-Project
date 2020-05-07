@@ -66,42 +66,100 @@ plot(log(Open)) # linear regression or polynomial model could fit
 
 
 ## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
-##
-## Sources: https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
-## and Chihara and Hesterberg's Mathematical Statistics with Resampling
-## 
+#
+# Sources: 
+# https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
+# Chihara and Hesterberg's Mathematical Statistics with Resampling
+#
 # If our sample is an independent and identically distributed realization 
-# from a light-tailed distribution, the central limit theorem should hold.
+# from a light-tailed distribution, the central limit theorem should hold
+# even at smaller sample sizes. If we have a heavy-tailed distribution, 
+# larger sample sizes will be needed to approximate the standard normal distribution.
 # Use bootstrap resampling to demonstrate this.
+#
 ## Bootstrap For A Single Population
-N <- 10 ;  n <- 10
-meanY <- varY <- Z <- numeric(N) ; X <- diffs ; meanX <- mean(X)
-plot(function(x) pnorm(x), xlim = c(-3,3), main = "CDF for a Normal Distribution")
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+sampsize <- 1000 # starting sample size to draw from
+N <- 200 # number of boostraps to run
+n <- 500 # bootstrap sample size to draw
+xlima <- -3 ; xlimb <- 3
+
 # Perform N boostrap resamples of size n from sample X
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from First Differences")
 for (i in 1:N) {
+  X <- sample(diffs,sampsize,replace = TRUE)
 for (i in 1:N) {
   Y <- sample(X,n,replace = TRUE) # Resample
   meanY[i] <- mean(Y)
   varY[i] <- var(Y)
-  Z[i] <- (mean(Y) - meanX) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
 }
-  plot(ecdf(Z), add = TRUE, col = "red", lwd = 1, cex = .1)
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
 }
-hist(Z, breaks = "fd", prob = TRUE, main = "Histogram of Standardized Random Variable")# approximates standard normal distribution by CLT
-hist(varY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Variances") # long tailed distribution with right skew
-hist(meanY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Mean") # approximately normal with center around meanX
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from sample XcauchyIQR
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (Interquartile)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = diffs.median, scale = diffs.hiq)
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from sample XcauchyFD
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (FitDist)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = fit.diffs[1], scale = fit.diffs[2])
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from sample Xnorm
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Standard Normal")
+for (i in 1:N) {
+  X <- rnorm(sampsize) 
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+#########################################################
+par(mfrow = c(2,2)) # reset to 1x1 plot matrix
 
 # Boostrap resampling distribution of sample means has smaller spread than sample
-# This is expected since we expect Var(Ybar) = Var(diffs.mu)/n. And as N approaches infinity, 
+# This is expected since we expect Var(Ybar) = Var(Xbar)/n. And as N approaches infinity, 
 # the bootstrap sampling distribution of the sample mean of Y should 
 # be increasingly normally distributed according to the central limit theorem. 
 # It should also approximate the shape and spread of the sampling distribution 
 # of sample means from the underlying population,
-# though its center will retain the bias for sample mean from the original sample. 
-# Next: "perform a large number of bootstraps and compare the empirical distribution 
-# function of the observed Z's with the e.d.f. of a N(0,1). A natural way to make this 
-# comparison is the Kolmogorov–Smirnov test."
-
+# though its center will exhibit any bias for the expectation from the original sample. 
+hist(Z, breaks = "fd", prob = TRUE, main = "Histogram of Standardized Random Variable")
+# approximates standard normal distribution by CLT
+hist(varY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Variances") 
+# long tailed distribution with right skew
+hist(meanY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Mean") 
+# approximately normal with center around meanX
 
 ## Hypothesis Testing With Permutation Test
 #
