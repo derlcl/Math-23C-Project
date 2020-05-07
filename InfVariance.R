@@ -360,10 +360,12 @@ stable.location <- median(diffs)
 
 #Plot:
 hist(diffs, breaks = "FD", freq = FALSE)
-curve(dstable(x, stable.a,stable.b,stable.c,stable.location), add = TRUE, col = "cyan")
+curve(dstable(x, (stable.a),(stable.b - .5),stable.c, stable.location), add = TRUE, col = "cyan")
 
 #Breaks:
-stable.breaks <- c(-Inf, qstable((1:3) * .25, stable.a,stable.b,stable.c,stable.location), Inf)
+stable.breaks <- c(-Inf, qstable((1:9) * .1, stable.a,stable.b,stable.c,stable.location), Inf)
+
+chisq.test(stable.obs, table(cut(rstable(1:length(diffs), (stable.a),(stable.b - .5),stable.c, stable.location), stable.breaks)))
 
 #Both Values
 stable.obs <- table(cut(diffs, stable.breaks)); stable.obs
@@ -418,5 +420,49 @@ for (i in 1:N) {
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 hist(ks.stats2)
+
+
+#Combining a few ideas:
+plot(DJI$Open[seq(from = 1, to = length(diffs), by = 3)], typ = "l")
+plot(DJI$Open[seq(from = 1, to = length(diffs), by = 7)], typ = "l")
+plot(DJI$Open[seq(from = 1, to = length(diffs), by = 365)], typ = "l")
+plot(DJI$Open[seq(from = 1, to = length(diffs), by = 365 * 3)], typ = "l")
+
+#Hurstexponent
+result.hexptrunc <- numeric(length(DJI$Open) / 5)
+for (i in 1:(length(DJI$Open) / 5)){
+  print(i)
+  hexp <- hurstexp(diff(DJI$Open[seq(from = 1, to = length(diffs), by = i)]))
+  result.hexptrunc[i] <- hexp$Hs
+}
+plot(result.hexptrunc, type = "l")
+
+
+lmhurst <- lm(result.hexptrunc~seq(from = 1, to = length(result.hexptrunc), by = 1))
+lmhurst <- as.vector(lmhurst$coefficients)
+curve(x*lmhurst[2] +lmhurst[1], add = TRUE, col = "red", lwd = 3)
+
+
+#KS.Test - Gaussian vs Cuachy at various "details"
+nn <- length(DJI$Open)/ 2 - 1
+result.kstest.gauss <- numeric(nn)
+result.kstest.cauchy <- numeric(nn)
+for (i in 1:(nn)){
+  print(i)
+  samp <- diff(DJI$Open[seq(from = 1, to = length(diffs), by = i)])
+  samp.median <- median(samp)
+  samp.hiq <- (quantile(samp)[[4]] - quantile(samp)[[2]]) /2
+  samp.mean <- mean(samp)
+  samp.sd <- sd(samp)
+  sd.samp <- sd(samp)
+  kstest.cauchy <- ks.test(samp, rcauchy(length(samp), samp.median, samp.hiq))$p.value
+  kstest.gauss <- ks.test(samp, rnorm(length(samp), samp.mean, samp.sd))$p.value
+  result.kstest.cauchy[length(result.kstest.cauchy) - i] <- kstest.cauchy
+  result.kstest.gauss[length(result.kstest.gauss) - i] <- kstest.gauss
+}
+plot(result.kstest.gauss); abline(h = 0.05, col = "red")
+mean(result.kstest.gauss >= .05)
+plot(result.kstest.cauchy); abline(h = 0.05, col = "red")
+mean(result.kstest.cauchy >= .05)
 
 
