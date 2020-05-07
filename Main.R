@@ -76,18 +76,23 @@ plot(log(Open)) # linear regression or polynomial model could fit
 # from a light-tailed distribution, the central limit theorem should hold.
 # Use bootstrap resampling to demonstrate this.
 ## Bootstrap For A Single Population
-N <- 10^4 ;  n <- 1000
+N <- 10 ;  n <- 10
 meanY <- varY <- Z <- numeric(N) ; X <- diffs ; meanX <- mean(X)
+plot(function(x) pnorm(x), xlim = c(-3,3))
 # Perform N boostrap resamples of size n from sample X
+for (i in 1:N) {
 for (i in 1:N) {
   Y <- sample(X,n,replace = TRUE) # Resample
   meanY[i] <- mean(Y)
   varY[i] <- var(Y)
   Z[i] <- (mean(Y) - meanX) / (sd(Y)/sqrt(n))# Compute Z test statistic
 }
+  plot(ecdf(Z), add = TRUE, col = "red", lwd = 1, cex = .1)
+}
 hist(Z, breaks = "fd", prob = TRUE) # approximates standard normal distribution by CLT
 hist(varY, breaks = "fd", prob = TRUE) # long tailed distribution with right skew
 hist(meanY, breaks = "fd", prob = TRUE) # approximately normal with center around meanX
+
 # Boostrap resampling distribution of sample means has smaller spread than sample
 # This is expected since we expect Var(Ybar) = Var(diffs.mu)/n. And as N approaches infinity, 
 # the bootstrap sampling distribution of the sample mean of Y should 
