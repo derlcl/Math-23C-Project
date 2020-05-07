@@ -123,7 +123,9 @@ rep.gains <- sum(DJI$chg[rep.idx]); rep.gains
 dem.gains <- sum(DJI$chg[-rep.idx]); dem.gains
 sum(DJI$chg); sum(rep.gains,dem.gains)
 rep.dem.gains <- cbind(rep.gains, dem.gains); rep.dem.gains
-barplot(rep.dem.gains) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
+library(RColorBrewer)
+coul <- brewer.pal(5, "Set2") 
+barplot(rep.dem.gains, col = coul) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
 #Let us check with a series of permutation tests:
 
 #Permutation Test
