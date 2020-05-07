@@ -11,30 +11,30 @@ head(DJI)
 #
 #Create vector for difference between daily Open values and add as new column to data frame
 Open <- DJI$Open
-diffs <- diff(DJI$Open) #Get first difference of our data.
+first.diffs <- diff(DJI$Open) #Get first difference of our data.
+diffs <- numeric(nrow(DJI))
+diffs[1] <- 0 ; diffs[2:nrow(DJI)] <- first.diffs; head(diffs)
+DJI <- data.frame(DJI,diffs) ; head(DJI)
 head(diffs) # there are some rather large values with double digits before the decimal
 diffs.length <- length(diffs) # 8857 as expected
 sum(diffs)  # 18975.43 so over double the number of observations
-mu.chg.open <- mean(diffs) # 2.142422 around what we expected based on the aforementioned values
-med.chg.open <- median(diffs) # 3.4297 is higher than mean, indicating extreme lower values
-var.chg.open <- var(diffs) # whopping 13760.49 for variance, we expect this to increase over time
-hist(diffs, breaks = "fd", prob = TRUE) 
+mu.chg.open <- mean(diffs); mu.chg.open # 2.142422 around what we expected based on the aforementioned values
+med.chg.open <- median(diffs); med.chg.open # 3.4297 is higher than mean, indicating extreme lower values
+var.chg.open <- var(diffs); var.chg.open # whopping 13760.49 for variance, we expect this to increase over time
+hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
 # resembles normal distribution with narrow concentration around sharp peak at mean 
 # and with long tails, with more extreme negative values than positive values
 abline(v = mu.chg.open, col = "turquoise")
-chg <- numeric(nrow(DJI))
-chg[1] <- 0 ; chg[2:nrow(DJI)] <- diffs; chg <- data.frame(chg)
-DJI <- data.frame(DJI,chg); head(DJI)
 
 ## Linear and logistic regression models
 #
 # Compare open price first difference and trade volume variables
 x <- log(DJI$Volume)
-y <- log(abs(DJI$chg))
-plot(x~y) # interesting shape to the graph
+y <- log(abs(DJI$diffs)); zidx <- which(y == -Inf); y[zidx] <- 0
+plot(y~x, main = "Plot of First Differences by Volume", xlab = "Volume", ylab = "First Differences") # interesting shape to the graph
 linmod <- lm(y~x)
-summary(linmod) # R-squared value is only .1854, low explanation for residual errors
-
+summary(linmod) # R-squared value is only .2802, low explanation for residual errors
+abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
 
 ## Magnitude of First Differences
 #
@@ -46,15 +46,13 @@ sum(AbsDiffs[AbsDiffs <= mu.AbsDiffs]/diffs.length)/mu.AbsDiffs
 sum(AbsDiffs <= mu.AbsDiffs)/diffs.length
 # 67.7% of the values are at or below the mean value
 # yet 76.1% of the contributions to the mean value come from values above the mean
-max.AbsDiffs <- max(AbsDiffs) # 2419.92 is the max value
+max.AbsDiffs <- max(AbsDiffs); max.AbsDiffs # 2419.92 is the max value
 max(AbsDiffs)/diffs.length / mu.AbsDiffs # single maximum value contributed .4% to the mean
 # there are long tails of extreme values with large contributions to the mean
-plot(AbsDiffs) # messy
 hist(AbsDiffs, breaks = "fd", prob = TRUE) 
-# could be modeled by a non-negative valued, long-tailed distribution
+# could be modeled by a non-negative valued, long-tailed distribution (see below for Pareto analysis)
 
 ## Empirical Cumulative Distributions
-#
 AbsDiffsCDF <- ecdf(AbsDiffs)
 plot(AbsDiffsCDF) # could be modeled by non-negative, long-tailed distribution
 #
@@ -68,7 +66,7 @@ plot(log(Open)) # linear regression or polynomial model could fit
 
 
 ## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
-## 
+##
 ## Sources: https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
 ## and Chihara and Hesterberg's Mathematical Statistics with Resampling
 ## 
@@ -78,7 +76,7 @@ plot(log(Open)) # linear regression or polynomial model could fit
 ## Bootstrap For A Single Population
 N <- 10 ;  n <- 10
 meanY <- varY <- Z <- numeric(N) ; X <- diffs ; meanX <- mean(X)
-plot(function(x) pnorm(x), xlim = c(-3,3))
+plot(function(x) pnorm(x), xlim = c(-3,3), main = "CDF for a Normal Distribution")
 # Perform N boostrap resamples of size n from sample X
 for (i in 1:N) {
 for (i in 1:N) {
@@ -89,9 +87,9 @@ for (i in 1:N) {
 }
   plot(ecdf(Z), add = TRUE, col = "red", lwd = 1, cex = .1)
 }
-hist(Z, breaks = "fd", prob = TRUE) # approximates standard normal distribution by CLT
-hist(varY, breaks = "fd", prob = TRUE) # long tailed distribution with right skew
-hist(meanY, breaks = "fd", prob = TRUE) # approximately normal with center around meanX
+hist(Z, breaks = "fd", prob = TRUE, main = "Histogram of Standardized Random Variable")# approximates standard normal distribution by CLT
+hist(varY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Variances") # long tailed distribution with right skew
+hist(meanY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Mean") # approximately normal with center around meanX
 
 # Boostrap resampling distribution of sample means has smaller spread than sample
 # This is expected since we expect Var(Ybar) = Var(diffs.mu)/n. And as N approaches infinity, 
@@ -117,23 +115,25 @@ index.BO <- (DJI$Regime == "BO") ; sum(index.BO) # 2015
 index.DJT <- (DJI$Regime == "DJT") ; sum(index.DJT) # 797
 dim(DJI) ; sum(c(index.RR, index.GHWB, index.BC, index.GWB, index.BO, index.DJT)) # 8858, matches
 diffs.Republican <- diffs[index.Republican[-1]]
-mu.RepDiffs <- mean(diffs.Republican) # -.006959248
+mu.RepDiffs <- mean(diffs.Republican) #  0.007355863
 diffs.Democrat <- diffs[!(index.Republican[-1])]
 mu.DemDiffs <- mean(diffs.Democrat)
-mean(diffs.Democrat) # 4.709857
+mean(diffs.Democrat) # 4.692755
 # The means seem different, but given the large variance, this is doubtful.
 #Another way to look at the data is to consider the total gains in the DJI during republican and democrat regimes. 
 rep.idx <- which(DJI$Republican == TRUE) 
-rep.gains <- sum(DJI$chg[rep.idx]); rep.gains
-dem.gains <- sum(DJI$chg[-rep.idx]); dem.gains
-sum(DJI$chg); sum(rep.gains,dem.gains)
+rep.gains <- sum(DJI$diffs[rep.idx]); rep.gains
+dem.gains <- sum(DJI$diffs[-rep.idx]); dem.gains
+sum(DJI$diffs); sum(rep.gains,dem.gains)
 rep.dem.gains <- cbind(rep.gains, dem.gains); rep.dem.gains
 library(RColorBrewer)
 coul <- brewer.pal(5, "Set2") 
-barplot(rep.dem.gains, col = coul) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
-#Let us check with a series of permutation tests:
+name <- c("Republican Gains", "Democrat Gains" )
+barplot(rep.dem.gains, col = coul, main = "Barplot of Cummulative Gains by Party", names = name) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
 
-#Permutation Test
+#Let us check with a series of permutation tests:
+#First, let us consider if the observed means for republicans and democrats, respectively, are 
+#statistically significant:
 N <- 10^4; result.Republican <- numeric(N); result.Democrat <- numeric(N)
 for (i in 1:N) {
   smpl <- sample(index.Republican[-1], replace = FALSE)
@@ -158,30 +158,34 @@ mean(result.Democrat >= mu.DemDiffs)
 #2.83% chance. Whoa, both means are equally statistically significant.
 #
 #Rerun as a Combined Permutation Test
-RepAvg <- sum(DJI$chg*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
-DemAvg <- sum(DJI$chg*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
+RepAvg <- sum(DJI$diffs*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
+DemAvg <- sum(DJI$diffs*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
 Obs <-  DemAvg - RepAvg; Obs
 #
 N <- 10^4 #number of simulations
 result.Combined <- numeric(N) #this is the vector that will store our simulated differences
 for (i in 1:N) {
   Rep <- sample(DJI$Republican) #This is our permuted party column
-  RepMu <- sum(DJI$chg*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
-  DemMu <- sum(DJI$chg*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
+  RepMu <- sum(DJI$diffs*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
+  DemMu <- sum(DJI$diffs*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
   result.Combined[i] <- DemMu - RepMu
 }
 mean(result.Combined) #inspecting that these are indeed close to zero
 hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
-# 2.82% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed
+# 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed
 #better during democratic regimes, a result that is statistically signifficant.
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
 p <- sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
-obs.tbl <- table(DJI$Republican,DJI$Recession) # Republican has more Recession
+obs.tbl <- table(DJI$Republican,DJI$Recession)# Republican has more Recession
+colnames(obs.tbl) <- c("Expansion", "Recession")
+rownames(obs.tbl) <- c("Democrat", "Republican")
 exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
+colnames(exp.tbl) <- c("Expansion", "Recession")
+rownames(exp.tbl) <- c("Democrat", "Republican")
 obs.tbl ; exp.tbl
 chisq.test(DJI$Republican,DJI$Recession)
 # p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
@@ -191,21 +195,21 @@ chisq.test(DJI$Republican,DJI$Recession)
 # years from 1985 to early 2020. 
 #
 #Running this as chi-square test of contingency table including all regimes:
-obs.tbl <- table(DJI$Recession, DJI$Regime); obs.tbl #GWB had the most recession days
-exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); exp.tbl
+obs.tbl <- table(DJI$Recession, DJI$Regime); rownames(obs.tbl) <- c("Expansion", "Recession"); obs.tbl #GWB had the most recession days
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); rownames(exp.tbl) <- c("Expansion", "Recession"); exp.tbl
 chisqvalue <- sum((obs.tbl - exp.tbl)^2/exp.tbl)
 pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE) # p-value is 0
 #We reject the null hypothesis that recession years arise by chance across regimes. 
 #
 #Running this as chi-square test specific to each regime with p the observed probabilty of recession:
-q <- 1 - p # 0.8233235 probability of not being in a recession
+q <- 1 - p; q # 0.8233235 probability of not being in a recession
 prob <- (DJI$Recession*p + (!DJI$Recession)*q) / sum(DJI$Recession*p + (!DJI$Recession)*q) 
 min(prob) ; max(prob) ; sum(prob) 
 for (i in unique(DJI$Regime)) {
   print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
 }
 # Null hypothesis is that each regime has the observed probability p of recession across regimes. 
-# Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next..
+# Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next
 #Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
 #that no individual regime is equally likely to be associated with recessions
 #from the years 1985 to early 2020. (We should look into if our statistical methods
@@ -218,7 +222,7 @@ variances.cauchy <- numeric(N - 1)
 variances.Open <- numeric(N - 1)
 variances.diffs <- numeric(N - 1)
 sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
-Open <- DJI$Open ; diffs.Open <- DJI$chg
+Open <- DJI$Open ; diffs.Open <- DJI$diffs
 index <- 1:(N - 1)
 for (i in 2:N) {
  variances.normal[i - 1] <- var(sample.normal[1:i])
@@ -228,10 +232,10 @@ for (i in 2:N) {
 }
 variances.diffs <- variances.diffs[-1]
 par(mfrow = c(2,2)) # create 2x2 plot matrix
-plot(index,variances.normal, type = "l", col = "steelblue", log = "x") # converges
-plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy") # diverges jagged
-plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy") # diverges
-plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy") # diverges
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x", ylab = "Normal Variance", xlab = "Sample Size") # converges
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy",ylab = "Cauchy Variance", xlab = "Sample Size") # diverges jagged
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy",ylab = "Open Variance", xlab = "Sample Size") # diverges
+plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy", ylab = "Firs Diff. Variance", xlab = "Sample Size") # diverges
 par(mfrow = c(1,1)) # revert to 1x1 plot matrix
 summary(variances.normal) # data is centered closely around mean and median
 summary(variances.cauchy) # seems to be large spread
@@ -247,25 +251,25 @@ summary(variances.diffs) # spread is larger than it is for Cauchy but less than 
 #install.packages("fitdistrplus")
 library("fitdistrplus")
 
-fitdist(DJI$chg, distr = "cauchy", method = c("mle"))
+fitdist(DJI$diffs, distr = "cauchy", method = c("mle"))
 
-hist(DJI$chg, breaks = "FD", probability = TRUE) 
+hist(DJI$diffs, breaks = "FD", probability = TRUE) 
 
-locat <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[1]
-shap <- fitdist(DJI$chg, distr = "cauchy", method = c("mle"))$estimate[2]
+locat <- fitdist(DJI$diffs, distr = "cauchy", method = c("mle"))$estimate[1]
+shap <- fitdist(DJI$diffs, distr = "cauchy", method = c("mle"))$estimate[2]
 
 curve(dcauchy(x, location = locat, scale = shap, log = FALSE), col = "blue", add = TRUE)
 n1 <- qcauchy(.1, location = locat, scale = shap, lower.tail = TRUE); n1
 pcauchy(n1, location = locat, scale = shap)
-mean(DJI$chg <= n1) #about 10.1% of the data is in this bin
+mean(DJI$diffs <= n1) #about 10.1% of the data is in this bin
 abline(v = n1, col = "red")
 
 #Now let's create a vector of deciles so that we can split our data and see if it falls as expected
 dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #10 binned intervals
-Exp <- rep(length(DJI$chg)/10,10); Exp 
+Exp <- rep(length(DJI$diffs)/10,10); Exp 
 binchg <- numeric(10)
 for(i in 1:10) {
-  binchg[i] <- sum((DJI$chg >= dec[i]) & (DJI$chg <= dec[i + 1] )) ; binchg
+  binchg[i] <- sum((DJI$diffs >= dec[i]) & (DJI$diffs <= dec[i + 1] )) ; binchg
 }
 #Finally we can test for uniformity using a chi-squared test.
 ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
@@ -283,10 +287,12 @@ library(MASS)
 #install.packages("actuar")
 library(actuar)
 
+#The distribution of the absolute value of the changes appears to be well modeled by a Pareto distribution. Let us 
+#investigate if that is the case:
 hist(AbsDiffs , breaks = "FD", probability = TRUE) 
 shape.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[1]
 scale.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[2]
-curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE)
+curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE) #This looks pretty good
 
 n1 <- qpareto(.1, shape = shape.pareto, scale = scale.pareto); n1
 ppareto(n1,shape = shape.pareto, scale = scale.pareto)
@@ -301,7 +307,7 @@ for(i in 1:10){
   binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
 }
 #Finally we can test for uniformity using a chi-squared test.
-ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #460.8169
+ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #73.3071
 #We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
 #and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
 curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
@@ -310,7 +316,7 @@ pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
 #Given this extremely low p-value, it seems that the pareto distribution is not a good model (at all)
 #for the absolute daily fluxes in the Dow Jones Industrial Average. 
 
-#Taking a look at rare events:
+#Let's shift now to taking a look at rare events, and how they are impacting some of our results:
 #Let's consider each of the days in our data and examine how far from the mean flux in value each of
 #them was. 
 mu <- mean(diffs); mu
@@ -321,10 +327,9 @@ SDs <- numeric(N)
 for (i in 1:N){
   SDs[i] <- (diffs[i]-mu)/sigma
 }
-head(SDs)
-head(diffs)
-
-SDs.data <- c(0,SDs); head(SDs.data) 
+head(SDs);head(diffs)
+length(SDs)
+SDs.data <- c(0,SDs[2:length(SDs)]); head(SDs.data) 
 DJI <- data.frame(DJI,SDs.data)
 idx <- which(abs(SDs.data) > 5); head(idx)
 unusual <- DJI[idx,]; head(unusual) 
@@ -337,19 +342,29 @@ for (i in 1:(N)) {
  pvals[i] <- pnorm(abs(unusual$SDs.data[i]*sigma), mean = mu, sd = sigma, lower.tail = FALSE)
 }
 head(pvals)
-rare <- max(pvals) #2.306794e-07, which is pretty much 0. 
+rare <- max(pvals);rare #2.303366e-07, which is pretty much 0. 
 
 (1/rare)/365
-#In other words, if the DJI first differences followed a normal distribution, 
-#we would expect to see the least rare of these rare events once in 11,876 years.
+#If we interpret the p-value as the probability of an event taking place, and our events are measured in days,
+#then a given p-vakue tells us the probability of seeing that extreme of an event on any given days (i.e. a p-value of 
+#0.05 would correspond to an event that we'd "expect" to see once every 20 days, since it has a 1/20 chance of arising).
+#In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare 
+#of these rare events once in 11894.45 years.
 
 #Now that we have seen that the data follows a model with infinite variance, which somewhat resembles 
 #that of a random walk, let us consider the hypothesis that political regimes have an impact on 
 #the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering
 #the impact of political party on the performance of the market. 
 
-lm(DJI$chg~DJI$Republican + DJI$Recession)
+regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
+#At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.
+#But let us look a little closer:
+summary(regime)
+#Given the large standard error for the Republican coefficient, we cannot safely conclude that republican
+#administrations correlate with losses in the Dow. (i.e. the p-value is .3, so we fail to reject the null hypothesis
+#that this control variable has no impact on the response variable.)
 
+#Let's see if we can get a statistically signifficant result for any of the individual presidents:
 GHWB <- DJI$Regime == "GHWB"
 BC <- DJI$Regime == "BC"
 GWB <- DJI$Regime == "GWB"
@@ -363,26 +378,32 @@ regress.data <- data.frame(DJI,pres.binary)
 #since we omitted the Ronald Reagan variable, each of the coefficients for the various presidents 
 #represents the incremental surplus or deficit in the DJIA that occurred during each of the other 
 #presidents' terms
-lm(regress.data$chg ~ + regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
+ind.pres <- lm(regress.data$diffs ~ regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
+ind.pres
 #These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald 
 #Trump administration's success in boosting the DJIA to new heights.
+summary(ind.pres)
+#here again, we find that no presidents' presense in the White House had a significant impact on the Dow.
 
 #So, let's exclude the days when 5 sigma + events took place, that way we'll keep only the data for "normal/typical"
 #days.
 regress.data.ne <- regress.data[-idx,]
-lm(regress.data.ne$chg ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
+ind.pres.2 <- lm(regress.data.ne$diffs ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
+summary(ind.pres.2)
 #These results seem to indicate that, excluding days with extreme events, and controlling for recessions 
 #(and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, 
 #the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush.
 #It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis,
-#which took place in the final months of his second term. 
+#which took place in the final months of his second term. Additionally, we should note that the only statistically 
+#signifficant coefficient was that of Donald Trump, which had a p-value well below 0.01.
 
 #Logistic Regression
+#Given the earlier results, it seems that recessions play a large role on what happens wiht the Dow Jones Industrial Average.
 #Let us inspect how economic recessions correlate with the performance of the DJIA. 
-plot(DJI$chg,DJI$Recession, xlim = c(-5000,5000))
+plot(DJI$diffs,DJI$Recession, xlim = c(-5000,5000))
 MLL <- function(alpha, beta) {
-  -sum( log( exp(alpha+beta*DJI$chg)/(1+exp(alpha+beta*DJI$chg)) )*DJI$Recession
-        + log(1/(1+exp(alpha+beta*DJI$chg)))*(1-DJI$Recession) )
+  -sum( log( exp(alpha+beta*DJI$diffs)/(1+exp(alpha+beta*DJI$diffs)) )*DJI$Recession
+        + log(1/(1+exp(alpha+beta*DJI$diffs)))*(1-DJI$Recession) )
 }
 #R has a function that will maximize this function of alpha and beta
 #install.packages("stats4")   #needs to be run at most once
