@@ -250,38 +250,86 @@ summary(variances.diffs) # spread is larger than it is for Cauchy but less than 
 #
 #install.packages("fitdistrplus")
 library("fitdistrplus")
+hist(diffs, prob = TRUE, breaks = "FD")
+#Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
+#https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
+#Median:
+diffs.median <- median(diffs); diffs.median #
+#Half Interquartile Range:
+diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq # 36.41016
 
-fitdist(DJI$diffs, distr = "cauchy", method = c("mle"))
 
-hist(DJI$diffs, breaks = "FD", probability = TRUE) 
+#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
+#uses better paramater estimation, we will use our fit.diffs values.
+fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
+curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
+#And this does appear to be a good estimator
 
-locat <- fitdist(DJI$diffs, distr = "cauchy", method = c("mle"))$estimate[1]
-shap <- fitdist(DJI$diffs, distr = "cauchy", method = c("mle"))$estimate[2]
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+cauchy.breaks <- qcauchy((0:4)*.25, location = diffs.median, scale = diffs.hiq)
+#Get observed data
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
+#Get expected data:
+cauchy.exp <- rep(length(diffs)/4, 4); cauchy.exp 
 
-curve(dcauchy(x, location = locat, scale = shap, log = FALSE), col = "blue", add = TRUE)
-n1 <- qcauchy(.1, location = locat, scale = shap, lower.tail = TRUE); n1
-pcauchy(n1, location = locat, scale = shap)
-mean(DJI$diffs <= n1) #about 10.1% of the data is in this bin
-abline(v = n1, col = "red")
+#Get initial Chi Square Statistic:
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
 
-#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qcauchy(seq(0.0,1,by = 0.1), location = locat, scale = shap); dec  #10 binned intervals
-Exp <- rep(length(DJI$diffs)/10,10); Exp 
-binchg <- numeric(10)
-for(i in 1:10) {
-  binchg[i] <- sum((DJI$diffs >= dec[i]) & (DJI$diffs <= dec[i + 1] )) ; binchg
+#Run simulation: 
+N <- 10^4; results.Cauchy <- numeric(N)
+for (i in 1:N) {
+  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
+  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
 }
-#Finally we can test for uniformity using a chi-squared test.
-ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #219,8663
-#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
-#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
-curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
-abline(v = ChiStat, col = "red") 
-pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low p-value, it seems that the cauchy distribution is not a good model (at all)
-#for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
-#fits the data. 
+hist(results.Cauchy, breaks = "FD")
+abline(v = cauchy.cs, col = "red", lwd = 3)
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 24%.
+#We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
+#from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
+#NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
+#have infinite variance, it appears our data's distribution also has infinite variance.
 
+#################
+#using Octiles
+hist(diffs, prob = TRUE, breaks = "FD")
+#Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
+#https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
+#Median:
+diffs.median <- median(diffs); diffs.median #
+#Half Interquartile Range:
+diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
+
+#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
+#uses better paramater estimation, we will use our fit.diffs values.
+fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
+
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
+#Get observed data
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
+#Get expected data:
+cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
+
+#Get initial Chi Square Statistic:
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+
+#Run simulation: 
+N <- 10^4; results.Cauchy <- numeric(N)
+for (i in 1:N) {
+  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
+  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+}
+hist(results.Cauchy, breaks = "FD")
+abline(v = cauchy.cs, col = "red", lwd = 3)
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 12%.
+#We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
+#from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
+#NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
+#have infinite variance, it appears our data's distribution also has infinite variance.
 #Pareto
 library(MASS)
 #install.packages("actuar")
