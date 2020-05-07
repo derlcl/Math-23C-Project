@@ -384,7 +384,7 @@ mean(results.Stable >= stable.cs) #We reject the null hypothesis, our data fails
 
 
 #K-S Test
-nn <- length(diffs) #sample size. Basically each sample will be as large as our dataset
+nn <- 500 #sample size. 
 rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
 hist(rand, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")
@@ -394,12 +394,13 @@ curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 
 N <- 10^4
 ks.stats <- numeric(N)
 for (i in 1:N) {
-  rand[i] <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-  ks.stats[i] <- ks.test(diffs,rand[i])$p.value
+  rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
+  diff.samp <- sample(diffs,nn, replace = TRUE)
+  ks.stats[i] <- ks.test(diff.samp,rand)$p.value
 }
-mean(ks.stats) #mean p-values = 0.5904525
+mean(ks.stats) #mean p-values = 0.1976958
 hist(ks.stats)
-min(ks.stats) # 0.2700979, never a significant p-value below our .05 threshold
+
 
 #Using fitdist parameters
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
@@ -409,9 +410,11 @@ curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd
 N <- 10^4
 ks.stats2 <- numeric(N)
 for (i in 1:N) {
-  rand2[i] <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
-  ks.stats2[i] <- ks.test(diffs,rand2[i])$p.value
+  rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
+  diff.samp2 <- sample(diffs,nn, replace = TRUE)
+  ks.stats2[i] <- ks.test(diff.samp2,rand2)$p.value
 }
-mean(ks.stats2) #mean pvalues =  0.6247468
+mean(ks.stats2) #mean pvalues =  0.4248467
 hist(ks.stats2)
-min(ks.stats2) # 0.2700979, never a significant p-value below our .05 threshold
+
+
