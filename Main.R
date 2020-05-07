@@ -117,7 +117,15 @@ diffs.Democrat <- diffs[!(index.Republican[-1])]
 mu.DemDiffs <- mean(diffs.Democrat)
 mean(diffs.Democrat) # 4.709857
 # The means seem different, but given the large variance, this is doubtful.
-#
+#Another way to look at the data is to consider the total gains in the DJI during republican and democrat regimes. 
+rep.idx <- which(DJI$Republican == TRUE) 
+rep.gains <- sum(DJI$chg[rep.idx]); rep.gains
+dem.gains <- sum(DJI$chg[-rep.idx]); dem.gains
+sum(DJI$chg); sum(rep.gains,dem.gains)
+rep.dem.gains <- cbind(rep.gains, dem.gains); rep.dem.gains
+barplot(rep.dem.gains) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
+#Let us check with a series of permutation tests:
+
 #Permutation Test
 N <- 10^4; result.Republican <- numeric(N); result.Democrat <- numeric(N)
 for (i in 1:N) {
@@ -159,7 +167,8 @@ mean(result.Combined) #inspecting that these are indeed close to zero
 hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
-# 2.82% chance that this extreme of an observed difference would arise by chance .
+# 2.82% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed
+#better during democratic regimes, a result that is statistically signifficant.
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
@@ -311,7 +320,7 @@ head(diffs)
 SDs.data <- c(0,SDs); head(SDs.data) 
 DJI <- data.frame(DJI,SDs.data)
 idx <- which(abs(SDs.data) > 5); head(idx)
-unusual <- DJI[idx,]; View(unusual) 
+unusual <- DJI[idx,]; head(unusual) 
 #As we can see, there are 32 days in which the price flux for the Dow Jones was larger than 5 standard 
 #deviations away from the mean. To show just how bad of a fit the normal distribution is for our data
 #consider the p-values for each of these events. 
