@@ -36,7 +36,7 @@ plot(master_monthly$NASDAQ, type = "l", xlab = "Time",
 plot(master_yearly$NASDAQ, type = "l", xlab = "Time", 
      ylab = "Random Daily Opens", main = "Random Walk Model")
 
-diffs <- master$DJI
+diffs <- diff(master_yearly$DJI)
 diffs.median <- median(diffs); diffs.median #
 diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq
 hurstexp(diff(master$DJI))
@@ -47,10 +47,13 @@ ks.test(diff(master$DJI), rnorm(length(diff(master$DJI)), mean(diff(master$DJI))
 ks.test(diff(master_monthly$DJI), rnorm(length(diff(master_monthly$DJI)), mean(diff(master_monthly$DJI)), sd(diff(master_monthly$DJI))))
 ks.test(diff(master_yearly$DJI), rnorm(length(diff(master_yearly$DJI)), mean(diff(master_yearly$DJI)), sd(diff(master_yearly$DJI))))
 
-ks.test(diff(master$DJI), rcauchy(length(diff(master$DJI)), diffs.median, diffs.hiq))
-ks.test(diff(master_monthly$DJI), rcauchy(length(diff(master_monthly$DJI)), diffs.median, diffs.hiq))
-ks.test(diff(master_yearly$DJI), rcauchy(length(diff(master_yearly$DJI)), diffs.median, diffs.hiq))
+ks.test(diff(master$DJI), rcauchy(length(diff(master$DJI)), median(diff(master$DJI)), (quantile(diff(master$DJI), c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diff(master$DJI), c(seq(0.0,1,by = 0.1)))[[3]])/2))
+ks.test(diff(master_monthly$DJI), rcauchy(length(diff(master_monthly$DJI)), median(diff(master_monthly$DJI)), (quantile(diff(master_monthly$DJI), c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diff(master_monthly$DJI), c(seq(0.0,1,by = 0.1)))[[3]])/2))
+ks.test(diff(master_yearly$DJI), rcauchy(length(diff(master_yearly$DJI)), median(diff(master_yearly$DJI)), (quantile(diff(master_yearly$DJI), c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diff(master_yearly$DJI), c(seq(0.0,1,by = 0.1)))[[3]])/2))
 
+Estim(EstimMethod = c("Kout"), diff(master_monthly$DJI))
+hist(diffs, breaks = "FD")
+ks.test(diff(master_monthly$DJI), rstable(length(master_monthly$DJI), 1.3679109 , -0.1627983 , 163.7892113 , 109.2632272))
 
 #Stopped here
 
