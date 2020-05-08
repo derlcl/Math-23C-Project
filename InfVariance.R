@@ -512,5 +512,6 @@ par(mfrow = c(1,3))
 qqPlot(diffs, "cauchy", id = FALSE);mtext("QQ-Plot of Cauchy, Normal, and Stable Distributions", side = 3, line = -2.5, outer = TRUE)
 qqPlot(diffs, "norm", id = FALSE)
 qqPlot(diffs, "stable", alpha = stable.a, beta = stable.b)
+par(mfrow = c(1,1)) # reset plot partitions
 #As we can see more quantiles from our data fit the Cauchy and Stables line and
 #fall within the confidence interval when compared to a normal distribution.
