@@ -444,24 +444,22 @@ curve(x*lmhurst[2] +lmhurst[1], add = TRUE, col = "red", lwd = 3)
 
 
 #KS.Test - Gaussian vs Cauchy at various "details"
-nn <- length(DJI$Open) / 2 - 1
+nn <- (length(DJI$Open) / 2) - 1
 result.kstest.gauss <- numeric(nn)
 result.kstest.cauchy <- numeric(nn)
 for (i in 1:(nn)) {
   print(i)
-  samp <- diff(DJI$Open[seq(from = 1, to = length(diffs), by = i)])
+  samp <- diff(DJI$Open[seq(from = 1, to = length(diffs), by = i)]); (samp <- samp - mean(samp) / sd(samp))
   samp.median <- median(samp)
   samp.hiq <- (quantile(samp)[[4]] - quantile(samp)[[2]]) / 2
   samp.mean <- mean(samp)
   samp.sd <- sd(samp)
-  kstest.cauchy <- ks.test(samp, rcauchy(length(samp), samp.median, samp.hiq))$p.value
-  kstest.gauss <- ks.test(samp, rnorm(length(samp), samp.mean, samp.sd))$p.value
+  kstest.cauchy <- ks.test(samp, "pcauchy", samp.median, samp.hiq)$p.value
+  kstest.gauss <- ks.test(samp, "pnorm", samp.mean, samp.sd)$p.value
   result.kstest.cauchy[length(result.kstest.cauchy) - i] <- kstest.cauchy
   result.kstest.gauss[length(result.kstest.gauss) - i] <- kstest.gauss
 }
-plot(result.kstest.gauss); abline(h = 0.05, col = "red")
+plot(result.kstest.gauss, type = "l"); abline(h = 0.05, col = "red")
 mean(result.kstest.gauss >= .05)
-plot(result.kstest.cauchy); abline(h = 0.05, col = "red")
+plot(result.kstest.cauchy, type = "l"); abline(h = 0.05, col = "red")
 mean(result.kstest.cauchy >= .05)
-
-
