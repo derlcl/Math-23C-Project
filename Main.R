@@ -79,9 +79,10 @@ plot(log(Open)) # linear regression or polynomial model could fit
 #
 ## Bootstrap For A Single Population
 par(mfrow = c(2,2)) # create 2x2 plot matrix
+
 sampsize <- 1000 # starting sample size to draw from
-N <- 200 # number of boostraps to run
-n <- 500 # bootstrap sample size to draw
+N <- 200 # number of boostrap samples to run
+n <-  500 # bootstrap sample size to draw
 xlima <- -3 ; xlimb <- 3
 
 # Perform N boostrap resamples of size n from sample X
@@ -145,7 +146,7 @@ for (i in 1:N) {
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 
 #########################################################
-par(mfrow = c(2,2)) # reset to 1x1 plot matrix
+par(mfrow = c(1,1)) # reset to 1x1 plot matrix
 
 # Boostrap resampling distribution of sample means has smaller spread than sample
 # This is expected since we expect Var(Ybar) = Var(Xbar)/n. And as N approaches infinity, 

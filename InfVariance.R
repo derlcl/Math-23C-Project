@@ -443,18 +443,17 @@ lmhurst <- as.vector(lmhurst$coefficients)
 curve(x*lmhurst[2] +lmhurst[1], add = TRUE, col = "red", lwd = 3)
 
 
-#KS.Test - Gaussian vs Cuachy at various "details"
-nn <- length(DJI$Open)/ 2 - 1
+#KS.Test - Gaussian vs Cauchy at various "details"
+nn <- length(DJI$Open) / 2 - 1
 result.kstest.gauss <- numeric(nn)
 result.kstest.cauchy <- numeric(nn)
-for (i in 1:(nn)){
+for (i in 1:(nn)) {
   print(i)
   samp <- diff(DJI$Open[seq(from = 1, to = length(diffs), by = i)])
   samp.median <- median(samp)
-  samp.hiq <- (quantile(samp)[[4]] - quantile(samp)[[2]]) /2
+  samp.hiq <- (quantile(samp)[[4]] - quantile(samp)[[2]]) / 2
   samp.mean <- mean(samp)
   samp.sd <- sd(samp)
-  sd.samp <- sd(samp)
   kstest.cauchy <- ks.test(samp, rcauchy(length(samp), samp.median, samp.hiq))$p.value
   kstest.gauss <- ks.test(samp, rnorm(length(samp), samp.mean, samp.sd))$p.value
   result.kstest.cauchy[length(result.kstest.cauchy) - i] <- kstest.cauchy
