@@ -8,6 +8,7 @@ library('gifski')
 library('fractaldim')
 library('fBasics')
 library('stabledist')
+library('car')
 
 #Import Cleaned Data
 source("prj_DataPreparation.R")
@@ -463,3 +464,11 @@ plot(result.kstest.gauss, type = "l"); abline(h = 0.05, col = "red")
 mean(result.kstest.gauss >= .05)
 plot(result.kstest.cauchy, type = "l"); abline(h = 0.05, col = "red")
 mean(result.kstest.cauchy >= .05)
+
+#QQ Plot Test:
+par(mfrow = c(1,3))
+qqPlot(diffs, "cauchy", id = FALSE);mtext("QQ-Plot of Cauchy, Normal, and Stable Distributions", side = 3, line = -2.5, outer = TRUE)
+qqPlot(diffs, "norm", id = FALSE)
+qqPlot(diffs, "stable", alpha = stable.a, beta = stable.b)
+#As we can see more quantiles from our data fit the Cauchy line as well as fall within the confidence interval
+#when compared to a normal distribution and the Stable distribution
