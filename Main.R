@@ -314,11 +314,11 @@ hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
 #Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
 #https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
 #Median:
-diffs.median <- median(diffs); diffs.median #
+diffs.median <- median(diffs); diffs.median 
 #Half Interquartile Range:
 diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq # 36.41016
 
-
+library("fitdistrplus")
 #Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
 #uses better paramater estimation, we will use our fit.diffs values.
 fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
