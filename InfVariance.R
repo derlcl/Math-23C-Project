@@ -436,6 +436,22 @@ for(i in 1:N){
 hist(ks.samp.rand, breaks = "FD")
 mean(ks.samp.rand)
 
+#doing the same thing as above, but instead od KS, doing chi-square test
+samp.rand.cs <- numeric(N); pvals.chi <- numeric(N)
+for(i in 1:N){
+  diff.samp <- sample(diffs, nn, replace = TRUE)
+  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
+  cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  cauchy.breaks <- qcauchy((0:10)*.1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  cauchy.obs <- table(cut(diff.samp, breaks = cauchy.breaks)); cauchy.obs
+  cauchy.exp <- rep(nn/10, 10); cauchy.exp 
+  samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+  pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
+}
+hist(samp.rand.cs, breaks = "FD")
+hist(pvals.chi, breaks = "FD")
+
+
 #Checking how the k-s stat is afefcted by sample size
 ks.stat <- numeric(N)
 for(i in 1:N){
