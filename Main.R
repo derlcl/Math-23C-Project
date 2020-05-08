@@ -148,17 +148,10 @@ plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 #########################################################
 par(mfrow = c(1,1)) # reset to 1x1 plot matrix
 
-# Boostrap resampling distribution of sample means has smaller spread than sample
-# This is expected since we expect Var(Ybar) = Var(Xbar)/n. And as N approaches infinity, 
-# the bootstrap sampling distribution of the sample mean of Y should 
-# be increasingly normally distributed according to the central limit theorem. 
-# It should also approximate the shape and spread of the sampling distribution 
-# of sample means from the underlying population,
-# though its center will exhibit any bias for the expectation from the original sample. 
 hist(Z, breaks = "fd", prob = TRUE, main = "Histogram of Standardized Random Variable")
 # approximates standard normal distribution by CLT
 hist(varY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Variances") 
-# long tailed distribution with right skew
+# long tailed distribution with right skew, indicating large variance values
 hist(meanY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Mean") 
 # approximately normal with center around meanX
 

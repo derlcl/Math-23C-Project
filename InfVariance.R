@@ -452,9 +452,9 @@ hist(samp.rand.cs, breaks = "FD")
 hist(pvals.chi, breaks = "FD")
 
 
-#Checking how the k-s stat is afefcted by sample size
+#Checking how the K-S statistic is affected by sample size
 ks.stat <- numeric(N)
-for(i in 1:N){
+for(i in 1:N) {
   diff.samp <- sample(diffs, i+1, replace = TRUE)
   fit.samp <- fitdist(diff.samp, "cauchy", "mle")
   cauchy.samp <- rcauchy(i+1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
@@ -506,6 +506,7 @@ plot(result.kstest.cauchy, type = "l"); abline(h = 0.05, col = "red")
 mean(result.kstest.cauchy >= .05)
 
 #QQ Plot Test:
+# install.packages("car")
 library(car)
 par(mfrow = c(1,3))
 qqPlot(diffs, "cauchy", id = FALSE);mtext("QQ-Plot of Cauchy, Normal, and Stable Distributions", side = 3, line = -2.5, outer = TRUE)
