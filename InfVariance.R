@@ -422,6 +422,30 @@ for (i in 1:N) {
 mean(ks.stats2) #mean pvalues =  0.4248467
 hist(ks.stats2)
 
+#Taking N samples from diffs and using fitdist to fit each of those.Then comparing each of those samples to an 
+#rCauchy dist with those same parameters, and then taking chi-squares and looking at the histogram
+samp.rand <- numeric(N)
+nn <- 200
+ks.samp.rand <- numeric(N)
+for(i in 1:N){
+  diff.samp <- sample(diffs, nn, replace = TRUE)
+  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
+  cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  ks.samp.rand[i] <- ks.test(diff.samp, cauchy.samp)$p.value
+}
+hist(ks.samp.rand, breaks = "FD")
+mean(ks.samp.rand)
+
+#Checking how the k-s stat is afefcted by sample size
+ks.stat <- numeric(N)
+for(i in 1:N){
+  diff.samp <- sample(diffs, i+1, replace = TRUE)
+  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
+  cauchy.samp <- rcauchy(i+1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
+}
+plot(ks.stat, pch = ".")
+hist(ks.stat, breaks = "FD", probability = TRUE)
 
 #Combining a few ideas:
 plot(DJI$Open[seq(from = 1, to = length(diffs), by = 3)], typ = "l")
@@ -466,6 +490,7 @@ plot(result.kstest.cauchy, type = "l"); abline(h = 0.05, col = "red")
 mean(result.kstest.cauchy >= .05)
 
 #QQ Plot Test:
+library(car)
 par(mfrow = c(1,3))
 qqPlot(diffs, "cauchy", id = FALSE);mtext("QQ-Plot of Cauchy, Normal, and Stable Distributions", side = 3, line = -2.5, outer = TRUE)
 qqPlot(diffs, "norm", id = FALSE)
