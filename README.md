@@ -39,6 +39,17 @@ Do financial returns have finite or infinite variance? A paradox and an explanat
 Pages 883-893 | Received 29 Jan 2009, Accepted 02 Dec 2009, Published online: 14 Jul 2010
 https://people.orie.cornell.edu/gennady/techreports/RetTailParadoxExplFinal.pdf
 
+An Empirical Examination of Daily Stock
+Return Distributions for U.S. Stocks
+Svetlozar T. Rachev, Stoyan V. Stoyanov, Almira Biglova^, and
+Prank J. Fabozzi
+https://sci-hub.tw/https://doi.org/10.1007/3-540-28397-8_30
+
+The Behavior of Stock-Market Prices
+Eugene F. Fama
+The Journal of Business, Vol. 38, No. 1. (Jan., 1965), pp. 34-105
+http://static.stevereads.com/papers_to_read/the_behavior_of_stock_market_prices.pdf
+
 Books:
 The (Mis)behavior of Markets by Benoit Mandelbrot:
 https://dichgiacamchi.files.wordpress.com/2015/01/the_misbehavior_of_markets_-_benoit_mandelbrot.pdf
