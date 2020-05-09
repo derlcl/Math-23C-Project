@@ -515,6 +515,8 @@ par(mfrow = c(1,1)) # reset plot partitions
 #As we can see more quantiles from our data fit the Cauchy and Stables line and
 #fall within the confidence interval when compared to a normal distribution.
 
+
+
 # EXPERIMENTING
 ##########################################
 ##########################################
@@ -523,9 +525,9 @@ logAbsDiffs <- logAbsDiffs[logAbsDiffs > -Inf] ; summary(logAbsDiffs)
 hist(logAbsDiffs, prob = TRUE, breaks = "fd")
 
 #Stable Distribution:
-#Paramaterized using:"Simple Consistent Estimators of Stable Distribution Parameters," Communications in Statistics - Simulation and Computation 15 (1986): 1109-36.
+#Paramaterized using: "Simple Consistent Estimators of Stable Distribution Parameters," Communications in Statistics - Simulation and Computation 15 (1986): 1109-36.
 #https://www.asc.ohio-state.edu/mcculloch.2/papers/stabparm.pdf by J. Huston McCulloch
-stable.Xs <- quantile(logAbsDiffs, c(.05, .25, .5, .75, .95))
+stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
 
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
@@ -547,9 +549,12 @@ hist(logAbsDiffs, breaks = "FD", freq = FALSE)
 curve(dstable(x, (stable.a),(stable.b - .5),stable.c, stable.location), add = TRUE, col = "cyan")
 
 #Breaks:
-stable.breaks <- c(-Inf, qstable((1:9) * .1, stable.a,stable.b,stable.c,stable.location), Inf)
+stable.breaks <- c(-Inf, qstable( ((1:9) * .1), stable.a,stable.b,stable.c,stable.location), Inf)
 
 chisq.test(stable.obs, table(cut(rstable(1:length(logAbsDiffs), (stable.a),(stable.b - .5),stable.c, stable.location), stable.breaks)))
+
+table(cut(rstable(1:length(logAbsDiffs), (stable.a),(stable.b - .5),stable.c, stable.location), stable.breaks))
+stable.exp <- rep(mean(stable.obs), length(stable.obs)); stable.exp   
 
 #Both Values
 stable.obs <- table(cut(logAbsDiffs, stable.breaks)); stable.obs
@@ -580,6 +585,28 @@ fd <- fitdist(samp.stable/1000,"stable", method = "mle",
                            delta=stable.location,pm=0,tol=64*.Machine$double.eps, zeta.tol = NULL))
 ks.test(diffs,"pstable",fd$estimate[1],fd$estimate[2])$p.value
 
+# Monte Carlo Simulation for Parameter Estimation 
+N <- 10^3 ; cs <- Inf ; idx <- 1
+tempdata <- logAbsDiffs
+alpha <- runif(N,0,2)
+beta <- runif(N,-1,1)
+gamma <- rexp(N,1)
+delta <- median(tempdata)
+for (i in 1:N) {
+stable.breaks <- c(-Inf, qstable( ((1:9) * .1), alpha[i],beta[i],gamma[i],delta), Inf)
+stable.obs <- table(cut(tempdata,stable.breaks)) ; 
+stable.exp <- rep(mean(stable.obs), length(stable.obs)); stable.exp   
+csCurrent <- ChiSq(stable.obs,stable.exp)
+if (csCurrent < cs) { 
+  cs <- csCurrent
+  idx <- i
+  }
+}
+cs ; pchisq(cs,df=5, lower.tail=FALSE)
+hist(tempdata, breaks = "fd", prob=TRUE)
+curve(dstable(x,alpha[idx],beta[idx],gamma[idx],delta), add=TRUE, col = "red")
+alpha[idx] ; beta[idx] ; gamma[idx] ; delta
+
 #Stable Distribution:
 #Paramaterized using:"Simple Consistent Estimators of Stable Distribution Parameters," Communications in Statistics - Simulation and Computation 15 (1986): 1109-36.
 #https://www.asc.ohio-state.edu/mcculloch.2/papers/stabparm.pdf by J. Huston McCulloch
@@ -590,7 +617,7 @@ stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2
 stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
 
 #Using Table we calculate alpha and beta
-stable.a <- .7
+stable.a <- 1.13
 stable.b <- .614
 
 #Calculate Phi_3 
@@ -631,9 +658,12 @@ mean(results.Stable >= stable.cs) #We reject the null hypothesis, our data fails
 
 # Pareto for AbsDiffs? Add in other Cauchy. 
 n <- 1000
-sampy <- rstable(n, (stable.a),(stable.b - .5),stable.c, stable.location)
-sampy2 <- rnorm(n, mean = mu, sd = sigma)
-sampy3 <- rcauchy(n, location = fit.diffs[1], scale = fit.diffs[2])
-ks.test(diffs,sampy)
-ks.test(diffs,sampy2)
-ks.test(diffs,sampy3)
+sampy.stable <- rstable(n, (stable.a),(stable.b - .5),stable.c, stable.location)
+sampy.norm <- rnorm(n, mean = mu, sd = sigma)
+sampy.cauchy.fd <- rcauchy(n, location = fit.diffs[1], scale = fit.diffs[2])
+sampy.cauchy.other <- 
+sampy.pareto <- 
+ks.test(diffs,sampy.stable)
+ks.test(diffs,sampy.norm)
+ks.test(diffs,sampy.cauchy.fd)
+ks.test(diffs,sampy.cauchy.other)
