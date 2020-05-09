@@ -56,6 +56,11 @@ Source: The Journal of Business, Vol. 36, No. 4 (Oct., 1963), pp. 394-419
 Published by: The University of Chicago Press
 https://web.williams.edu/Mathematics/sjmiller/public_html/341Fa09/econ/Mandelbroit_VariationCertainSpeculativePrices.pdf
 
+Proof: The normal distribution is stable with index alpha = 2. There is no skewness parameter.
+Kyle Siegrist
+Phd in Mathematics, Georgia Institute of Technology, '79
+https://www.randomservices.org/random/special/Stable.html
+
 Books:
 The (Mis)behavior of Markets by Benoit Mandelbrot:
 https://dichgiacamchi.files.wordpress.com/2015/01/the_misbehavior_of_markets_-_benoit_mandelbrot.pdf
