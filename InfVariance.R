@@ -506,7 +506,6 @@ plot(result.kstest.cauchy, type = "l"); abline(h = 0.05, col = "red")
 mean(result.kstest.cauchy >= .05)
 
 #QQ Plot Test:
-# install.packages("car")
 library(car)
 par(mfrow = c(1,3))
 qqPlot(diffs, "cauchy", id = FALSE);mtext("QQ-Plot of Cauchy, Normal, and Stable Distributions", side = 3, line = -2.5, outer = TRUE)
@@ -515,3 +514,126 @@ qqPlot(diffs, "stable", alpha = stable.a, beta = stable.b)
 par(mfrow = c(1,1)) # reset plot partitions
 #As we can see more quantiles from our data fit the Cauchy and Stables line and
 #fall within the confidence interval when compared to a normal distribution.
+
+# EXPERIMENTING
+##########################################
+##########################################
+logAbsDiffs <- log(AbsDiffs) ; summary(logAbsDiffs) 
+logAbsDiffs <- logAbsDiffs[logAbsDiffs > -Inf] ; summary(logAbsDiffs)
+hist(logAbsDiffs, prob = TRUE, breaks = "fd")
+
+#Stable Distribution:
+#Paramaterized using:"Simple Consistent Estimators of Stable Distribution Parameters," Communications in Statistics - Simulation and Computation 15 (1986): 1109-36.
+#https://www.asc.ohio-state.edu/mcculloch.2/papers/stabparm.pdf by J. Huston McCulloch
+stable.Xs <- quantile(logAbsDiffs, c(.05, .25, .5, .75, .95))
+
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+
+#Using Table we calculate alpha and beta
+stable.a <- 1.13
+stable.b <- .614
+
+#Calculate Phi_3 
+stable.phi_3 <- 2.312
+
+#Use phi_3 to calculate scale and then location is found from the table 
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
+stable.location <- median(diffs)
+
+#Plot:
+hist(logAbsDiffs, breaks = "FD", freq = FALSE)
+curve(dstable(x, (stable.a),(stable.b - .5),stable.c, stable.location), add = TRUE, col = "cyan")
+
+#Breaks:
+stable.breaks <- c(-Inf, qstable((1:9) * .1, stable.a,stable.b,stable.c,stable.location), Inf)
+
+chisq.test(stable.obs, table(cut(rstable(1:length(logAbsDiffs), (stable.a),(stable.b - .5),stable.c, stable.location), stable.breaks)))
+
+#Both Values
+stable.obs <- table(cut(logAbsDiffs, stable.breaks)); stable.obs
+stable.exp <- rep(mean(stable.obs), length(stable.obs)); stable.exp
+
+#Stable
+stable.cs <- ChiSq(stable.obs, stable.exp)
+
+#Simulation:
+N <- 10^4; results.Stable <- numeric(N)
+for (i in 1:N) {
+  obs.sim.stable <- rstable(1:length(diffs), stable.a,stable.b,stable.c,stable.location)
+  obs.sim.stable <- table(cut(obs.sim.stable, breaks = stable.breaks))
+  results.Stable[i] <- ChiSq(obs.sim.stable, stable.exp)
+}
+
+mean(results.Stable >= stable.cs) #We reject the null hypothesis, our data fails to pull from the 
+#Stable distribution. Our data is therefore, between a Cauchy Distribution and a Gaussian Distribution
+#leaning toward a Cauchy distribution.
+#
+#
+hist(diffs, breaks = "fd")
+
+samp.stable <- rstable(1000,alpha=stable.a,beta=stable.b,gamma=stable.c,delta=stable.location) ; hist(samp.stable, breaks = "fd", prob = TRUE)
+summary(samp.stable)
+fd <- fitdist(samp.stable/1000,"stable", method = "mle",
+              start = list(alpha=stable.a,beta=stable.b,gamma=stable.c,
+                           delta=stable.location,pm=0,tol=64*.Machine$double.eps, zeta.tol = NULL))
+ks.test(diffs,"pstable",fd$estimate[1],fd$estimate[2])$p.value
+
+#Stable Distribution:
+#Paramaterized using:"Simple Consistent Estimators of Stable Distribution Parameters," Communications in Statistics - Simulation and Computation 15 (1986): 1109-36.
+#https://www.asc.ohio-state.edu/mcculloch.2/papers/stabparm.pdf by J. Huston McCulloch
+stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
+
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+
+#Using Table we calculate alpha and beta
+stable.a <- .7
+stable.b <- .614
+
+#Calculate Phi_3 
+stable.phi_3 <- 2.312
+
+#Use phi_3 to calculate scale and then location is found from the table 
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
+stable.location <- median(diffs)
+
+#Plot:
+hist(diffs, breaks = "FD", freq = FALSE)
+curve(dstable(x, .7,(stable.b - .5),stable.c, stable.location), add = TRUE, col = "cyan")
+curve(dstable(x, 1.5,(stable.b - .5),stable.c, stable.location), add = TRUE, col = "red")
+
+#Breaks:
+stable.breaks <- c(-Inf, qstable((1:9) * .1, stable.a,stable.b,stable.c,stable.location), Inf)
+stable.obs <- table(cut(diffs, stable.breaks)); stable.obs
+stable.exp <- rep(mean(stable.obs), length(stable.obs)); stable.exp
+chisq.test(stable.obs, table(cut(rstable(1:length(diffs), (stable.a),(stable.b - .5),stable.c, stable.location), stable.breaks)))
+chisq.test(stable.obs,stable.exp)
+
+#Both Values
+
+#Stable
+stable.cs <- ChiSq(stable.obs, stable.exp)
+
+#Simulation:
+N <- 10^4; results.Stable <- numeric(N)
+for (i in 1:N) {
+  obs.sim.stable <- rstable(1:length(diffs), stable.a,stable.b,stable.c,stable.location)
+  obs.sim.stable <- table(cut(obs.sim.stable, breaks = stable.breaks))
+  results.Stable[i] <- ChiSq(obs.sim.stable, stable.exp)
+}
+
+mean(results.Stable >= stable.cs) #We reject the null hypothesis, our data fails to pull from the 
+#Stable distribution. Our data is therefore, between a Cauchy Distribution and a Gaussian Distribution
+#leaning toward a Cauchy distribution.
+
+# Pareto for AbsDiffs? Add in other Cauchy. 
+n <- 1000
+sampy <- rstable(n, (stable.a),(stable.b - .5),stable.c, stable.location)
+sampy2 <- rnorm(n, mean = mu, sd = sigma)
+sampy3 <- rcauchy(n, location = fit.diffs[1], scale = fit.diffs[2])
+ks.test(diffs,sampy)
+ks.test(diffs,sampy2)
+ks.test(diffs,sampy3)
