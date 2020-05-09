@@ -2,44 +2,47 @@
 
 #Retrieve any functions we have made for this project
 source("prj_Functions.R")
+
 #Load Dow Jones Industrial dataset and prepare it for analysis
-DJI <- read.csv("DJI.csv"); head(DJI)
+DJI <- read.csv("DJI.csv")
 source("prj_DataPreparation.R")
-head(DJI)
 
-## Preliminary Data Exploration
-#
-#Create vector for difference between daily Open values and add as new column to data frame
-Open <- DJI$Open
-first.diffs <- diff(DJI$Open) #Get first difference of our data.
-diffs <- numeric(nrow(DJI))
-diffs[1] <- 0 ; diffs[2:nrow(DJI)] <- first.diffs; head(diffs)
-DJI <- data.frame(DJI,diffs) ; head(DJI)
-head(diffs) # there are some rather large values with double digits before the decimal
-diffs.length <- length(diffs) # 8857 as expected
-sum(diffs)  # 18975.43 so over double the number of observations
-mu.chg.open <- mean(diffs); mu.chg.open # 2.142422 around what we expected based on the aforementioned values
-med.chg.open <- median(diffs); med.chg.open # 3.4297 is higher than mean, indicating extreme lower values
-var.chg.open <- var(diffs); var.chg.open # whopping 13760.49 for variance, we expect this to increase over time
+## Exploratory Data Analysis
+
+summary(DJI)
+# Minimum, 1st quartile, median, mean, 3rd quartile, and maximum values look similar
+# across Open, High, Low, Close and Adjusted Close. We will work with Open values.
+# Add first differences between daily Open values to data frame
+Open <- DJI$Open # retrieve our Open price values
+diffs <- diff(DJI$Open) #Get first difference of our Open values. 
+diffs.length <- length(diffs) # 8857, concatenate with 0 as starting value to fit data frame
+DJI <- data.frame(DJI,"diffs" = c(0,diffs)) ; head(DJI) # Add to data frame
+
+# Center and Shape
+summary(diffs)  ; boxplot(diffs) # Five-number summary and boxplot visualization
+# Min.        1st Qu.    Median      Mean    3rd Qu.  Max. 
+# -2419.920   -30.400     3.430     2.142    42.420   1171.961 
+# Median is greater than mean, indicates left skew
+# Minimum is absolutely greater than maximum, indicates left skew
+mean(diffs, trim = 0.25) # 4.351473 trimmed mean, greater than mean, indicates left skew
+max(diffs) - min(diffs) # 3591.881 is the range, suggesting wide spread
+IQR(diffs) # 72.82031 is the interquartile range, suggesting concentrated center
+var(diffs) # whopping 13760.49 for variance, we expect this to increase over time
+sd(diffs) # 117.3051 standard deviation
+
+# Visualize
 hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
+abline(v = mean(diffs), col = "turquoise")
 # resembles normal distribution with narrow concentration around sharp peak at mean 
-# and with long tails, with more extreme negative values than positive values
-abline(v = mu.chg.open, col = "turquoise")
+# and heavy tails, with more extreme negative values than positive values
+qqnorm(diffs) # plot data with quantiles of the standard normal on the x-axis.
+qqline(diffs) # add straight line through the first and third quartiles of our data
+# data does not seem to follow normal distribution at tails
 
-## Linear and logistic regression models
-#
-# Compare open price first difference and trade volume variables
-x <- log(DJI$Volume)
-y <- log(abs(DJI$diffs)); zidx <- which(y == -Inf); y[zidx] <- 0
-plot(y~x, main = "Plot of First Differences by Volume", xlab = "Volume", ylab = "First Differences") # interesting shape to the graph
-linmod <- lm(y~x)
-summary(linmod) # R-squared value is only .2802, low explanation for residual errors
-abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
-
-## Magnitude of First Differences
-#
+# Magnitude of First Differences
 AbsDiffs <- abs(diffs) # the absolute value of the first differences
-mu.AbsDiffs <- mean(AbsDiffs) # 69 is the empirical mean
+mu.AbsDiffs <- mean(AbsDiffs) # 69 is the mean, greater than trimmed mean
+mean(AbsDiffs, trim = .25) # 41.49568 is the trimmed mean, indicating right skew
 sum(AbsDiffs/diffs.length) # 69 is also the total value of the contributions to the mean
 sum(AbsDiffs[AbsDiffs <= mu.AbsDiffs]/diffs.length)/mu.AbsDiffs 
 # only 23.9% of the contributions to the mean come from values at or below the mean
@@ -47,12 +50,14 @@ sum(AbsDiffs <= mu.AbsDiffs)/diffs.length
 # 67.7% of the values are at or below the mean value
 # yet 76.1% of the contributions to the mean value come from values above the mean
 max.AbsDiffs <- max(AbsDiffs); max.AbsDiffs # 2419.92 is the max value
-max(AbsDiffs)/diffs.length / mu.AbsDiffs # single maximum value contributed .4% to the mean
+max(AbsDiffs)/diffs.length / mu.AbsDiffs # single maximum value contributed .4% to the mean value
 # there are long tails of extreme values with large contributions to the mean
-hist(AbsDiffs, breaks = "fd", prob = TRUE) 
-# could be modeled by a non-negative valued, long-tailed distribution (see below for Pareto analysis)
+hist(AbsDiffs, breaks = "fd", prob = TRUE) ; abline(v = mu.AbsDiffs)
+# could be modeled by a non-negative valued, long-tailed distribution 
+# (see below for Pareto analysis)
 
 ## Empirical Cumulative Distributions
+plot.ecdf(diffs)
 AbsDiffsCDF <- ecdf(AbsDiffs)
 plot(AbsDiffsCDF) # could be modeled by non-negative, long-tailed distribution
 #
@@ -63,7 +68,6 @@ CDF.diffs <- ecdf(diffs)
 plot(CDF.diffs) # logistic regression model could fit
 plot(Open) # exponential model could fit
 plot(log(Open)) # linear regression or polynomial model could fit
-
 
 ## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
 #
@@ -500,8 +504,27 @@ summary(ind.pres.2)
 #which took place in the final months of his second term. Additionally, we should note that the only statistically 
 #signifficant coefficient was that of Donald Trump, which had a p-value well below 0.01.
 
+# Linear Regression
+# Find interesting linear relationships
+Volume <- DJI$Volume
+plot(DJI$diffs~Volume)
+plot(DJI$diffs~log(Volume))
+plot(log(abs(DJI$diffs))~log(Volume))
+plot(DJI$diffs~log(Open))
+plot(Open,Volume)
+plot(log(Open)~log(Volume)) # looks most promising
+# Compare logarithms of open price and trade volume variables
+x <- log(Volume)
+y <- log(Open)
+linmod <- lm(y~x)
+plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
+abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
+summary(linmod) # R-squared is 0.7298, so the linear model explains 73% of the data
+
+
 #Logistic Regression
-#Given the earlier results, it seems that recessions play a large role on what happens wiht the Dow Jones Industrial Average.
+#Given the earlier results, it seems that recessions have a large impact on 
+#first differences in daily Open values for the Dow Jones Industrial Average.
 #Let us inspect how economic recessions correlate with the performance of the DJIA. 
 plot(DJI$diffs,DJI$Recession, xlim = c(-5000,5000))
 MLL <- function(alpha, beta) {
@@ -520,7 +543,7 @@ curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + res
 #In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones
 #correlate with economic recessions.
 
-# Tribute to Mandelbrot
+# Fractal Tribute to Mandelbrot
 # Source: https://rosettacode.org/wiki/Mandelbrot_set#R 
 iterate.until.escape <- function(z, c, trans, cond, max=50, response=dwell) {
   #we iterate all active points in the same array operation,

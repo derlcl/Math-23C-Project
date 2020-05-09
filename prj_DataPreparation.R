@@ -1,7 +1,5 @@
-## Prepare data for analysis
+## Prepare data for political analysis
 
-#Load Dow Jones Industrial dataset and prepare it for analysis
-DJI <- read.csv("DJI.csv"); head(DJI)
 #Create 'Regime' Categories (Regan, Bush, etc.)
 DJI["Regime"] <- "None" #Set blank column
 #Set the dates for each regime. Each 'term' is denoted from inaugaration day to the day 
@@ -43,3 +41,4 @@ min.Open <- range.Open[,1]
 max.Open <- range.Open[,2]
 range.Open <- max.Open - min.Open
 head(min.Open) ; head(max.Open) ; head(range.Open)
+plot(max.Open)
