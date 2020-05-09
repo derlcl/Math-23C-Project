@@ -61,6 +61,12 @@ Kyle Siegrist
 Phd in Mathematics, Georgia Institute of Technology, '79
 https://www.randomservices.org/random/special/Stable.html
 
+On the Distribution of Stock Price Differences
+Benoit Mandelbrot, IBM Yorktown Heights, New York
+Howard M. Taylor, Cornell University, Ithaca New York
+Operations Research, Vol. 15, No. 6, November-December 1967, pp. 1057-1062
+https://users.math.yale.edu/mandelbrot/web_pdfs/050onthedistribution.pdf
+
 Books:
 The (Mis)behavior of Markets by Benoit Mandelbrot:
 https://dichgiacamchi.files.wordpress.com/2015/01/the_misbehavior_of_markets_-_benoit_mandelbrot.pdf
