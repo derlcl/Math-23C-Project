@@ -50,6 +50,12 @@ Eugene F. Fama
 The Journal of Business, Vol. 38, No. 1. (Jan., 1965), pp. 34-105
 http://static.stevereads.com/papers_to_read/the_behavior_of_stock_market_prices.pdf
 
+The Variation of Certain Speculative Prices
+Benoit Mandelbrot
+Source: The Journal of Business, Vol. 36, No. 4 (Oct., 1963), pp. 394-419
+Published by: The University of Chicago Press
+https://web.williams.edu/Mathematics/sjmiller/public_html/341Fa09/econ/Mandelbroit_VariationCertainSpeculativePrices.pdf
+
 Books:
 The (Mis)behavior of Markets by Benoit Mandelbrot:
 https://dichgiacamchi.files.wordpress.com/2015/01/the_misbehavior_of_markets_-_benoit_mandelbrot.pdf
