@@ -56,6 +56,11 @@ hist(AbsDiffs, breaks = "fd", prob = TRUE) ; abline(v = mu.AbsDiffs)
 # could be modeled by a non-negative valued, long-tailed distribution 
 # (see below for Pareto analysis)
 
+# Logarithm of Absolute First Differences
+logAbsDiffs <- log(AbsDiffs) ; summary(logAbsDiffs) ; 
+logAbsDiffs <- logAbsDiffs[logAbsDiffs > -Inf] ; summary(logAbsDiffs) ; length(logAbsDiffs)
+hist(logAbsDiffs, prob = TRUE, breaks = "fd")
+
 ## Empirical Cumulative Distributions
 plot.ecdf(diffs)
 AbsDiffsCDF <- ecdf(AbsDiffs)
