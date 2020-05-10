@@ -237,44 +237,39 @@ summary(variances.Open) # extremely large spread
 summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
 # variance seems to diverge for both Open prices and for first differences
 
+## An interesting correlation that we would not have expected to be signifficant, but turns out to be so:
+# Finding interesting linear relationships
+Volume <- DJI$Volume
+plot(DJI$diffs~Volume)
+plot(DJI$diffs~log(Volume))
+plot(log(abs(DJI$diffs))~log(Volume))
+plot(DJI$diffs~log(Open))
+plot(Open,Volume)
+plot(log(Open)~log(Volume)) # looks most promising
+# Compare logarithms of open price and trade volume variables
+x <- log(Volume)
+y <- log(Open)
+#Let us first manually run the regression, and then we'll check our results against the built-in
+#function. First, let's find the slope of the line
+b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b 
+#Alternative - works because division by n-1 cancels out
+cov(x,y)/var(x)
+#Here is the formula for the intercept
+a <- mean(y) - b*mean(x);a    
 
-## Pareto
-library(MASS)
-#install.packages("actuar")
-library(actuar)
+#It is quicker to use the built-in R function
+linmod <- lm(y~x)
+linmod; a; b #And we get the same result
+plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
+abline(a, b, col = "cyan")
+abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
+summary(linmod) 
+###R-squared is 0.7298, so the linear model explains 73% of the data, and it appears that volume and open
+###prices are positively correlated
 
-#The distribution of the absolute value of the changes appears to be well modeled by a Pareto distribution. Let us 
-#investigate if that is the case:
-hist(AbsDiffs , breaks = "FD", probability = TRUE) 
-shape.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[1]
-scale.pareto <- fitdist(AbsDiffs, "pareto", start=list(shape = 1, scale = 500))$estimate[2]
-curve(dpareto(x,shape = shape.pareto , scale = scale.pareto ), col = "red", add = TRUE) #This looks pretty good
-
-n1 <- qpareto(.1, shape = shape.pareto, scale = scale.pareto); n1
-ppareto(n1,shape = shape.pareto, scale = scale.pareto)
-mean(AbsDiffs <= n1) #about 11% of the data is in this bin
-abline(v = n1, col = "blue") #very close to 0, as expected from a pareto distribution
-
-#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qpareto(seq(0.0,1,by = 0.1), shape = shape.pareto, scale = scale.pareto); dec  #10 bins
-Exp <- rep(length(AbsDiffs)/10,10); Exp 
-binabschg <- numeric(10)
-for(i in 1:10){
-  binabschg[i] <- sum((AbsDiffs >= dec[i]) & (AbsDiffs <= dec[i+1] )) ; binabschg
-}
-#Finally we can test for uniformity using a chi-squared test.
-ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #73.3071
-#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
-#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
-curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
-abline(v=ChiStatAbs, col = "red") 
-pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
-### Given this extremely low p-value, it seems that the pareto distribution is not a good model (at all)
-### for the absolute daily fluxes in the Dow Jones Industrial Average. 
-
-#Let's shift now to taking a look at rare events, and how they are impacting some of our results:
-#Let's consider each of the days in our data and examine how far from the mean flux in value each of
-#them was. 
+##Let's shift now to taking a look at presumably rare events, and how they are impacting our results:
+#Let's consider each of the days in our data and examine how far from the mean flux in value 
+#each of them was. 
 mu <- mean(diffs); mu
 sigma <- sd(diffs); sigma
 
@@ -312,9 +307,6 @@ rare <- max(pvals);rare #2.303366e-07, which is pretty much 0.
 #the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering
 #the impact of political party on the performance of the market. 
 
-
-
-
 regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
 #At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.
 #But let us look a little closer:
@@ -342,10 +334,10 @@ ind.pres
 #These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald 
 #Trump administration's success in boosting the DJIA to new heights.
 summary(ind.pres)
-#here again, we find that no presidents' presense in the White House had a significant impact on the Dow.
+#here again, we find that no presidents' presence in the White House had a significant impact on the Dow.
 
-#So, let's exclude the days when 5 sigma + events took place, that way we'll keep only the data for "normal/typical"
-#days.
+#Let us now exclude the days when 5 sigma + events took place, that way we'll keep only the data for 
+#"normal/typical" days.
 regress.data.ne <- regress.data[-idx,]
 ind.pres.2 <- lm(regress.data.ne$diffs ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
 summary(ind.pres.2)
@@ -356,36 +348,10 @@ summary(ind.pres.2)
 #which took place in the final months of his second term. Additionally, we should note that the only statistically 
 #signifficant coefficient was that of Donald Trump, which had a p-value well below 0.01.
 
-# Linear Regression
-# Find interesting linear relationships
-Volume <- DJI$Volume
-plot(DJI$diffs~Volume)
-plot(DJI$diffs~log(Volume))
-plot(log(abs(DJI$diffs))~log(Volume))
-plot(DJI$diffs~log(Open))
-plot(Open,Volume)
-plot(log(Open)~log(Volume)) # looks most promising
-# Compare logarithms of open price and trade volume variables
-x <- log(Volume)
-y <- log(Open)
-#Let us first manually run the regression, and then we'll check our results against the built-in
-#function. First, let's find the slope of the line
-b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b 
-#Alternative - works because division by n-1 cancels out
-cov(x,y)/var(x)
-#Here is the formula for the intercept
-a <- mean(y) - b*mean(x);a    
-
-#It is quicker to use the built-in R function
-linmod <- lm(y~x)
-linmod; a; b #And we get the same result
-plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
-abline(a, b, col = "cyan")
-abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
-summary(linmod) # R-squared is 0.7298, so the linear model explains 73% of the data
 
 
-#Logistic Regression
+
+##Logistic Regression: Recessions and Results
 #Given the earlier results, it seems that recessions have a large impact on 
 #first differences in daily Open values for the Dow Jones Industrial Average.
 #Let us inspect how economic recessions correlate with the performance of the DJIA. 
@@ -400,11 +366,11 @@ library(stats4)
 results <- mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
 results@coef
 curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + results@coef[2]*x)),col = "blue", add=TRUE)
-#This is a fairly interesting result because its graph looks different than the normal logistic curve.
-#Of course, this becomes obvious when one considers the nature of the regression, namely that recessions
-#are events that are expected to correlate with negative values of first differences (i.e. price drops).
-#In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones
-#correlate with economic recessions.
+###This is a fairly interesting result because its graph looks different than the normal logistic curve.
+###Of course, this becomes obvious when one considers the nature of the regression, namely that recessions
+###are events that are expected to correlate with negative values of first differences (i.e. price drops).
+###In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones
+###correlate with economic recessions.
 
 
 
