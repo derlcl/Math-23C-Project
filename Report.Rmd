@@ -9,13 +9,14 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Exploratory Data Analysis - Center and shape, visualizations, first differences, magnitude, logarithm, 
+# Exploratory Data Analysis - Center and shape, visualizations, first differences, magnitude, logarithm, 
+##  First differences of Open share price values for DJI data exhibits left skew, large variance, 
 Bootstrapping for empirical cumulative distribution
 Bootstrapped sampling distributions and central limit theorem
 Partial variance
 Pareto analysis
 Rare events, linear regression, logistic regression
-Hypothesis testing with permutation tests, contingency tables, and chi-square tests
+Hypothesis testing with permutations, contingency tables, and chi-square
 
 Fourier Analysis
 Random Walk
