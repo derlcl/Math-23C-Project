@@ -10,30 +10,163 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 <<<<<<< HEAD
 #Outline
-Exploratory Data Analysis - Center and shape, visualizations, first differences, magnitude, logarithm, 
-=======
-
-# Exploratory Data Analysis - Center and shape, visualizations, first differences, magnitude, logarithm, 
-##  First differences of Open share price values for DJI data exhibits left skew, large variance, 
->>>>>>> 82efb3591e99a448d0f40ff30b9d062a5509baab
-Bootstrapping for empirical cumulative distribution
-Bootstrapped sampling distributions and central limit theorem
-Partial variance
-Pareto analysis
-Rare events, linear regression, logistic regression
-Hypothesis testing with permutations, contingency tables, and chi-square
-
+Exploratory Data Analysis
+Pareto Distribution
+Linear and Logistic Regression
 Fourier Analysis
 Random Walk
-Graphical Volatility
-Fractal Analysis and Hurst Exponent
+Fractal Analysis
 Cauchy Distribution
-Divergent Integrals
-Stable Distribution
-Kolmogorov-Smirnov tests
-Logarithms, absolute values and varying time horizons
-
+Bootstrap
 Partial Variance
+Divergent Integration
+Stable Distribution
+Kolmogorov-Smirnov Test
+Chi-square Test on Varying Time Scales
+The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
+Hypothesis Testing: Contingency table with chi-square test
+=======
+
+
+#Cauchy Distribution
+```{r}
+
+```
+
+#Bootstrap
+```{r}
+## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
+#
+# Sources: 
+# https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
+# Chihara and Hesterberg's Mathematical Statistics with Resampling
+#
+# If our sample is an independent and identically distributed realization 
+# from a light-tailed distribution, the central limit theorem should hold
+# even at smaller sample sizes. If we have a heavy-tailed distribution, 
+# larger sample sizes will be needed to approximate the standard normal distribution.
+# Use bootstrap resampling to demonstrate this.
+
+## Bootstrap For A Single Population
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+sampsize <- length(diffs) # starting sample size to draw from
+N <- 100 # number of boostrap samples to run
+n <-  100 # bootstrap sample size to draw
+xlima <- -3 ; xlimb <- 3
+
+# Perform N boostrap resamples of size n from sample X
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from First Differences")
+for (i in 1:N) {
+  X <- diffs
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.diffs <- meanY
+varY.diffs <- varY
+Z.diffs <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from sample Cauchy with interquartile parameters
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (Interquartile)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = diffs.median, scale = diffs.hiq)
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.iqrCauchy <- meanY
+varY.iqrCauchy <- varY
+Z.iqrCauchy <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from Cauchy with fitdist parameters
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (FitDist)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = fit.diffs[1], scale = fit.diffs[2])
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.fdCauchy <- meanY
+varY.fdCauchy <- varY
+Z.fdCauchy <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from normal distribution
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Normal")
+for (i in 1:N) {
+  X <- rnorm(sampsize, mean(diffs), sd(diffs)) 
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.norm <- meanY
+varY.norm <- varY
+Z.norm <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+#########################################################
+## Result: Empirical cumulative distribution for standardized random variable from
+## bootstrap sampling distribution seems to indicate similarity between first differences
+## and standard normal as well as dissimilarity between first differences and Cauchy. 
+## Though there are indicates of wider dispersion in the eCDFs for the first differences
+## than there are in the eCDFs for the normal, indicating the possibility of 
+## significantly greater Kolmogorov-Smirnov test statistics. This requires testing. 
+
+
+# Bootstrap sampling distribution of standardized sample observations
+hist(Z.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(Z.iqrCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.fdCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Central Limit Theorem explains approximation of standard normal for larger sample sizes. 
+# However, due to infinite variance of Cauchy distribution, extreme values from heavy tails
+# require very large sample size to approximate standard normal distribution. 
+# Cauchy has inconsistent center, shape and spread on different iterations. 
+
+# Bootstrap sampling distribution of sample variances
+hist(varY.diffs, breaks = "fd", prob = TRUE) # somewhat normal with somewhat heavy right tail
+hist(varY.iqrCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.fdCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Variance for first difference somewhat resembles shape and spread of Cauchy variance, not normal.
+
+# Bootstrap sampling distribution of sample means
+hist(meanY.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(meanY.iqrCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.fdCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Mean for first difference resembles shape and spread of normal sample mean, not Cauhcy.
+
+## Overall Result: Our first differences data may lie somewhere between Gaussian and Cauchy 
+## on the parameter scale for stable distributions. However, the data is a sample from 
+## an underlying population, so the limited accessibilility to a sample size of only 8857 
+## limits the capture of extreme values from possibly heavy right tails. 
+```
+
+
+#Partial Variance
 ```{r}
 # Partial Variance to test for convergence of variance
 N <- length(Open) - 1; 
@@ -65,7 +198,7 @@ summary(variances.diffs) # spread is larger than it is for Cauchy but less than 
 ```
 
 
-Divergent Integrals
+#Divergent Integrals, Divergent Variance
 ```{r}
 ## Divergent Integration For Calculating Variance
 
@@ -85,6 +218,11 @@ integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[
 exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
 #And it appears that the integral is divergent! This means that 
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
+```
+
+#Stable Distribution
+```{r}
+
 ```
 
 
