@@ -585,48 +585,7 @@ curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 #QQ Plot
 par(mfrow = c(1,3))
 qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
-
-
-#Yearly
-yearly <- DJI; yearly$Date <- as.Date(yearly$Date)
-yearly$Date <- format(as.Date(yearly$Date, format="%d/%m/%Y"),"%Y") 
-yearly <-  aggregate(yearly[,2:4], list(yearly$Date), mean, drop = TRUE) 
-colnames(yearly)[1] <- "Date"; head(yearly)
-
-par(mfrow = c(1,2))
-plot(yearly$Open, type = "l")
-yearlyDiffs <- diff(yearly$Open); hist(diff(yearly$Open), freq = FALSE, breaks = "FD")
-
-#Normal
-curve(dnorm(x, mean(yearlyDiffs), sd(yearlyDiffs)), col = "red", lwd = 2, add = TRUE)
-
-#Stable
-stable.Xs <- quantile(yearlyDiffs, c(.05, .25, .5, .75, .95))
-
-#Calculate V's
-stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
-
-#Using Table we calculate alpha and beta
-stable.a <- 1.35
-stable.b <- .721
-
-#Calculate Phi_3 
-stable.phi_3 <- 2.147
-
-#Use phi_3 to calculate scale and then location is found from the table 
-stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
-stable.location <- median(yearlyDiffs)
-curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
-
-#Cauchy
-cauchy.median <- median(yearlyDiffs)
-cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
-curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
-
-#QQ Plot
-par(mfrow = c(1,3))
-qqPlot(yearlyDiffs, "norm"); qqPlot(yearlyDiffs, "cauchy"); qqPlot(yearlyDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
+hurstexp(logDiffs)
 
 #Monthly
 monthly <- DJI; monthly$Date <- as.Date(monthly$Date)
@@ -668,11 +627,49 @@ curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 #QQ Plot
 par(mfrow = c(1,3))
 qqPlot(monthlyDiffs, "norm"); qqPlot(monthlyDiffs, "cauchy"); qqPlot(monthlyDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
+hurstexp(monthlyDiffs)
 
-#Comparing yearly Diffs to rnrom QQ Plots
+#Yearly
+yearly <- DJI; yearly$Date <- as.Date(yearly$Date)
+yearly$Date <- format(as.Date(yearly$Date, format="%d/%m/%Y"),"%Y") 
+yearly <-  aggregate(yearly[,2:4], list(yearly$Date), mean, drop = TRUE) 
+colnames(yearly)[1] <- "Date"; head(yearly)
+
 par(mfrow = c(1,2))
-qqPlot(yearlyDiffs, "norm"); qqPlot(rnorm(35, mean(yearlyDiffs), sd(yearlyDiffs)), "norm")
+plot(yearly$Open, type = "l")
+yearlyDiffs <- diff(yearly$Open); hist(diff(yearly$Open), freq = FALSE, breaks = "FD")
 
+#Normal
+curve(dnorm(x, mean(yearlyDiffs), sd(yearlyDiffs)), col = "red", lwd = 2, add = TRUE)
+
+#Stable
+stable.Xs <- quantile(yearlyDiffs, c(.05, .25, .5, .75, .95))
+
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+
+#Using Table we calculate alpha and beta
+stable.a <- 1.35
+stable.b <- .721
+
+#Calculate Phi_3 
+stable.phi_3 <- 2.147
+
+#Use phi_3 to calculate scale and then location is found from the table 
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
+stable.location <- median(yearlyDiffs)
+curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
+
+#Cauchy
+cauchy.median <- median(yearlyDiffs)
+cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
+curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
+
+#QQ Plot
+par(mfrow = c(1,3))
+qqPlot(yearlyDiffs, "norm"); qqPlot(yearlyDiffs, "cauchy"); qqPlot(yearlyDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
+hurstexp(yearlyDiffs)
 
 #Log Price then take diffs :)
 #Log Diffs:
@@ -709,6 +706,7 @@ curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 #QQ Plot
 par(mfrow = c(1,3))
 qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
+hurstexp(logDiffs)
 
 #logDiffs of Prices Chi Square Test (cauchy):
 cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
@@ -730,4 +728,16 @@ stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
 stable.exp <- rep(length(logDiffs) / 4, length(stable.obs)); stable.exp
 stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs
 pchisq(stable.cs, df = 4) #It breaks 
+
+#Comparing yearly Diffs to rnrom QQ Plots
+par(mfrow = c(1,2))
+qqPlot(yearlyDiffs, "norm"); qqPlot(rnorm(length(yearlyDiffs), mean(yearlyDiffs), sd(yearlyDiffs)), "norm")
+
+par(mfrow = c(1,2))
+qqPlot(monthlyDiffs, "norm"); qqPlot(rnorm(length(monthlyDiffs), mean(monthlyDiffs), sd(monthlyDiffs)), "norm")
+
+par(mfrow = c(1,2))
+qqPlot(logDiffs, "norm"); qqPlot(rnorm(length(logDiffs), mean(logDiffs), sd(logDiffs)), "norm")
+
+
 
