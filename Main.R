@@ -147,11 +147,11 @@ varY.fdCauchy <- varY
 Z.fdCauchy <- Z
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 
-# Perform N boostrap resamples of size n from standard normal distribution
+# Perform N boostrap resamples of size n from normal distribution
 meanY <- varY <- Z <- numeric(N)
-plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Standard Normal")
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Normal")
 for (i in 1:N) {
-  X <- rnorm(sampsize) 
+  X <- rnorm(sampsize, mean(diffs), sd(diffs)) 
   for (i in 1:N) {
     Y <- sample(X,n,replace = TRUE) # Resample
     meanY[i] <- mean(Y)
@@ -166,22 +166,42 @@ Z.norm <- Z
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 
 #########################################################
-par(mfrow = c(1,1)) # reset to 1x1 plot matrix
 ## Result: Empirical cumulative distribution for standardized random variable from
 ## bootstrap sampling distribution seems to indicate similarity between first differences
 ## and standard normal as well as dissimilarity between first differences and Cauchy. 
 ## Though there are indicates of wider dispersion in the eCDFs for the first differences
-## than there are in the eCDFs for the standard normal, indicating the possibility of 
+## than there are in the eCDFs for the normal, indicating the possibility of 
 ## significantly greater Kolmogorov-Smirnov test statistics. This requires testing. 
 
+# Bootstrap sampling distribution of standardized sample observations
+hist(Z.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(Z.iqrCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.fdCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Central Limit Theorem explains approximation of standard normal for larger sample sizes. 
+# However, due to infinite variance of Cauchy distribution, extreme values from heavy tails
+# require very large sample size to approximate standard normal distribution. 
 
-# Bootstrap sampling distribution of sample mean, variance and standardized Z
-hist(Z, breaks = "fd", prob = TRUE, main = "Histogram of Standardized Random Variable")
-# approximates standard normal distribution by CLT
-hist(varY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Variances") 
-# long tailed distribution with right skew, indicating large variance values
-hist(meanY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Mean") 
-# approximately normal with center around meanX
+# Bootstrap sampling distribution of sample variances
+hist(varY.diffs, breaks = "fd", prob = TRUE) # somewhat normal with somewhat heavy right tail
+hist(varY.iqrCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.fdCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Variance for first difference somewhat resembles shape and spread of Cauchy variance, not normal.
+
+# Bootstrap sampling distribution of sample means
+hist(meanY.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(meanY.iqrCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.fdCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Mean for first difference resembles shape and spread of normal sample mean, not Cauhcy.
+
+## Overall Result: Our first differences data may lie somewhere between Gaussian and Cauchy 
+## on the parameter scale for stable distributions. However, the data is a sample from 
+## an underlying population, so the limited accessibilility to a sample size of only 8857 
+## limits the capture of extreme values from possibly heavy right tails. 
+
+par(mfrow = c(1,1)) # reset to 1x1 plot matrix
 
 ## Hypothesis Testing With Permutation Test
 #
