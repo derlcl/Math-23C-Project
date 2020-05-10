@@ -375,12 +375,12 @@ b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b
 cov(x,y)/var(x)
 #Here is the formula for the intercept
 a <- mean(y) - b*mean(x);a    
-#We can add this regression line to the plot of the data
-abline(a, b, col = "red")
+
 #It is quicker to use the built-in R function
 linmod <- lm(y~x)
 linmod; a; b #And we get the same result
 plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
+abline(a, b, col = "cyan")
 abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
 summary(linmod) # R-squared is 0.7298, so the linear model explains 73% of the data
 
