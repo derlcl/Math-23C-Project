@@ -292,7 +292,6 @@ hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
 
 
 #Partial Variance
->>>>>>> 5b5c0749e494546bd316b6eb7560cbf5ac1ca52c
 ```{r}
 # Partial Variance to test for convergence of variance
 N <- length(Open) - 1; 
@@ -345,7 +344,6 @@ exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2
 #And it appears that the integral is divergent! This means that 
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
 ```
->>>>>>> ab7de49cc1c3eccf96c2ecf068143a939a62150a
 
 #Stable Distribution
 ```{r}
