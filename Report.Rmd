@@ -8,141 +8,414 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-Exploratory Data Analysis - Center and shape, visualizations, first differences, magnitude, logarithm, 
-Bootstrapping for empirical cumulative distribution
-Bootstrapped sampling distributions and central limit theorem
-Partial variance
-Pareto analysis
-Rare events, linear regression, logistic regression
-Hypothesis testing with permutation tests, contingency tables, and chi-square tests
-
+<<<<<<< HEAD
+#Outline
+Exploratory Data Analysis
+Pareto Distribution
+Linear and Logistic Regression
 Fourier Analysis
 Random Walk
-Graphical Volatility
-Fractal Analysis and Hurst Exponent
+Fractal Analysis
 Cauchy Distribution
+Bootstrap
+Partial Variance
+Divergent Integration
 Stable Distribution
-Kolmogorov-Smirnov tests
-Logarithms, absolute values and varying time horizons
+Kolmogorov-Smirnov Test
+Chi-square Test on Varying Time Scales
+The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
+Hypothesis Testing: Contingency table with chi-square test
+=======
 
-# TD
-Rakeen
-1. Compare different price variables (?) including volume vs. first difference. (In progress, is it helpful?)
-2. [Bootstrap] Sampling distribution from our data and find a model that fits the data and use it to estimate the population variance (check if this can be estimated using bootstrapping). Variance increases as sample size increases? (Find in lecture, notes from Alek). Barplot, pdf overlaid on histogram. Compare classical (CLT, chi-square) vs. simulation (permutation), which works better? Leverage theoretical knowledge. (In Progress)
-3.  Read https://stats.stackexchange.com/questions/2504/test-for-finite-variance, ecdf (DONE)
-4. Integration on infinite variance to demonstrate divergence. Select data to model with a continuous distribution (exponential, gamma, chi square, beta). Dispaly a histogram of your data and overlay on it a graph of the density function for your hypothesized distribution. Then use integration is R to compute the expected number of counts in various bins, and compare with the observed number of counts. (Bruno?)
-Bruno here: What are you thinking when you say "use integration to compute the expected number of counts in the bins"? 
-Rakeen: so instead of using the built-in CDF function we just manually integrate over the density function to get the same expected counts that you got already. This is really just to demonstrate that we can do integration in R. 
-
-
-Derl
-1. [X]Test if data is well modeled by random walk with fractal analysis (https://blog.quantinsti.com/hurst-exponent/). 
-  What would infinite variance in economic price indices mean for the long-term future of humanity? Does the stock market also have infinite growth? Political party/regime? When does it all end? What about automation? What is the optimization curve look like? 
-2. [X]Analysis of contingency table with recession by more granular than annual period. Repeat chi-square test by party, and also repeat for regime. (Surprising that Democratic regimes bore brunt of recession(s) but have higher first differences and less recession time periods. Interesting if recession seems to be more associated with one categorical response than another, that we have so much variance, reflecting a random walk. Regime, recession, cycles, Fourier, random walk.)
-3. [X]Fourier analysis, signal processing on First Difference Series. 
-4. []Report, Overleaf (include effect of policy write-up), Video
-5. [X]Hurst Exponent vs time. Different time frames within DJI. Run the same analysis on the two other big boy indices (S&P 500, NASDAQ)
-Notes:
--History of stock market and it's impact on the various distributions / risk analysis. More history we have, the more cauchy / infinite variance begins to appears
--A new kind of statistics, a more gemotric statistics. We can't continue to analyze risk without acknowledging the slow failure of gaussian statistics
-
-Bruno
-1. [x] Test Opens and diffs for normal, Cauchy, Pareto, stable/Levy, student's t. Barplot, pdf overlaid on histogram. Use bins, quantiles to compare distributions. 
-2. [x]Linear and multiple regression analysis to predict values by regime and party. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday). Logistic regression analysis on probabilities for recession, party. Include covariance and correlation calculations, Rsquared. 
-3. [x]What is the standard deviation of the COVID-19 crash? Its significance? How many 5sigma events do we have in the data? 2007-8 market crash?
- - I added some stuff on this. There are 32 days where the flux was greater than 5 sigma. How do we want to discuss this?
-
-# Additional, ideal list of comprehensive data analysis workflows I'd like to include:
-1. Relevant data and case studies for introduction of topic and discussion of results. 
-2. Exploratory data analysis with numeric summaries including center, spread and shape, novel statistics (e.g. trimmed mean, maximum or minimum, skewness, ratios).
-Basic plots including boxplot, normal quantile plot, empirical cumulative distribution function and scatter plot. Nice pretty 3D plot (time vs. price vs. variance) or other plots yet unused in class used ggplot functions. 
-3. Hypothesis testing with and without permutation tests. 
-4. Demonstrate sampling distributions, central limit theorem (CLT) for binomial data, continuity correction for discrete random variables, and CLT for sampling without replacement. 
-5. Bootstrapping to demonstrate the plug-in principle to estimate the population mean, bootstrapping percentile intervals, two-sample bootstrap including matched pairs, estimation of bias, monte carlo sampling (the second boostrap principle), sample mean with both large and small sample sizes, sample median and the mean-variance relationship.
-6. Estimation. (Maximum Likelihood Estimation)
-7. Confidence intervals with and without bootstrapping.
-8. Regression.
-9. Categorical data analysis.
-10. Bayesian methods.
-11. One-way ANOVA.
-12. Distributions. Multivariate/bivariate normal distribution with covariance matrix and correlation coefficients. Check out what kind of data (or manipulation) can make chi-square, gamma or beta distribution and theory relevant. 
-
-# The points below are broken into required and additional points. To achieve full credit, you must do all of the required points, and a subset of 10 of the additional points. To facilitate grading, leave an index/comment in your long script identifying where/how you think you earned your points within your analysis.
-
-## Required dataset standards (DONE)
-1. A dataframe. (DJI)
-2. At least two categorical or logical columns. (political regime, year of expansion vs. recession)
-3. At least two numeric columns. (open, close, high, low, volume, diffs)
-4. At least 20 rows, preferably more, but real-world data may be limited. (8858 rows)
-
-## Required graphical displays (all graphs must be colored and nicely labeled) (TD)
-1. A barplot. (with fitdistr model overlaid on barplot of data) (Republican vs. Democratic gains, it's silly but it's what I got)
-2. A histogram. (DONE)
-3. A probability density graph overlaid on a histogram. (fitdistr) (DONE)
-4. A contingency table. (DONE)
-
-## Required analysis (TD)
-1. A permutation test. (regime change, president permutation tests, effect of policy)
-2. A p-value or other statistic based on a distribution function. (all over)
-3. Analysis of a contingency table. 
-4. Comparison of analysis by classical methods (chi-square, CLT) and simulation methods. (set seed in R, if infinite variance then this can be seen with more simulations and fat tails)
-
-## Required submission uploads (DONE)
-1. A .csv file with the dataset (DJI)
-2. A long, well-commented script that loads the dataset, explores it, and does all the analysis. (Main.R file)
-3. A shorter .Rmd with compiled .pdf or .html file that presents highlights in ten minutes. (Report.Rmd file)
-4. A one-page handout that explains the dataset and summarizes the analysis. (https://www.overleaf.com/project/5e7665484b0d3600011e16d0)
-
-
-## Additional points for creativity or complexity (You may attempt as many as you like, for a maximum possible of 10 points)
-1. A data set with lots of columns, allowing comparison of many different variables. (by volume, decade, year, month) (Recession by Party and Regime)
-2.[x] A data set that is so large that it can be used as a population from which samples are taken. (35 x ~365 rows) (Bootstrap sampling distribution)
-3. A one-page document that discusses ethical issues related to collection of the dataset. (N/A)
-4.[to-do] A one-page document that discusses ethical issues raised by conclusions reached from analysis of the data. (What would infinite variance in economic price indices mean for the long-term future of humanity?)
-5. A graphical display that is different from those in the textbook or in the class scripts.
-6.[x] Appropriate use of R functions for a probability distribution other than binomial, normal, or chi-square. (Random walk model, possibly also Cauchy, Levy, Pareto, T)
-7.[x] Appropriate use of integration to calculate a significant result.
-8.[?] A convincing demonstration of a relationship that might not have been statistically significant but that turns out to be so.(DJT gains before Covid?)
-9.[?]A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.(Pareto)
-10. Professional-looking software engineering (e.g defining and using your own functions).
-11.[?] Nicely labeled graphics using ggplot, with good use of color, line styles, etc., that tell a convincing story. (Do we need more here? Is labeling and coloring enough?)
-12. An example where permutation tests or other computational techniques clearly work better than classical methods. (?)
-13. Appropriate use of novel statistics (e.g. trimmed mean, maximum or minimum, skewness, ratios). (We consider max and min in several places)
-14.[x] Use of linear regression. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday)
-15.[x] Calculation and display of a logistic regression curve. (?)
-16. Appropriate use of covariance or correlation. (?)
-17. Use of theoretical knowledge of chi-square, gamma, or beta distributions.
-18.[x] Use of theoretical knowledge of sampling distributions. (variance)
-19. A graphical display that is different from those in the class scripts.
-20.[?] Calculation of a confidence interval. (could we calculate a confidence interval for the variance?)
-21.[x] Appropriate use of quantiles to compare distributions. (random walk bins, quantiles)
-22. Team consists of exactly two members (otherwise, 1 or 3 is a possibility). (3)
-23. A video of the short script is posted on YouTube and a link to it is left in your long script. 
-
-```{r}
-## Old Comments
-## # Normal seems to fit random walk, but not first differences (which model fits?) 
-# What is a narrow highly concentrated around the mean but with really large variance?
-# random walk doesn't seem to have infinite variance, but how does it theoretically?
-## Should we perform this analysis for High, Low or Close? Does it change anything?
-## Does using a logarithmic or exponential model make the data behave better?
-## Given that our observed DOD data produces low frequency, extreme values, particularly negative,
-## how do we do a better job of fitting a probability distribution model to our observed data? 
-## That is, can we slice our data differently, change the parameters of the random walk model,
-## or use a different distribution altogether to model our data? We could use Cauchy, Levy, Pareto, 
-## T or other distributions with infinite variance. Are there any that look like our histogram?
-## Is this necessary in order to test for infinite variance? 
-## Does the current random walk model invalidate our test for infinite variance on the observed data?
-## Or can we test for infinite variance without worrying about any model at all? 
-## 
-## ## Let's apply simulation methods to the day-over-day (DOD) change in Open values. 
-## We can also run this and the previous analyses on the other numerical columns 
-## of DJI to see if we arise at similar or different results, 
-## once we finish the first round of analysis the DOD change in Open values. 
-## If we set up the simulations appropriately, we should expect to see in our results that 
-## a greater sample size or a greater number of simulations yields increasingly higher 
-## variance, potentially indicated by fat tails when plotting the distribution of the results. 
-## Can you figure out a way to leverage a chi-square test or CLT here? 
+<<<<<<< HEAD
+<<<<<<< HEAD
+#Investigating Interesting Correlations - Regressions
+An interesting correlation that we would not have expected to be significant, but turns out to be so is that
+of Open prices and Volume:
+```{r,echo=T}
+plot(log(Open)~log(Volume)) 
 ```
+This looks fairly  promising. 
+
+Compare logarithms of open price and trade volume variables
+```{r,echo=TRUE}
+x <- log(Volume)
+y <- log(Open)
+
+#Let us first manually run the regression, and then we'll check our results against the built-in
+#function. First, let's find the slope of the line
+b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b 
+#Alternative - works because division by n-1 cancels out
+cov(x,y)/var(x)
+#Here is the formula for the intercept
+a <- mean(y) - b*mean(x);a    
+#It is quicker to use the built-in R function
+linmod <- lm(y~x)
+linmod; a; b #And we get the same result
+plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
+abline(a, b, col = "cyan")
+abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
+summary(linmod) 
+```
+And we get an R-squared that is 0.7298, so the linear model explains 73% of the data, and it appears that volume and open prices are positively correlated.
+
+#The Impact of "Rare" Events
+Let's shift now to taking a look at presumably rare events, and how they are impacting our results:
+Let's consider each of the days in our data and examine how far from the mean flux in value each of them was. 
+```{r,echo=T}
+mu <- mean(diffs); mu
+sigma <- sd(diffs); sigma
+
+N <- length(diffs)
+SDs <- numeric(N)
+for (i in 1:N){
+  SDs[i] <- (diffs[i]-mu)/sigma
+}
+head(SDs);head(diffs)
+length(SDs)
+SDs.data <- c(0,SDs[1:length(SDs)]); head(SDs.data) 
+DJI <- data.frame(DJI,SDs.data)
+idx <- which(abs(SDs.data) > 5); head(idx)
+unusual <- DJI[idx,]; head(unusual) 
+```
+As we can see, there are 32 days in which the price flux for the Dow Jones was larger than 5 standard deviations away from the mean. To show just how bad of a fit the normal distribution is for our data consider the p-values for each of these events. 
+```{r,echo=T}
+N <- nrow(unusual)
+pvals <- numeric(N)
+for (i in 1:(N)) {
+ pvals[i] <- pnorm(abs(unusual$SDs.data[i]*sigma), mean = mu, sd = sigma, lower.tail = FALSE)
+}
+head(pvals)
+rare <- max(pvals);rare #2.303366e-07, which is pretty much 0. 
+
+(1/rare)/365
+```
+If we interpret the p-value as the probability of an event taking place, and our events are measured in days, then a given p-value tells us the probability of seeing that extreme of an event on any given days (i.e. a p-value of 0.05 would correspond to an event that we'd "expect" to see once every 20 days, since it has a 1/20 chance of arising).In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare of these rare events once in 11,894.45 years, but from the data it is clear that these events are far more common than that.
+
+#Surveying the impact of the White House on the Dow Jones
+Now that we have seen that the data follows a model with infinite variance, which somewhat resemblesthat of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
+
+```{r,echo=T}
+regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
+summary(regime)
+```
+At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.But let us look a little closer. Given the large standard error for the Republican coefficient, we cannot safely conclude that republican administrations correlate with losses in the Dow. (i.e. the p-value is .3, so we fail to reject the null hypothesis that this control variable has no impact on the response variable.)
+
+Let's see if we can get a statistically signifficant result for any of the individual presidents:
+```{r,echo=T}
+GHWB <- DJI$Regime == "GHWB"
+BC <- DJI$Regime == "BC"
+GWB <- DJI$Regime == "GWB"
+BO <- DJI$Regime == "BO"
+DJT <- DJI$Regime == "DJT"
+
+pres.binary <- data.frame(GHWB, BC, GWB, BO, DJT)
+
+regress.data <- data.frame(DJI,pres.binary)
+
+#since we omitted the Ronald Reagan variable, each of the coefficients for the various presidents 
+#represents the incremental surplus or deficit in the DJIA that occurred during each of the other 
+#presidents' terms
+ind.pres <- lm(regress.data$diffs ~ regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
+ind.pres
+###These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald 
+###Trump administration's success in boosting the DJIA to new heights.
+summary(ind.pres)
+###here again, we find that no presidents' presence in the White House had a significant impact on the Dow.
+```
+These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald Trump administration's success in boosting the DJIA to new heights. Here again, we find that no presidents' presence in the White House had a significant impact on the Dow.
+
+Let us now exclude the days when 5 sigma + events took place, that way we'll keep only the data for "normal/typical" days.
+```{r,echo=T}
+regress.data.ne <- regress.data[-idx,]
+ind.pres.2 <- lm(regress.data.ne$diffs ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
+summary(ind.pres.2)
+```
+These results seem to indicate that, excluding days with "extremely" events, and controlling for recessions (and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush. It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis, which took place in the final months of his second term. Additionally, we should note that the only statistically signifficant coefficient was that of Donald Trump, which had a p-value well below 0.01.
+
+#Logistic Regression: Recessions and Results
+Given the earlier results, it seems that recessions have a large impact on first differences in daily Open values for the Dow Jones Industrial Average.Let us inspect how economic recessions correlate with the performance of the DJIA. 
+```{r,echo=T}
+plot(DJI$diffs,DJI$Recession, xlim = c(-5000,5000))
+MLL <- function(alpha, beta) {
+  -sum( log( exp(alpha+beta*DJI$diffs)/(1+exp(alpha+beta*DJI$diffs)) )*DJI$Recession
+        + log(1/(1+exp(alpha+beta*DJI$diffs)))*(1-DJI$Recession) )
+}
+#R has a function that will maximize this function of alpha and beta
+#install.packages("stats4")   #needs to be run at most once
+library(stats4)
+results <- mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
+results@coef
+curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + results@coef[2]*x)),col = "blue", add=TRUE)
+```
+This is a fairly interesting result because its graph looks different than the normal logistic curve. Of course, this becomes obvious when one considers the nature of the regression, namely that recessions are events that are expected to correlate with negative values of first differences (i.e. price drops).In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones correlate with economic recessions.
+=======
+Partial Variance
+=======
+
+#Cauchy Distribution
+```{r}
+
+```
+
+#Bootstrap
+```{r}
+## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
+#
+# Sources: 
+# https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
+# Chihara and Hesterberg's Mathematical Statistics with Resampling
+#
+# If our sample is an independent and identically distributed realization 
+# from a light-tailed distribution, the central limit theorem should hold
+# even at smaller sample sizes. If we have a heavy-tailed distribution, 
+# larger sample sizes will be needed to approximate the standard normal distribution.
+# Use bootstrap resampling to demonstrate this.
+
+## Bootstrap For A Single Population
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+sampsize <- length(diffs) # starting sample size to draw from
+N <- 100 # number of boostrap samples to run
+n <-  100 # bootstrap sample size to draw
+xlima <- -3 ; xlimb <- 3
+
+# Perform N boostrap resamples of size n from sample X
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from First Differences")
+for (i in 1:N) {
+  X <- diffs
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.diffs <- meanY
+varY.diffs <- varY
+Z.diffs <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from sample Cauchy with interquartile parameters
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (Interquartile)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = diffs.median, scale = diffs.hiq)
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.iqrCauchy <- meanY
+varY.iqrCauchy <- varY
+Z.iqrCauchy <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from Cauchy with fitdist parameters
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (FitDist)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = fit.diffs[1], scale = fit.diffs[2])
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.fdCauchy <- meanY
+varY.fdCauchy <- varY
+Z.fdCauchy <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from normal distribution
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Normal")
+for (i in 1:N) {
+  X <- rnorm(sampsize, mean(diffs), sd(diffs)) 
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.norm <- meanY
+varY.norm <- varY
+Z.norm <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+#########################################################
+## Result: Empirical cumulative distribution for standardized random variable from
+## bootstrap sampling distribution seems to indicate similarity between first differences
+## and standard normal as well as dissimilarity between first differences and Cauchy. 
+## Though there are indicates of wider dispersion in the eCDFs for the first differences
+## than there are in the eCDFs for the normal, indicating the possibility of 
+## significantly greater Kolmogorov-Smirnov test statistics. This requires testing. 
+
+
+# Bootstrap sampling distribution of standardized sample observations
+hist(Z.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(Z.iqrCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.fdCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Central Limit Theorem explains approximation of standard normal for larger sample sizes. 
+# However, due to infinite variance of Cauchy distribution, extreme values from heavy tails
+# require very large sample size to approximate standard normal distribution. 
+# Cauchy has inconsistent center, shape and spread on different iterations. 
+
+# Bootstrap sampling distribution of sample variances
+hist(varY.diffs, breaks = "fd", prob = TRUE) # somewhat normal with somewhat heavy right tail
+hist(varY.iqrCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.fdCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Variance for first difference somewhat resembles shape and spread of Cauchy variance, not normal.
+
+# Bootstrap sampling distribution of sample means
+hist(meanY.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(meanY.iqrCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.fdCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Mean for first difference resembles shape and spread of normal sample mean, not Cauhcy.
+
+## Overall Result: Our first differences data may lie somewhere between Gaussian and Cauchy 
+## on the parameter scale for stable distributions. However, the data is a sample from 
+## an underlying population, so the limited accessibilility to a sample size of only 8857 
+## limits the capture of extreme values from possibly heavy right tails. 
+```
+
+
+#Partial Variance
+>>>>>>> 5b5c0749e494546bd316b6eb7560cbf5ac1ca52c
+```{r}
+# Partial Variance to test for convergence of variance
+N <- length(Open) - 1; 
+variances.normal <- variances.cauchy <- variances.Open <- variances.diffs <- numeric(N)
+sample.normal <- rnorm(N + 1) ; sample.cauchy <- rcauchy(N + 1)
+Open <- DJI$Open ; diffs.Open <- DJI$diffs
+index <- 1:N
+for (i in 2:(N + 1)) {
+  variances.normal[i - 1] <- var(sample.normal[1:i])
+  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
+  variances.Open[i - 1] <- var(Open[1:i])
+  variances.diffs[i - 1] <- var(diffs.Open[1:i])
+}
+variances.diffs <- variances.diffs[-1]
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x", ylab = "Normal Variance", xlab = "Sample Size") # converges
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy",ylab = "Cauchy Variance", xlab = "Sample Size") # diverges jagged
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy",ylab = "Open Variance", xlab = "Sample Size") # diverges
+plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy", ylab = "Firs Diff. Variance", xlab = "Sample Size") # diverges
+par(mfrow = c(1,1)) # revert to 1x1 plot matrix
+summary(variances.normal) # data is centered closely around mean and median
+summary(variances.cauchy) # seems to be large spread
+summary(variances.Open) # extremely large spread
+summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
+### Result: As index increases, partial variance converges for normal distribution,
+### but it diverges in jagged jumps for Cauchy distribution and
+### in smoother curves for both Open values and first differences. 
+### This indicates that our data may have undefined or infinite variance. 
+```
+
+
+#Divergent Integrals, Divergent Variance
+```{r}
+## Divergent Integration For Calculating Variance
+
+#Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
+#scale parameters above, that it does indeed have infinite variance. 
+#To do that, we'll need to define functions that will describe the integrands that will allow us to
+#use the tail-integral theorem. First, we'll define the integrand that will give us E(X).
+#Since the underlying distribution can be modeled by a Cauchy distribution, we will use 
+#dcauchy with the right parameters as our mu_x:
+integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
+#and now we have E(X):
+exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
+
+#In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
+integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
+#And E(X^2)
+exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
+#And it appears that the integral is divergent! This means that 
+#Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
+```
+>>>>>>> ab7de49cc1c3eccf96c2ecf068143a939a62150a
+
+#Stable Distribution
+```{r}
+
+```
+
+
+#The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
+```{r, echo=TRUE}
+RepAvg <- sum(DJI$diffs*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
+DemAvg <- sum(DJI$diffs*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
+Obs <-  DemAvg - RepAvg; Obs
+#
+N <- 10^4 #number of simulations
+result.Combined <- numeric(N) #this is the vector that will store our simulated differences
+for (i in 1:N) {
+  Rep <- sample(DJI$Republican) #This is our permuted party column
+  RepMu <- sum(DJI$diffs*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
+  DemMu <- sum(DJI$diffs*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
+  result.Combined[i] <- DemMu - RepMu
+  }
+mean(result.Combined) #inspecting that these are indeed close to zero
+hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
+abline(v = Obs, col = "red")
+pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue
+```
+Giving a p-value of 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed better during democratic regimes, a result that is statistically signifficant.
+
+# Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
+```{r,echo=TRUE}
+p <- sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
+obs.tbl <- table(DJI$Republican,DJI$Recession)# Republican has more Recession
+colnames(obs.tbl) <- c("Expansion", "Recession")
+rownames(obs.tbl) <- c("Democrat", "Republican")
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
+colnames(exp.tbl) <- c("Expansion", "Recession")
+rownames(exp.tbl) <- c("Democrat", "Republican")
+obs.tbl ; exp.tbl
+chisq.test(DJI$Republican,DJI$Recession)
+```
+As we can see from this contingency table, Republicans had more days in office during recessions, but 
+they also had more days in office during expansions.
+The result of the chi-square test is a p-value is less than 2.2e-16, far below our .05 threshold, so there would be a verysmall chance that the observed contingency table would arise by chance. Thus, the observations provide sufficient evidence to reject the null hypothesis that Republican and Democratic regimes are equally likely to be associated with recession years from 1985 to early 2020. 
+
+Let us try running this as chi-square test of contingency table including all regimes:
+```{r,echo=TRUE}
+obs.tbl <- table(DJI$Recession, DJI$Regime); rownames(obs.tbl) <- c("Expansion", "Recession"); obs.tbl #GWB had the most recession days
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); rownames(exp.tbl) <- c("Expansion", "Recession"); exp.tbl
+#This table allows us to see a breakdown of how long each president was in office in terms of recessions and 
+#expansions
+chisqvalue <- sum((obs.tbl - exp.tbl)^2/exp.tbl)
+
+```
+Here we can see that GWB had the most recession days. We can also see how long each president was in office in terms of recessions and how many recession days we would've expected, if they occurred evenly through the years.
+```{r,echo=T}
+P.Value <- pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE); P.Value
+```
+And we get a p-value of zero, thus we reject the null hypothesis that recession years are equaly likely to arise across regimes. 
+
+Lastly, we can run this analysis as chi-square test specific to each regime with p the observed probabilty of recession:
+```{r, echo=T}
+q <- 1 - p; q # 0.8233235 probability of not being in a recession
+prob <- (DJI$Recession*p + (!DJI$Recession)*q) / sum(DJI$Recession*p + (!DJI$Recession)*q) 
+min(prob) ; max(prob) ; sum(prob) 
+for (i in unique(DJI$Regime)) {
+  print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
+}
+```
+Null hypothesis is that each regime has the observed probability p of recession across regimes. 
+Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next.
+Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates that no individual regime is equally likely to be associated with recessions from the years 1985 to early 2020. 
+
 
