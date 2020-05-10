@@ -537,10 +537,10 @@ pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
 #Using Table we calculate alpha and beta
 stable.a <- 2
-stable.b <- 1
+stable.b <- -1
 #Calculate Phi_3 
 stable.phi_3 <- 1.908
 #Use phi_3 to calculate scale and then location is found from the table 
@@ -597,12 +597,12 @@ pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 stable.Xs <- quantile(monthlyDiffs, c(.05, .25, .5, .75, .95))
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
 #Using Table we calculate alpha and beta
-stable.a <- 1.21
-stable.b <- .689
+stable.a <- 1.279
+stable.b <- 0
 #Calculate Phi_3 
-stable.phi_3 <- 2.2095
+stable.phi_3 <- 1.955
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(monthlyDiffs); stable.location
@@ -655,12 +655,12 @@ pchisq(norm.cs, df = bins - 3, lower.tail = F) # fail to reject null
 stable.Xs <- quantile(yearlyDiffs, c(.05, .25, .5, .75, .95))
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
 #Using Table we calculate alpha and beta
-stable.a <- 1.35
-stable.b <- .721
+stable.a <- 1.388
+stable.b <- -0.165
 #Calculate Phi_3 
-stable.phi_3 <- 2.147
+stable.phi_3 <- 1.795
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(yearlyDiffs)
@@ -721,12 +721,12 @@ pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
 #Using Table we calculate alpha and beta
-stable.a <- 1.448
-stable.b <- .943
+stable.a <- 1.484
+stable.b <- 0
 #Calculate Phi_3 
-stable.phi_3 <- 2.11
+stable.phi_3 <- 1.939
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(logDiffs)
