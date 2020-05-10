@@ -550,4 +550,39 @@ ks.test(diffs,sampy.norm)
 ks.test(diffs,sampy.cauchy.fd)
 ks.test(diffs,sampy.cauchy.other)
 
-# Try AbsDiffs and logAbsDiffs?
+# Paramaterize with respect to log, and 3 different time frames using both rdistribution and stable distribution
+logDiffs <- log(abs(diffs[diffs != 0]))
+
+#Normal
+hist(logDiffs, breaks = "FD", freq = FALSE)
+curve(dnorm(x, mean(logDiffs), sd(logDiffs)), col = "red", lwd = 2, add = TRUE)
+
+#Stable
+stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
+
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+
+#Using Table we calculate alpha and beta
+stable.a <- 2
+stable.b <- 1
+
+#Calculate Phi_3 
+stable.phi_3 <- 1.908
+
+#Use phi_3 to calculate scale and then location is found from the table 
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
+stable.location <- median(diffs)
+curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
+
+cauchy.median <- median(logDiffs)
+cauchy.hiq <- (quantile(logDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
+curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
+
+par(mfrow = c(1,3))
+qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
+
+
+
+
