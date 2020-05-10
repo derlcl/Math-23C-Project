@@ -305,6 +305,168 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 #NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
 #have infinite variance, our could originate from a distribution with infinite variance.
 
+## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
+#
+# Sources: 
+# https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
+# Chihara and Hesterberg's Mathematical Statistics with Resampling
+#
+# If our sample is an independent and identically distributed realization 
+# from a light-tailed distribution, the central limit theorem should hold
+# even at smaller sample sizes. If we have a heavy-tailed distribution, 
+# larger sample sizes will be needed to approximate the standard normal distribution.
+# Use bootstrap resampling to demonstrate this.
+
+## Bootstrap For A Single Population
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+sampsize <- length(diffs) # starting sample size to draw from
+N <- 100 # number of boostrap samples to run
+n <-  100 # bootstrap sample size to draw
+xlima <- -3 ; xlimb <- 3
+
+# Perform N boostrap resamples of size n from sample X
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from First Differences")
+for (i in 1:N) {
+  X <- diffs
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.diffs <- meanY
+varY.diffs <- varY
+Z.diffs <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from sample Cauchy with interquartile parameters
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (Interquartile)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = diffs.median, scale = diffs.hiq)
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.iqrCauchy <- meanY
+varY.iqrCauchy <- varY
+Z.iqrCauchy <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from Cauchy with fitdist parameters
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (FitDist)")
+for (i in 1:N) {
+  X <- rcauchy(sampsize, location = fit.diffs[1], scale = fit.diffs[2])
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.fdCauchy <- meanY
+varY.fdCauchy <- varY
+Z.fdCauchy <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+# Perform N boostrap resamples of size n from normal distribution
+meanY <- varY <- Z <- numeric(N)
+plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Normal")
+for (i in 1:N) {
+  X <- rnorm(sampsize, mean(diffs), sd(diffs)) 
+  for (i in 1:N) {
+    Y <- sample(X,n,replace = TRUE) # Resample
+    meanY[i] <- mean(Y)
+    varY[i] <- var(Y)
+    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
+  }
+  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
+}
+meanY.norm <- meanY
+varY.norm <- varY
+Z.norm <- Z
+plot(function(x) pnorm(x), lwd = 3, add = TRUE)
+
+#########################################################
+## Result: Empirical cumulative distribution for standardized random variable from
+## bootstrap sampling distribution seems to indicate similarity between first differences
+## and standard normal as well as dissimilarity between first differences and Cauchy. 
+## Though there are indicates of wider dispersion in the eCDFs for the first differences
+## than there are in the eCDFs for the normal, indicating the possibility of 
+## significantly greater Kolmogorov-Smirnov test statistics. This requires testing. 
+
+
+# Bootstrap sampling distribution of standardized sample observations
+hist(Z.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(Z.iqrCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.fdCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
+hist(Z.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Central Limit Theorem explains approximation of standard normal for larger sample sizes. 
+# However, due to infinite variance of Cauchy distribution, extreme values from heavy tails
+# require very large sample size to approximate standard normal distribution. 
+# Cauchy has inconsistent center, shape and spread on different iterations. 
+
+# Bootstrap sampling distribution of sample variances
+hist(varY.diffs, breaks = "fd", prob = TRUE) # somewhat normal with somewhat heavy right tail
+hist(varY.iqrCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.fdCauchy, breaks = "fd", prob = TRUE) # heavy right tail
+hist(varY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Variance for first difference somewhat resembles shape and spread of Cauchy variance, not normal.
+
+# Bootstrap sampling distribution of sample means
+hist(meanY.diffs, breaks = "fd", prob = TRUE) # looks normal
+hist(meanY.iqrCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.fdCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
+hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
+# Result: Mean for first difference resembles shape and spread of normal sample mean, not Cauhcy.
+
+## Overall Result: Our first differences data may lie somewhere between Gaussian and Cauchy 
+## on the parameter scale for stable distributions. However, the data is a sample from 
+## an underlying population, so the limited accessibilility to a sample size of only 8857 
+## limits the capture of extreme values from possibly heavy right tails. 
+
+par(mfrow = c(1,1)) # reset to 1x1 plot matrix
+
+# Partial Variance to test for convergence of variance
+N <- length(Open) - 1; 
+variances.normal <- variances.cauchy <- variances.Open <- variances.diffs <- numeric(N)
+sample.normal <- rnorm(N + 1) ; sample.cauchy <- rcauchy(N + 1)
+Open <- DJI$Open ; diffs.Open <- DJI$diffs
+index <- 1:N
+for (i in 2:(N + 1)) {
+  variances.normal[i - 1] <- var(sample.normal[1:i])
+  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
+  variances.Open[i - 1] <- var(Open[1:i])
+  variances.diffs[i - 1] <- var(diffs.Open[1:i])
+}
+variances.diffs <- variances.diffs[-1]
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x", ylab = "Normal Variance", xlab = "Sample Size") # converges
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy",ylab = "Cauchy Variance", xlab = "Sample Size") # diverges jagged
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy",ylab = "Open Variance", xlab = "Sample Size") # diverges
+plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy", ylab = "Firs Diff. Variance", xlab = "Sample Size") # diverges
+par(mfrow = c(1,1)) # revert to 1x1 plot matrix
+summary(variances.normal) # data is centered closely around mean and median
+summary(variances.cauchy) # seems to be large spread
+summary(variances.Open) # extremely large spread
+summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
+### Result: As index increases, partial variance converges for normal distribution,
+### but it diverges in jagged jumps for Cauchy distribution and
+### in smoother curves for both Open values and first differences. 
+### This indicates that our data may have undefined or infinite variance. 
+
+
+## Divergent Integration For Calculating Variance
+
 #Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
 #scale parameters above, that it does indeed have infinite variance. 
 #To do that, we'll need to define functions that will describe the integrands that will allow us to
@@ -321,6 +483,7 @@ integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[
 exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
 #And it appears that the integral is divergent! This means that 
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
+
 
 
 ## Stable Distribution Model
