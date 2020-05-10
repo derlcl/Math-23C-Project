@@ -85,20 +85,19 @@ plot(log(Open)) # linear regression or polynomial model could fit
 # even at smaller sample sizes. If we have a heavy-tailed distribution, 
 # larger sample sizes will be needed to approximate the standard normal distribution.
 # Use bootstrap resampling to demonstrate this.
-#
+
 ## Bootstrap For A Single Population
 par(mfrow = c(2,2)) # create 2x2 plot matrix
-
-sampsize <- 1000 # starting sample size to draw from
-N <- 200 # number of boostrap samples to run
-n <-  500 # bootstrap sample size to draw
+sampsize <- length(diffs) # starting sample size to draw from
+N <- 100 # number of boostrap samples to run
+n <-  100 # bootstrap sample size to draw
 xlima <- -3 ; xlimb <- 3
 
 # Perform N boostrap resamples of size n from sample X
 meanY <- varY <- Z <- numeric(N)
 plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from First Differences")
 for (i in 1:N) {
-  X <- sample(diffs,sampsize,replace = TRUE)
+  X <- diffs
 for (i in 1:N) {
   Y <- sample(X,n,replace = TRUE) # Resample
   meanY[i] <- mean(Y)
@@ -107,9 +106,12 @@ for (i in 1:N) {
 }
   lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
 }
+meanY.diffs <- meanY
+varY.diffs <- varY
+Z.diffs <- Z
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 
-# Perform N boostrap resamples of size n from sample XcauchyIQR
+# Perform N boostrap resamples of size n from sample Cauchy with interquartile parameters
 meanY <- varY <- Z <- numeric(N)
 plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (Interquartile)")
 for (i in 1:N) {
@@ -122,9 +124,12 @@ for (i in 1:N) {
   }
   lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
 }
+meanY.iqrCauchy <- meanY
+varY.iqrCauchy <- varY
+Z.iqrCauchy <- Z
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 
-# Perform N boostrap resamples of size n from sample XcauchyFD
+# Perform N boostrap resamples of size n from Cauchy with fitdist parameters
 meanY <- varY <- Z <- numeric(N)
 plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (FitDist)")
 for (i in 1:N) {
@@ -137,9 +142,12 @@ for (i in 1:N) {
   }
   lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
 }
+meanY.fdCauchy <- meanY
+varY.fdCauchy <- varY
+Z.fdCauchy <- Z
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 
-# Perform N boostrap resamples of size n from sample Xnorm
+# Perform N boostrap resamples of size n from standard normal distribution
 meanY <- varY <- Z <- numeric(N)
 plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Standard Normal")
 for (i in 1:N) {
@@ -152,11 +160,22 @@ for (i in 1:N) {
   }
   lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
 }
+meanY.norm <- meanY
+varY.norm <- varY
+Z.norm <- Z
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 
 #########################################################
 par(mfrow = c(1,1)) # reset to 1x1 plot matrix
+## Result: Empirical cumulative distribution for standardized random variable from
+## bootstrap sampling distribution seems to indicate similarity between first differences
+## and standard normal as well as dissimilarity between first differences and Cauchy. 
+## Though there are indicates of wider dispersion in the eCDFs for the first differences
+## than there are in the eCDFs for the standard normal, indicating the possibility of 
+## significantly greater Kolmogorov-Smirnov test statistics. This requires testing. 
 
+
+# Bootstrap sampling distribution of sample mean, variance and standardized Z
 hist(Z, breaks = "fd", prob = TRUE, main = "Histogram of Standardized Random Variable")
 # approximates standard normal distribution by CLT
 hist(varY, breaks = "fd", prob = TRUE, main = "Histogram of First Diffs. Sample Variances") 
