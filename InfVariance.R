@@ -551,6 +551,7 @@ ks.test(diffs,sampy.cauchy.fd)
 ks.test(diffs,sampy.cauchy.other)
 
 # Paramaterize with respect to log, and 3 different time frames using both rdistribution and stable distribution
+#Log Diffs:
 logDiffs <- log(abs(diffs[diffs != 0]))
 
 #Normal
@@ -576,10 +577,12 @@ stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(diffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
 
+#Cauchy
 cauchy.median <- median(logDiffs)
 cauchy.hiq <- (quantile(logDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 
+#QQ Plot
 par(mfrow = c(1,3))
 qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
 
