@@ -32,6 +32,127 @@ Stable Distribution
 Kolmogorov-Smirnov tests
 Logarithms, absolute values and varying time horizons
 
+#Investigating Interesting Correlations - Regressions
+An interesting correlation that we would not have expected to be significant, but turns out to be so is that
+of Open prices and Volume:
+```{r,echo=T}
+plot(log(Open)~log(Volume)) 
+```
+This looks fairly  promising. 
+
+Compare logarithms of open price and trade volume variables
+```{r,echo=TRUE}
+x <- log(Volume)
+y <- log(Open)
+
+#Let us first manually run the regression, and then we'll check our results against the built-in
+#function. First, let's find the slope of the line
+b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b 
+#Alternative - works because division by n-1 cancels out
+cov(x,y)/var(x)
+#Here is the formula for the intercept
+a <- mean(y) - b*mean(x);a    
+#It is quicker to use the built-in R function
+linmod <- lm(y~x)
+linmod; a; b #And we get the same result
+plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
+abline(a, b, col = "cyan")
+abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
+summary(linmod) 
+```
+And we get an R-squared that is 0.7298, so the linear model explains 73% of the data, and it appears that volume and open prices are positively correlated.
+
+#The Impact of "Rare" Events
+Let's shift now to taking a look at presumably rare events, and how they are impacting our results:
+Let's consider each of the days in our data and examine how far from the mean flux in value each of them was. 
+```{r,echo=T}
+mu <- mean(diffs); mu
+sigma <- sd(diffs); sigma
+
+N <- length(diffs)
+SDs <- numeric(N)
+for (i in 1:N){
+  SDs[i] <- (diffs[i]-mu)/sigma
+}
+head(SDs);head(diffs)
+length(SDs)
+SDs.data <- c(0,SDs[1:length(SDs)]); head(SDs.data) 
+DJI <- data.frame(DJI,SDs.data)
+idx <- which(abs(SDs.data) > 5); head(idx)
+unusual <- DJI[idx,]; head(unusual) 
+```
+As we can see, there are 32 days in which the price flux for the Dow Jones was larger than 5 standard deviations away from the mean. To show just how bad of a fit the normal distribution is for our data consider the p-values for each of these events. 
+```{r,echo=T}
+N <- nrow(unusual)
+pvals <- numeric(N)
+for (i in 1:(N)) {
+ pvals[i] <- pnorm(abs(unusual$SDs.data[i]*sigma), mean = mu, sd = sigma, lower.tail = FALSE)
+}
+head(pvals)
+rare <- max(pvals);rare #2.303366e-07, which is pretty much 0. 
+
+(1/rare)/365
+```
+If we interpret the p-value as the probability of an event taking place, and our events are measured in days, then a given p-value tells us the probability of seeing that extreme of an event on any given days (i.e. a p-value of 0.05 would correspond to an event that we'd "expect" to see once every 20 days, since it has a 1/20 chance of arising).In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare of these rare events once in 11,894.45 years, but from the data it is clear that these events are far more common than that.
+
+#Surveying the impact of the White House on the Dow Jones
+Now that we have seen that the data follows a model with infinite variance, which somewhat resemblesthat of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
+
+```{r,echo=T}
+regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
+summary(regime)
+```
+At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.But let us look a little closer. Given the large standard error for the Republican coefficient, we cannot safely conclude that republican administrations correlate with losses in the Dow. (i.e. the p-value is .3, so we fail to reject the null hypothesis that this control variable has no impact on the response variable.)
+
+Let's see if we can get a statistically signifficant result for any of the individual presidents:
+```{r,echo=T}
+GHWB <- DJI$Regime == "GHWB"
+BC <- DJI$Regime == "BC"
+GWB <- DJI$Regime == "GWB"
+BO <- DJI$Regime == "BO"
+DJT <- DJI$Regime == "DJT"
+
+pres.binary <- data.frame(GHWB, BC, GWB, BO, DJT)
+
+regress.data <- data.frame(DJI,pres.binary)
+
+#since we omitted the Ronald Reagan variable, each of the coefficients for the various presidents 
+#represents the incremental surplus or deficit in the DJIA that occurred during each of the other 
+#presidents' terms
+ind.pres <- lm(regress.data$diffs ~ regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
+ind.pres
+###These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald 
+###Trump administration's success in boosting the DJIA to new heights.
+summary(ind.pres)
+###here again, we find that no presidents' presence in the White House had a significant impact on the Dow.
+```
+These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald Trump administration's success in boosting the DJIA to new heights. Here again, we find that no presidents' presence in the White House had a significant impact on the Dow.
+
+Let us now exclude the days when 5 sigma + events took place, that way we'll keep only the data for "normal/typical" days.
+```{r,echo=T}
+regress.data.ne <- regress.data[-idx,]
+ind.pres.2 <- lm(regress.data.ne$diffs ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
+summary(ind.pres.2)
+```
+These results seem to indicate that, excluding days with "extremely" events, and controlling for recessions (and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush. It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis, which took place in the final months of his second term. Additionally, we should note that the only statistically signifficant coefficient was that of Donald Trump, which had a p-value well below 0.01.
+
+#Logistic Regression: Recessions and Results
+Given the earlier results, it seems that recessions have a large impact on first differences in daily Open values for the Dow Jones Industrial Average.Let us inspect how economic recessions correlate with the performance of the DJIA. 
+```{r,echo=T}
+plot(DJI$diffs,DJI$Recession, xlim = c(-5000,5000))
+MLL <- function(alpha, beta) {
+  -sum( log( exp(alpha+beta*DJI$diffs)/(1+exp(alpha+beta*DJI$diffs)) )*DJI$Recession
+        + log(1/(1+exp(alpha+beta*DJI$diffs)))*(1-DJI$Recession) )
+}
+#R has a function that will maximize this function of alpha and beta
+#install.packages("stats4")   #needs to be run at most once
+library(stats4)
+results <- mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
+results@coef
+curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + results@coef[2]*x)),col = "blue", add=TRUE)
+```
+This is a fairly interesting result because its graph looks different than the normal logistic curve. Of course, this becomes obvious when one considers the nature of the regression, namely that recessions are events that are expected to correlate with negative values of first differences (i.e. price drops).In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones correlate with economic recessions.
+
 
 #The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
 ```{r, echo=TRUE}
