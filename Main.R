@@ -447,7 +447,7 @@ hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
 ### 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the 
-#DJI performed better during democratic regimes, a result that is statistically signifficant.
+###DJI performed better during democratic regimes, a result that is statistically signifficant.
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
@@ -462,11 +462,11 @@ obs.tbl ; exp.tbl
 #As we can see from this contingency table, Republicans had more days in office during recessions, but 
 #they also had more days in office during expansions.
 chisq.test(DJI$Republican,DJI$Recession)
-# p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
-# small chance that the observed contingency table would arise by chance.
-# Thus, the observations provide sufficient evidence to reject the null hypothesis
-# that Republican and Democratic regimes are equally likely to be associated with recession
-# years from 1985 to early 2020. 
+### p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
+### small chance that the observed contingency table would arise by chance.
+### Thus, the observations provide sufficient evidence to reject the null hypothesis
+### that Republican and Democratic regimes are equally likely to be associated with recession
+### years from 1985 to early 2020. 
 #
 #Running this as chi-square test of contingency table including all regimes:
 obs.tbl <- table(DJI$Recession, DJI$Regime); rownames(obs.tbl) <- c("Expansion", "Recession"); obs.tbl #GWB had the most recession days
@@ -484,12 +484,12 @@ min(prob) ; max(prob) ; sum(prob)
 for (i in unique(DJI$Regime)) {
   print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
 }
-# Null hypothesis is that each regime has the observed probability p of recession across regimes. 
-# Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next
-#Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
-#that no individual regime is equally likely to be associated with recessions
-#from the years 1985 to early 2020. (We should look into if our statistical methods
-#are correct here.)
+###Null hypothesis is that each regime has the observed probability p of recession across regimes. 
+###Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next
+###Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
+###that no individual regime is equally likely to be associated with recessions
+###from the years 1985 to early 2020. (We should look into if our statistical methods
+###are correct here.)
 
 
 # Fractal Tribute to Mandelbrot
