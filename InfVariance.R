@@ -22,6 +22,8 @@ plot(DJI$Open, type = "l", xlab = "Time",
 #Get the first difference of the time series data
 diffs <- diff(DJI$Open)
 
+## Fourier Analysis
+ 
 #Can we capture DJI$Open by Fourier Analysis?
 RunFourier(length(DJI$Open)/2, DJI$Open) #Perfect Reconstruction 
 RunFourier(10, DJI$Open) #Using approx 1/400th of the basis vectors
@@ -39,33 +41,7 @@ RunFourier(10, diffs) #Useless
 #pick up what I would consider "white noise". There is no noticeable trend or cycle.
 #This is our first indication that the market is acting as a random walk.
 
-#Bruno: Demonstrate infinite variance by showing that the model is not well modeled by a Normal distribution.
-#Then try an alternate model like Cauchy later. Check if daily price fluxes have infinite variance.
-hist(diffs, breaks = "FD", probability = TRUE) #already doesn't look super promising
-mu <- mean(diffs) # may have to adjust for sample mean instead of population 
-sigma <- sd(diffs) # may have to adjust for sample standard deviation instead of population
-
-curve(dnorm(x,mu,sigma), from = -2500, to = 1000, add = TRUE, col = "red")
-n1 <- qnorm(0.1, mu, sigma); n1    #10% of the normal distribution lies below this value
-pnorm(n1, mu, sigma)       
-mean(diffs <= n1) #6.2%, not great, we would expect something closer to 10% if it were Normal
-#Now let's create a vector of deciles so that we can split our data and see if it falls as expected
-dec <- qnorm(seq(0.0,1,by = 0.1), mu,sigma); dec  #10 bins
-Exp <- rep(length(diffs)/10,10); Exp 
-binchg <- numeric(10)
-for (i in 1:10) {
-  binchg[i] <- sum((diffs >= dec[i]) & (diffs <= dec[i + 1] )) ; binchg
-}
-#Finally we can test for uniformity using a chi-squared test.
-ChiStat <- sum((binchg - Exp)^2/Exp); ChiStat #3581.397
-#We estimated two parameters (using the sample mean and standard deviation), which costs two degrees of freedom, 
-#and we have set the total days to match our sample which costs another so we have 10 - 3 = 7 degrees of freedom
-curve(dchisq(x, df = 7), from = 0, to = ChiStat + 5)
-abline(v = ChiStat, col = "red") 
-pchisq(ChiStat, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low p-value, it seems that the normal distribution is not a good model (at all)
-#for the daily fluxes in the Dow Jones Industrial Average. So let's now check how a model with infinite variance
-#fits the data. 
+## Random Walk
 
 #The first step in testing to see if the Dow Jones Index has infinite variance
 #is to see if the the index follows a Random Walk.
@@ -116,7 +92,9 @@ for (i in 1:100) {
 #Extremely volatile -- the variance between simultation points at the same time is increasing as time
 #increases.
 
-#Fractal Analysis
+
+## Fractal Analysis
+
 #Using the hurst exponent, we can analyze whether our data is a random walk.
 
 #We will be using the R/S Method to find the Hurst Exponent:
@@ -200,16 +178,45 @@ hurstexp(diffs)
 #install.packages("wavelets")
 fracd.estimates <- fd.estimate(DJI$Open, methods = c("variogram", "madogram",
                                                      "hallwood", "wavelet")); fracd.estimates$fd
-
 #One final check for our Hurst Exponent:
 2 - fracd.estimates$fd
 
 #Correct again. We get .5 across all 4 methods. The Dow Jones Index seems to be following a
 #random walk.
 
+#Standard deviation and expectation are undefined for our model because it is a Cauchy distribution.
+#Therefore, we will have to test our stock market drop against a gaussian random walk.
+# Calculate the first difference series rw.drift_diff
+rw.drift_diff <- diff(rw.drift)
+rw.drift_diff
+#Mean of the First Difference Series
+rw.sigma <- sd(rw.drift_diff); rw.sigma #117.0062
+rw.mu <- mean(rw.drift_diff); rw.mu #1.835033
+
+#Plot a histogram of the values and draw the mean/median using abline
+hist(rw.drift_diff); abline(v = mean(rw.drift_diff), col = "red", lwd = 3)
+#Plot the values of the time series and draw the mean/median using abline - and we get a constant!
+plot(rw.drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
+     main = "First Difference Series"); abline(h = mean(rw.drift_diff), col = "red", lwd = 3)
+hist(rw.drift_diff, prob = TRUE)
+curve(dnorm(x,rw.mu,rw.sigma), from = -500, to = 500, add = TRUE, col = "red") 
+
+#Zooming in our plot:
+ggplot(DJI[,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
+ggplot(DJI[8000:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
+ggplot(DJI[8850:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
+
+#Approximately 5 Sigma Event for the average drop of the last 7 days in our data set:
+abs(mean(diffs[8851:8857]) / sd.diff) 
+
+#Approximately 20 sigma event for the biggest drop
+abs(min(diffs) / sd.diff) 
 
 
-#Checking a 5 sigma Event:
+## Cauchy Distribution Model
+
+# Checking a 5 sigma Event
+#
 hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
      Cauchy Model", xlab = "First Differences")
 #Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
@@ -218,7 +225,7 @@ hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
 diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
 diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq # 36.41016
-
+# Result: Doesn't look normal, possibly Cauchy. 
 
 #Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
 #uses better paramater estimation, we will use our fit.diffs values.
@@ -236,11 +243,12 @@ cauchy.exp <- rep(length(diffs)/4, 4); cauchy.exp
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
 
 #Run simulation: 
-N <- 10^4; results.Cauchy <- numeric(N)
+N <- 10^4; results.Cauchy <- pvalues.Chisq <- numeric(N)
 for (i in 1:N) {
   obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
   obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
   results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+  pvalues.Chisq[i] <- pchisq(results.Cauchy[i],4-3,lower.tail=F)
 }
 hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
 abline(v = cauchy.cs, col = "red", lwd = 3)
@@ -250,7 +258,13 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 #NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
 #have infinite variance, it appears our data's distribution also has infinite variance.
 
-#################
+#analysis of pvalues for chi-square statistics
+hist(pvalues.Chisq, breaks = "FD", prob = T)
+abline(v = .05, col = "blue")
+cauchy.cs.pvalue <- pchisq(cauchy.cs,df=4-3,lower.tail=F)
+abline(v = cauchy.cs.pvalue, col = "red")
+pvalues.pvalue <- mean(pvalues.Chisq >= cauchy.cs.pvalue) ; pvalues.pvalue
+
 #using Octiles
 hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
      Cauchy Model", xlab = "First Differences")
@@ -289,7 +303,7 @@ cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of a
 #We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
 #from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
 #NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
-#have infinite variance, it appears our data's distribution also has infinite variance.
+#have infinite variance, our could originate from a distribution with infinite variance.
 
 #Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
 #scale parameters above, that it does indeed have infinite variance. 
@@ -309,37 +323,8 @@ exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
 
 
-#Standard deviation and expectation are undefined for our model because it is a Cauchy distribution.
-#Therefore, we will have to test our stock market drop against a gaussian random walk.
-# Calculate the first difference series rw.drift_diff
-rw.drift_diff <- diff(rw.drift)
-rw.drift_diff
-#Mean of the First Difference Series
-rw.sigma <- sd(rw.drift_diff); rw.sigma #117.0062
-rw.mu <- mean(rw.drift_diff); rw.mu #1.835033
+## Stable Distribution Model
 
-#Plot a histogram of the values and draw the mean/median using abline
-hist(rw.drift_diff); abline(v = mean(rw.drift_diff), col = "red", lwd = 3)
-#Plot the values of the time series and draw the mean/median using abline - and we get a constant!
-plot(rw.drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Daily Opens",
-     main = "First Difference Series"); abline(h = mean(rw.drift_diff), col = "red", lwd = 3)
-hist(rw.drift_diff, prob = TRUE)
-curve(dnorm(x,rw.mu,rw.sigma), from = -500, to = 500, add = TRUE, col = "red") 
-
-
-#Zooming in our plot:
-ggplot(DJI[,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
-ggplot(DJI[8000:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
-ggplot(DJI[8850:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
-
-#Approximately 5 Sigma Event for the average drop of the last 7 days in our data set:
-abs(mean(diffs[8851:8857]) / sd.diff) 
-
-#Approximately 20 sigma event for the biggest drop
-abs(min(diffs) / sd.diff) 
-
-
-#Stable Distribution:
 #Paramaterized using:"Simple Consistent Estimators of Stable Distribution Parameters," Communications in Statistics - Simulation and Computation 15 (1986): 1109-36.
 #https://www.asc.ohio-state.edu/mcculloch.2/papers/stabparm.pdf by J. Huston McCulloch
 stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
@@ -386,13 +371,34 @@ mean(results.Stable >= stable.cs) #We reject the null hypothesis, our data fails
 #Stable distribution. Our data is therefore, between a Cauchy Distribution and a Gaussian Distribution
 #leaning toward a Cauchy distribution.
 
+## Monte Carlo Simulation to Estimate Parameters for Stable Distribution
+N <- 10^3 ; cs <- Inf ; idx <- 1 # set upper limit for chisquare and starting index
+tempdata <- diffs[(diffs>-750)&(diffs<750)] # select data for chisquare test
+alpha <- runif(N,0,2) # alpha parameter has support (0,2]
+beta <- runif(N,-1,1) # beta parameter has support [-1,1]
+gamma <- rexp(N,1) # gamma parameter has support (0,Inf)
+delta <- median(tempdata) # delta parameter has support , estimated from data
+for (i in 1:N) {
+  stable.breaks <- c(-Inf, qstable( ((1:9) * .1), alpha[i],beta[i],gamma[i],delta), Inf)
+  stable.obs <- table(cut(tempdata,stable.breaks)) ; 
+  stable.exp <- rep(mean(stable.obs), length(stable.obs)); stable.exp   
+  csCurrent <- ChiSq(stable.obs,stable.exp)
+  if (csCurrent < cs) { 
+    cs <- csCurrent # set lower chisquare value
+    idx <- i # record the index
+  }
+}
+cs ; pchisq(cs,df=5, lower.tail=FALSE) # high chisquare value, 0 p-value, poor fit from simulation
+hist(tempdata, breaks = "fd", prob=TRUE) # histogram of data to model
+curve(dstable(x,alpha[idx],beta[idx],gamma[idx],delta), add=TRUE, col = "red") # overlay density curve
+alpha[idx] ; beta[idx] ; gamma[idx] ; delta # stable distribution parameters
 
-#K-S Test
+
+#Kolmogorov-Smirnov Test
 nn <- 500 #sample size. 
 rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
 hist(rand, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")
-#doesn't look great, let's try with 8857 samples
 
 #using interquartile parameters
 N <- 10^4
@@ -411,7 +417,7 @@ rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
 hist(rand2, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
 #doesn't look great, let's try with 8857 samples
-N <- 10^4
+N <- 10^3
 ks.stats2 <- numeric(N)
 for (i in 1:N) {
   rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
@@ -452,10 +458,10 @@ hist(pvals.chi, breaks = "FD")
 
 #Checking how the K-S statistic is affected by sample size
 ks.stat <- numeric(N)
-for(i in 1:N) {
+for (i in 1:N) {
   diff.samp <- sample(diffs, i+1, replace = TRUE)
   fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(i+1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  cauchy.samp <- rcauchy(i + 1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
   ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
 plot(ks.stat, pch = ".")
@@ -485,7 +491,6 @@ nn <- (length(DJI$Open) / 2) - 1
 result.kstest.gauss <- numeric(nn)
 result.kstest.cauchy <- numeric(nn)
 for (i in 1:(nn)) {
-  print(i)
   samp <- diff(DJI$Open[seq(from = 1, to = length(diffs), by = i)]); (samp <- samp - mean(samp) / sd(samp))
   samp.median <- median(samp)
   samp.hiq <- (quantile(samp)[[4]] - quantile(samp)[[2]]) / 2
@@ -512,40 +517,7 @@ par(mfrow = c(1,1)) # reset plot partitions
 #fall within the confidence interval when compared to a normal distribution.
 
 
-# Monte Carlo Simulation to Estimate Parameters for Stable Distribution
-N <- 10^3 ; cs <- Inf ; idx <- 1 # set upper limit for chisquare and starting index
-tempdata <- diffs[(diffs>-750)&(diffs<750)] # select data for chisquare test
-alpha <- runif(N,0,2) # alpha parameter has support (0,2]
-beta <- runif(N,-1,1) # beta parameter has support [-1,1]
-gamma <- rexp(N,1) # gamma parameter has support (0,Inf)
-delta <- median(tempdata) # delta parameter has support , estimated from data
-for (i in 1:N) {
-stable.breaks <- c(-Inf, qstable( ((1:9) * .1), alpha[i],beta[i],gamma[i],delta), Inf)
-stable.obs <- table(cut(tempdata,stable.breaks)) ; 
-stable.exp <- rep(mean(stable.obs), length(stable.obs)); stable.exp   
-csCurrent <- ChiSq(stable.obs,stable.exp)
-if (csCurrent < cs) { 
-  cs <- csCurrent # set lower chisquare value
-  idx <- i # record the index
-  }
-}
-cs ; pchisq(cs,df=5, lower.tail=FALSE) # high chisquare value, 0 p-value, poor fit from simulation
-hist(tempdata, breaks = "fd", prob=TRUE) # histogram of data to model
-curve(dstable(x,alpha[idx],beta[idx],gamma[idx],delta), add=TRUE, col = "red") # overlay density curve
-alpha[idx] ; beta[idx] ; gamma[idx] ; delta # stable distribution parameters
-
-# Run K-S tests and compare?
-n <- 1000
-sampy.stable <- rstable(n, (stable.a),(stable.b - .5),stable.c, stable.location)
-sampy.norm <- rnorm(n, mean = mu, sd = sigma)
-sampy.cauchy.fd <- rcauchy(n, location = fit.diffs[1], scale = fit.diffs[2])
-sampy.cauchy.other <- 
-ks.stable <- ks.test(diffs,"pstable",alpha[idx],beta[idx],gamma[idx],delta[idx])
-ks.stable$p.value
-ks.test(diffs,sampy.norm)
-ks.test(diffs,sampy.cauchy.fd)
-ks.test(diffs,sampy.cauchy.other)
-
+bins <- 6
 
 ## Logarithm of Absolute First Differences of Open Values
 logDiffs <- log(abs(diffs[diffs != 0]))
@@ -555,11 +527,11 @@ logDiffs <- log(abs(diffs[diffs != 0]))
 hist(logDiffs, breaks = "FD", freq = FALSE)
 curve(dnorm(x, mean(logDiffs), sd(logDiffs)), col = "red", lwd = 2, add = TRUE)
 # Chi-square test
-norm.breaks <- qnorm((0:4) * .25, mean(logDiffs), sd(logDiffs))
+norm.breaks <- qnorm((0:bins) * 1/bins, mean(logDiffs), sd(logDiffs))
 norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
-norm.exp <- rep(length(logDiffs) / 4, length(norm.obs)); norm.exp
-norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 62.27596
-pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0, Reject null
+norm.exp <- rep(length(logDiffs) / bins, length(norm.obs)); norm.exp
+norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs
+pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 
 #Stable
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
@@ -576,22 +548,22 @@ stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(logDiffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
 # Chi-square test
-stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.breaks <- c(-Inf, qstable((1:(bins - 1)) * 1/bins, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
 stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
-stable.exp <- rep(length(logDiffs) / 4, length(stable.obs)); stable.exp
+stable.exp <- rep(length(logDiffs) / bins, length(stable.obs)); stable.exp
 stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 9.198371
-pchisq(stable.cs, df = 4 - 3, lower.tail = F) # 0.002422305, reject null
+pchisq(stable.cs, df = bins - 3, lower.tail = F) # 0.002422305, reject null
 
 #Cauchy
 cauchy.median <- median(logDiffs)
 cauchy.hiq <- (quantile(logDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 # Chi-square test
-cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
+cauchy.breaks <- qcauchy((0:bins) * 1/bins, cauchy.median, cauchy.hiq)
 cauchy.obs <- table(cut(logDiffs, breaks = cauchy.breaks)); cauchy.obs
-cauchy.exp <- rep(length(logDiffs) / 4, length(cauchy.obs))
+cauchy.exp <- rep(length(logDiffs) / bins, length(cauchy.obs))
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 9.198371
-pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.002422305, reject null
+pchisq(cauchy.cs, df = bins - 3, lower.tail = F) # 0.002422305, reject null
 
 #QQ Plot
 par(mfrow = c(1,3))
@@ -615,11 +587,11 @@ monthlyDiffs <- diff(monthly$Open); hist(diff(monthly$Open), freq = FALSE, break
 #Normal
 curve(dnorm(x, mean(monthlyDiffs), sd(monthlyDiffs)), col = "red", lwd = 2, add = TRUE)
 # Chi-square test
-norm.breaks <- qnorm((0:4) * .25, mean(monthlyDiffs), sd(monthlyDiffs))
+norm.breaks <- qnorm((0:bins) * 1/bins, mean(monthlyDiffs), sd(monthlyDiffs))
 norm.obs <- table(cut(monthlyDiffs, breaks = norm.breaks)); norm.obs
-norm.exp <- rep(length(monthlyDiffs) / 4, length(norm.obs)); norm.exp
+norm.exp <- rep(length(monthlyDiffs) / bins, length(norm.obs)); norm.exp
 norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 79.25118
-pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0, Reject null
+pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 
 #Stable
 stable.Xs <- quantile(monthlyDiffs, c(.05, .25, .5, .75, .95))
@@ -636,22 +608,22 @@ stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(monthlyDiffs); stable.location
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
 # Chi-square test
-stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.breaks <- c(-Inf, qstable((1:(bins-1)) * 1/bins, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
 stable.obs <- table(cut(monthlyDiffs, breaks = stable.breaks)); stable.obs
-stable.exp <- rep(length(monthlyDiffs) / 4, length(stable.obs)); stable.exp
+stable.exp <- rep(length(monthlyDiffs) / bins, length(stable.obs)); stable.exp
 stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 13.92417
-pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0.0009471195, reject null
+pchisq(stable.cs, df = bins - 3, lower.tail = F) # 0.0009471195, reject null
 
 #Cauchy
 cauchy.median <- median(monthlyDiffs)
 cauchy.hiq <- (quantile(monthlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 # Chi-square test
-cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
+cauchy.breaks <- qcauchy((0:bins) * 1/bins, cauchy.median, cauchy.hiq)
 cauchy.obs <- table(cut(monthlyDiffs, breaks = cauchy.breaks)); cauchy.obs
-cauchy.exp <- rep(length(monthlyDiffs) / 4, length(cauchy.obs))
+cauchy.exp <- rep(length(monthlyDiffs) / bins, length(cauchy.obs))
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 10.85308
-pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.0009863154, reject null
+pchisq(cauchy.cs, df = bins - 3, lower.tail = F) # 0.0009863154, reject null
 
 #QQ Plot
 par(mfrow = c(1,3))
@@ -673,11 +645,11 @@ yearlyDiffs <- diff(yearly$Open); hist(diff(yearly$Open), freq = FALSE, breaks =
 
 #Normal
 curve(dnorm(x, mean(yearlyDiffs), sd(yearlyDiffs)), col = "red", lwd = 2, add = TRUE)
-norm.breaks <- qnorm((0:4) * .25, mean(yearlyDiffs), sd(yearlyDiffs))
+norm.breaks <- qnorm((0:bins) * 1/bins, mean(yearlyDiffs), sd(yearlyDiffs))
 norm.obs <- table(cut(yearlyDiffs, breaks = norm.breaks)); norm.obs
-norm.exp <- rep(length(yearlyDiffs) / 4, length(norm.obs)); norm.exp
-norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 2.142857
-pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0.1432349, fail to reject null
+norm.exp <- rep(length(yearlyDiffs) / bins, length(norm.obs)); norm.exp
+norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 
+pchisq(norm.cs, df = bins - 3, lower.tail = F) # fail to reject null
 
 #Stable
 stable.Xs <- quantile(yearlyDiffs, c(.05, .25, .5, .75, .95))
@@ -694,22 +666,22 @@ stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(yearlyDiffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
 # Chi-square test
-stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.breaks <- c(-Inf, qstable((1:(bins-1)) * 1/bins, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
 stable.obs <- table(cut(yearlyDiffs, breaks = stable.breaks)); stable.obs
-stable.exp <- rep(length(yearlyDiffs) / 4, length(stable.obs)); stable.exp
+stable.exp <- rep(length(yearlyDiffs) / bins, length(stable.obs)); stable.exp
 stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 4.885714
-pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0.08691218, fail to reject null
+pchisq(stable.cs, df = bins - 3, lower.tail = F) # fail to reject null
 
 #Cauchy
 cauchy.median <- median(yearlyDiffs)
 cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(yearlyDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 # Chi-square test
-cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
+cauchy.breaks <- qcauchy((0:bins) * 1/bins, cauchy.median, cauchy.hiq)
 cauchy.obs <- table(cut(yearlyDiffs, breaks = cauchy.breaks)); cauchy.obs
-cauchy.exp <- rep(length(yearlyDiffs) / 4, length(cauchy.obs))
+cauchy.exp <- rep(length(yearlyDiffs) / bins, length(cauchy.obs))
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 4.885714
-pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.02707983, reject null
+pchisq(cauchy.cs, df = bins - 3, lower.tail = F) # reject null
 
 #QQ Plot
 par(mfrow = c(1,3))
@@ -739,11 +711,11 @@ logDiffs <- diff(log(DJI$Open))
 hist(logDiffs, breaks = "FD", freq = FALSE, prob = TRUE)
 curve(dnorm(x, mean(logDiffs), sd(logDiffs)), col = "red", lwd = 2, add = TRUE)
 # Chi-square test
-norm.breaks <- qnorm((0:4) * .25, mean(logDiffs), sd(logDiffs))
+norm.breaks <- qnorm((0:bins) * 1/bins, mean(logDiffs), sd(logDiffs))
 norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
-norm.exp <- rep(length(logDiffs) / 4, length(norm.obs)); norm.exp
+norm.exp <- rep(length(logDiffs) / bins, length(norm.obs)); norm.exp
 norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 779.7705
-pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0, Reject null
+pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 
 ## Stable
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
@@ -760,22 +732,22 @@ stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(logDiffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
 # Chi-square test
-stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.breaks <- c(-Inf, qstable((1:(bins-1)) * 1/bins, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
 stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
-stable.exp <- rep(length(logDiffs) / 4, length(stable.obs)); stable.exp
+stable.exp <- rep(length(logDiffs) / bins, length(stable.obs)); stable.exp
 stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 443.075
-pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0, Reject null
+pchisq(stable.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 
 #Cauchy
 cauchy.median <- median(logDiffs)
 cauchy.hiq <- (quantile(logDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 # Chi-square test
-cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
+cauchy.breaks <- qcauchy((0:bins) * 1/bins, cauchy.median, cauchy.hiq)
 cauchy.obs <- table(cut(logDiffs, breaks = cauchy.breaks)); cauchy.obs
-cauchy.exp <- rep(length(logDiffs) / 4, length(cauchy.obs))
+cauchy.exp <- rep(length(logDiffs) / bins, length(cauchy.obs))
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 0.6046065
-pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.4368258, Fail to reject
+pchisq(cauchy.cs, df = bins - 3, lower.tail = F) # Reject null
 
 #QQ Plot on daily first differences on logarithm of Open values
 par(mfrow = c(1,3))

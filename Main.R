@@ -1,5 +1,9 @@
 #Math 23C Term Project by Rakeen Tanvir, Bruno Kömel, and Derl Clausen
 
+#Comments
+##Titles
+###Results/Conclusions
+
 #Retrieve any functions we have made for this project
 source("prj_Functions.R")
 
@@ -205,118 +209,6 @@ hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
 
 par(mfrow = c(1,1)) # reset to 1x1 plot matrix
 
-## Hypothesis Testing With Permutation Test
-#
-#Set up indices for permutation test by party and president 
-index.Republican <- DJI$Republican ; sum(index.Republican) # 4822, matches
-index.RR <- (DJI$Regime == "RR") ; sum(index.RR) # 1005
-index.GHWB <- (DJI$Regime == "GHWB") ; sum(index.GHWB) # 1011
-index.BC <- (DJI$Regime == "BC") ; sum(index.BC) # 2021
-index.GWB <- (DJI$Regime == "GWB") ; sum(index.GWB) # 2009
-index.BO <- (DJI$Regime == "BO") ; sum(index.BO) # 2015
-index.DJT <- (DJI$Regime == "DJT") ; sum(index.DJT) # 797
-dim(DJI) ; sum(c(index.RR, index.GHWB, index.BC, index.GWB, index.BO, index.DJT)) # 8858, matches
-diffs.Republican <- diffs[index.Republican[-1]]
-mu.RepDiffs <- mean(diffs.Republican) #  0.007355863
-diffs.Democrat <- diffs[!(index.Republican[-1])]
-mu.DemDiffs <- mean(diffs.Democrat)
-mean(diffs.Democrat) # 4.692755
-# The means seem different, but given the large variance, this is doubtful.
-#Another way to look at the data is to consider the total gains in the DJI during republican and democrat regimes. 
-rep.idx <- which(DJI$Republican == TRUE) 
-rep.gains <- sum(DJI$diffs[rep.idx]); rep.gains
-dem.gains <- sum(DJI$diffs[-rep.idx]); dem.gains
-sum(DJI$diffs); sum(rep.gains,dem.gains)
-rep.dem.gains <- cbind(rep.gains, dem.gains); rep.dem.gains
-library(RColorBrewer)
-coul <- brewer.pal(5, "Set2") 
-name <- c("Republican Gains", "Democrat Gains" )
-barplot(rep.dem.gains, col = coul, main = "Barplot of Cummulative Gains by Party", names = name) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
-
-#Let us check with a series of permutation tests:
-#First, let us consider if the observed means for republicans and democrats, respectively, are 
-#statistically significant:
-N <- 10^4; result.Republican <- numeric(N); result.Democrat <- numeric(N)
-for (i in 1:N) {
-  smpl <- sample(index.Republican[-1], replace = FALSE)
-  smpl.Republican <- diffs[smpl]
-  smpl.Democrat <- diffs[!smpl]
-  result.Republican[i] <- mean(smpl.Republican)
-  result.Democrat[i] <- mean(smpl.Democrat)
-}
-#
-#Republican Result
-hist(result.Republican, col = "red")
-abline(v = mu.RepDiffs, col = "black", lwd = 3)
-mu.result.Republican <- mean(result.Republican) ; mu.result.Republican ; mu.RepDiffs
-mean(result.Republican <= mu.RepDiffs) 
-#2.83% chance of seeing this statistic thus it is statistically significant.
-#
-#Democrat Result
-hist(result.Democrat, col = "blue")
-abline(v = mu.DemDiffs, col = "black", lwd = 3)
-mu.result.Democrat <- mean(result.Democrat) ; mu.result.Democrat ; mu.DemDiffs
-mean(result.Democrat >= mu.DemDiffs) 
-#2.83% chance. Whoa, both means are equally statistically significant.
-#
-#Rerun as a Combined Permutation Test
-RepAvg <- sum(DJI$diffs*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
-DemAvg <- sum(DJI$diffs*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
-Obs <-  DemAvg - RepAvg; Obs
-#
-N <- 10^4 #number of simulations
-result.Combined <- numeric(N) #this is the vector that will store our simulated differences
-for (i in 1:N) {
-  Rep <- sample(DJI$Republican) #This is our permuted party column
-  RepMu <- sum(DJI$diffs*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
-  DemMu <- sum(DJI$diffs*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
-  result.Combined[i] <- DemMu - RepMu
-}
-mean(result.Combined) #inspecting that these are indeed close to zero
-hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
-abline(v = Obs, col = "red")
-pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
-# 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed
-#better during democratic regimes, a result that is statistically signifficant.
-
-## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
-## 
-p <- sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
-obs.tbl <- table(DJI$Republican,DJI$Recession)# Republican has more Recession
-colnames(obs.tbl) <- c("Expansion", "Recession")
-rownames(obs.tbl) <- c("Democrat", "Republican")
-exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
-colnames(exp.tbl) <- c("Expansion", "Recession")
-rownames(exp.tbl) <- c("Democrat", "Republican")
-obs.tbl ; exp.tbl
-chisq.test(DJI$Republican,DJI$Recession)
-# p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
-# small chance that the observed contingency table would arise by chance.
-# Thus, the observations provide sufficient evidence to reject the null hypothesis
-# that Republican and Democratic regimes are equally likely to be associated with recession
-# years from 1985 to early 2020. 
-#
-#Running this as chi-square test of contingency table including all regimes:
-obs.tbl <- table(DJI$Recession, DJI$Regime); rownames(obs.tbl) <- c("Expansion", "Recession"); obs.tbl #GWB had the most recession days
-exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); rownames(exp.tbl) <- c("Expansion", "Recession"); exp.tbl
-chisqvalue <- sum((obs.tbl - exp.tbl)^2/exp.tbl)
-pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE) # p-value is 0
-#We reject the null hypothesis that recession years arise by chance across regimes. 
-#
-#Running this as chi-square test specific to each regime with p the observed probabilty of recession:
-q <- 1 - p; q # 0.8233235 probability of not being in a recession
-prob <- (DJI$Recession*p + (!DJI$Recession)*q) / sum(DJI$Recession*p + (!DJI$Recession)*q) 
-min(prob) ; max(prob) ; sum(prob) 
-for (i in unique(DJI$Regime)) {
-  print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
-}
-# Null hypothesis is that each regime has the observed probability p of recession across regimes. 
-# Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next
-#Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
-#that no individual regime is equally likely to be associated with recessions
-#from the years 1985 to early 2020. (We should look into if our statistical methods
-#are correct here.)
-
 # Exploratory Data Analysis of Partial Variance to test for convergence of variance
 N <- length(Open) ; 
 variances.normal <- numeric(N - 1)
@@ -345,97 +237,8 @@ summary(variances.Open) # extremely large spread
 summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
 # variance seems to diverge for both Open prices and for first differences
 
-#Let us now try to fit our DJI data with some other distribution whose properties are familiar:
-#Given the lack of convergence in the variance shown above, it appears that we should model the data
-#with some distribution with infinite variance. Thus, we will see how well our data is modeled by a 
-#Cauchy distribution. 
-#
-#install.packages("fitdistrplus")
-library("fitdistrplus")
-hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
-     Cauchy Model", xlab = "First Differences")
-#Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
-#https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
-#Median:
-diffs.median <- median(diffs); diffs.median 
-#Half Interquartile Range:
-diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq # 36.41016
 
-library("fitdistrplus")
-#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
-#uses better paramater estimation, we will use our fit.diffs values.
-fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
-curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
-#And this does appear to be a good estimator
-
-#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
-cauchy.breaks <- qcauchy((0:4)*.25, location = diffs.median, scale = diffs.hiq)
-#Get observed data
-cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
-#Get expected data:
-cauchy.exp <- rep(length(diffs)/4, 4); cauchy.exp 
-
-#Get initial Chi Square Statistic:
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-
-#Run simulation: 
-N <- 10^4; results.Cauchy <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
-}
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 24%.
-#We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
-#from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
-#NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
-#have infinite variance, it appears our data's distribution also has infinite variance.
-
-#################
-#using Octiles
-hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
-     Cauchy Model", xlab = "First Differences")
-#Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
-#https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
-#Median:
-diffs.median <- median(diffs); diffs.median 
-#Half Interquartile Range:
-diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
-
-#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
-#uses better paramater estimation, we will use our fit.diffs values.
-fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
-curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
-#And this does appear to be a good estimator
-#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
-cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
-#Get observed data
-cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
-#Get expected data:
-cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
-
-#Get initial Chi Square Statistic:
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-
-#Run simulation: 
-N <- 10^4; results.Cauchy <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
-}
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 12%.
-#We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
-#from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
-#NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
-#have infinite variance, it appears our data's distribution also has infinite variance.
-#Pareto
+## Pareto
 library(MASS)
 #install.packages("actuar")
 library(actuar)
@@ -466,8 +269,8 @@ ChiStatAbs <- sum((binabschg - Exp)^2/Exp); ChiStatAbs #73.3071
 curve(dchisq(x, df = 7), from = 0, to = ChiStatAbs + 5)
 abline(v=ChiStatAbs, col = "red") 
 pchisq(ChiStatAbs, df = 7, lower.tail = FALSE) # 0
-#Given this extremely low p-value, it seems that the pareto distribution is not a good model (at all)
-#for the absolute daily fluxes in the Dow Jones Industrial Average. 
+### Given this extremely low p-value, it seems that the pareto distribution is not a good model (at all)
+### for the absolute daily fluxes in the Dow Jones Industrial Average. 
 
 #Let's shift now to taking a look at rare events, and how they are impacting some of our results:
 #Let's consider each of the days in our data and examine how far from the mean flux in value each of
@@ -589,7 +392,128 @@ curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + res
 #In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones
 #correlate with economic recessions.
 
+
+
+## Hypothesis Testing With Permutation Test
+#
+#Set up indices for permutation test by party and president 
+index.Republican <- DJI$Republican ; sum(index.Republican) # 4822, matches
+index.RR <- (DJI$Regime == "RR") ; sum(index.RR) # 1005
+index.GHWB <- (DJI$Regime == "GHWB") ; sum(index.GHWB) # 1011
+index.BC <- (DJI$Regime == "BC") ; sum(index.BC) # 2021
+index.GWB <- (DJI$Regime == "GWB") ; sum(index.GWB) # 2009
+index.BO <- (DJI$Regime == "BO") ; sum(index.BO) # 2015
+index.DJT <- (DJI$Regime == "DJT") ; sum(index.DJT) # 797
+dim(DJI) ; sum(c(index.RR, index.GHWB, index.BC, index.GWB, index.BO, index.DJT)) # 8858, matches
+diffs.Republican <- diffs[index.Republican[-1]]
+mu.RepDiffs <- mean(diffs.Republican) #  0.007355863
+diffs.Democrat <- diffs[!(index.Republican[-1])]
+mu.DemDiffs <- mean(diffs.Democrat)
+mean(diffs.Democrat) # 4.692755
+# The means seem different, but given the large variance, this is doubtful.
+#Another way to look at the data is to consider the total gains in the DJI during republican and democrat regimes. 
+rep.idx <- which(DJI$Republican == TRUE) 
+rep.gains <- sum(DJI$diffs[rep.idx]); rep.gains
+dem.gains <- sum(DJI$diffs[-rep.idx]); dem.gains
+sum(DJI$diffs); sum(rep.gains,dem.gains)
+rep.dem.gains <- cbind(rep.gains, dem.gains); rep.dem.gains
+library(RColorBrewer)
+coul <- brewer.pal(5, "Set2") 
+name <- c("Republican Gains", "Democrat Gains" )
+barplot(rep.dem.gains, col = coul, main = "Barplot of Cummulative Gains by Party", names = name) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
+
+#Let us check with a series of permutation tests:
+#First, let us consider if the observed means for republicans and democrats, respectively, are 
+#statistically significant:
+N <- 10^4; result.Republican <- numeric(N); result.Democrat <- numeric(N)
+for (i in 1:N) {
+  smpl <- sample(index.Republican[-1], replace = FALSE)
+  smpl.Republican <- diffs[smpl]
+  smpl.Democrat <- diffs[!smpl]
+  result.Republican[i] <- mean(smpl.Republican)
+  result.Democrat[i] <- mean(smpl.Democrat)
+}
+#
+#Republican Result
+hist(result.Republican, col = "red")
+abline(v = mu.RepDiffs, col = "black", lwd = 3)
+mu.result.Republican <- mean(result.Republican) ; mu.result.Republican ; mu.RepDiffs
+mean(result.Republican <= mu.RepDiffs) 
+#2.83% chance of seeing this statistic thus it is statistically significant.
+#
+#Democrat Result
+hist(result.Democrat, col = "blue")
+abline(v = mu.DemDiffs, col = "black", lwd = 3)
+mu.result.Democrat <- mean(result.Democrat) ; mu.result.Democrat ; mu.DemDiffs
+mean(result.Democrat >= mu.DemDiffs) 
+#2.83% chance. Whoa, both means are equally statistically significant.
+#
+#Rerun as a Combined Permutation Test
+RepAvg <- sum(DJI$diffs*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
+DemAvg <- sum(DJI$diffs*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
+Obs <-  DemAvg - RepAvg; Obs
+#
+N <- 10^4 #number of simulations
+result.Combined <- numeric(N) #this is the vector that will store our simulated differences
+for (i in 1:N) {
+  Rep <- sample(DJI$Republican) #This is our permuted party column
+  RepMu <- sum(DJI$diffs*(Rep == TRUE))/sum(Rep == TRUE) ; RepMu
+  DemMu <- sum(DJI$diffs*(Rep == FALSE))/sum(Rep == FALSE) ; DemMu
+  result.Combined[i] <- DemMu - RepMu
+}
+mean(result.Combined) #inspecting that these are indeed close to zero
+hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
+abline(v = Obs, col = "red")
+pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
+# 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed
+#better during democratic regimes, a result that is statistically signifficant.
+
+## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
+## 
+p <- sum(DJI$Recession)/length(DJI$Recession) # 17.67% of observations are in recession years
+obs.tbl <- table(DJI$Republican,DJI$Recession)# Republican has more Recession
+colnames(obs.tbl) <- c("Expansion", "Recession")
+rownames(obs.tbl) <- c("Democrat", "Republican")
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
+colnames(exp.tbl) <- c("Expansion", "Recession")
+rownames(exp.tbl) <- c("Democrat", "Republican")
+obs.tbl ; exp.tbl
+chisq.test(DJI$Republican,DJI$Recession)
+# p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
+# small chance that the observed contingency table would arise by chance.
+# Thus, the observations provide sufficient evidence to reject the null hypothesis
+# that Republican and Democratic regimes are equally likely to be associated with recession
+# years from 1985 to early 2020. 
+#
+#Running this as chi-square test of contingency table including all regimes:
+obs.tbl <- table(DJI$Recession, DJI$Regime); rownames(obs.tbl) <- c("Expansion", "Recession"); obs.tbl #GWB had the most recession days
+exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); rownames(exp.tbl) <- c("Expansion", "Recession"); exp.tbl
+chisqvalue <- sum((obs.tbl - exp.tbl)^2/exp.tbl)
+pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE) # p-value is 0
+#We reject the null hypothesis that recession years arise by chance across regimes. 
+#
+#Running this as chi-square test specific to each regime with p the observed probabilty of recession:
+q <- 1 - p; q # 0.8233235 probability of not being in a recession
+prob <- (DJI$Recession*p + (!DJI$Recession)*q) / sum(DJI$Recession*p + (!DJI$Recession)*q) 
+min(prob) ; max(prob) ; sum(prob) 
+for (i in unique(DJI$Regime)) {
+  print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
+}
+# Null hypothesis is that each regime has the observed probability p of recession across regimes. 
+# Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next
+#Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
+#that no individual regime is equally likely to be associated with recessions
+#from the years 1985 to early 2020. (We should look into if our statistical methods
+#are correct here.)
+
+
 # Fractal Tribute to Mandelbrot
+# "This is just a tribute!
+# You gotta believe it!
+# And I wish you were there!
+# Just a matter of opinion."
+# - Tenacious D
+
 # Source: https://rosettacode.org/wiki/Mandelbrot_set#R 
 iterate.until.escape <- function(z, c, trans, cond, max=50, response=dwell) {
   #we iterate all active points in the same array operation,
