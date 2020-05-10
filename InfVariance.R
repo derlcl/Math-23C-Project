@@ -534,10 +534,6 @@ hist(tempdata, breaks = "fd", prob=TRUE) # histogram of data to model
 curve(dstable(x,alpha[idx],beta[idx],gamma[idx],delta), add=TRUE, col = "red") # overlay density curve
 alpha[idx] ; beta[idx] ; gamma[idx] ; delta # stable distribution parameters
 
-hist(tempdata, breaks = "fd", prob=TRUE) # histogram of data to model
-fd.norm <- fitdist(tempdata,"norm")
-curve(dnorm(x,mean=fd.norm$estimate[1],sd=fd.norm$estimate[2]),add=TRUE)
-
 # Run K-S tests and compare?
 n <- 1000
 sampy.stable <- rstable(n, (stable.a),(stable.b - .5),stable.c, stable.location)
@@ -550,194 +546,247 @@ ks.test(diffs,sampy.norm)
 ks.test(diffs,sampy.cauchy.fd)
 ks.test(diffs,sampy.cauchy.other)
 
-# Paramaterize with respect to log, and 3 different time frames using both rdistribution and stable distribution
-#Log Diffs:
+
+## Logarithm of Absolute First Differences of Open Values
 logDiffs <- log(abs(diffs[diffs != 0]))
+# Fit normal, stable, and Cauchy distributions to data and run chi-square goodness of fit test.
 
 #Normal
 hist(logDiffs, breaks = "FD", freq = FALSE)
 curve(dnorm(x, mean(logDiffs), sd(logDiffs)), col = "red", lwd = 2, add = TRUE)
+# Chi-square test
+norm.breaks <- qnorm((0:4) * .25, mean(logDiffs), sd(logDiffs))
+norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
+norm.exp <- rep(length(logDiffs) / 4, length(norm.obs)); norm.exp
+norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 62.27596
+pchisq(norm.cs, df = 4 - 1, lower.tail = F) # 0, Reject null
 
 #Stable
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
-
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
 stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
-
 #Using Table we calculate alpha and beta
 stable.a <- 2
 stable.b <- 1
-
 #Calculate Phi_3 
 stable.phi_3 <- 1.908
-
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(logDiffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
+# Chi-square test
+stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
+stable.exp <- rep(length(logDiffs) / 4, length(stable.obs)); stable.exp
+stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 9.198371
+pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0.01006002, reject null
 
 #Cauchy
 cauchy.median <- median(logDiffs)
 cauchy.hiq <- (quantile(logDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
+# Chi-square test
+cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
+cauchy.obs <- table(cut(logDiffs, breaks = cauchy.breaks)); cauchy.obs
+cauchy.exp <- rep(length(logDiffs) / 4, length(cauchy.obs))
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 9.198371
+pchisq(cauchy.cs, df = 4 - 1, lower.tail = F) # 0.02676645, fail to reject null
 
 #QQ Plot
 par(mfrow = c(1,3))
 qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
-hurstexp(logDiffs)
+hurstexp(logDiffs) # Around 0.9, except for theoretical around 0.53
+## Result: Normal, stable, and Cauchy distributions fail to pass the chi-square 
+## goodness of fit test for the logarithm of absolute first differences of non-zero 
+## open values, though Cauchy seems to perform best and to look the best on the qqPlot. 
 
-#Monthly
+
+## First Differences of Monthly Average of Open Values
 monthly <- DJI; monthly$Date <- as.Date(monthly$Date)
-monthly$Date <- format(as.Date(master$Date, format="%d/%m/%Y"),"%Y-%m") 
+monthly$Date <- format(as.Date(monthly$Date, format = "%d/%m/%Y"),"%Y-%m") 
 monthly <-  aggregate(monthly[,2:4], list(monthly$Date), mean, drop = TRUE) 
 colnames(monthly)[1] <- "Date"; head(monthly)
-
 par(mfrow = c(1,2))
 plot(monthly$Open, type = "l")
 monthlyDiffs <- diff(monthly$Open); hist(diff(monthly$Open), freq = FALSE, breaks = "FD")
+# Fit normal, stable, and Cauchy distributions to data and run chi-square goodness of fit test.
 
 #Normal
 curve(dnorm(x, mean(monthlyDiffs), sd(monthlyDiffs)), col = "red", lwd = 2, add = TRUE)
+# Chi-square test
+norm.breaks <- qnorm((0:4) * .25, mean(monthlyDiffs), sd(monthlyDiffs))
+norm.obs <- table(cut(monthlyDiffs, breaks = norm.breaks)); norm.obs
+norm.exp <- rep(length(monthlyDiffs) / 4, length(norm.obs)); norm.exp
+norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 79.25118
+pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0, Reject null
 
 #Stable
 stable.Xs <- quantile(monthlyDiffs, c(.05, .25, .5, .75, .95))
-
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
 stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
-
 #Using Table we calculate alpha and beta
 stable.a <- 1.21
 stable.b <- .689
-
 #Calculate Phi_3 
 stable.phi_3 <- 2.2095
-
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(monthlyDiffs); stable.location
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
+# Chi-square test
+stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.obs <- table(cut(monthlyDiffs, breaks = stable.breaks)); stable.obs
+stable.exp <- rep(length(monthlyDiffs) / 4, length(stable.obs)); stable.exp
+stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 13.92417
+pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0.0009471195, reject null
 
 #Cauchy
 cauchy.median <- median(monthlyDiffs)
 cauchy.hiq <- (quantile(monthlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
+# Chi-square test
+cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
+cauchy.obs <- table(cut(monthlyDiffs, breaks = cauchy.breaks)); cauchy.obs
+cauchy.exp <- rep(length(monthlyDiffs) / 4, length(cauchy.obs))
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 10.85308
+pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.0009863154, reject null
 
 #QQ Plot
 par(mfrow = c(1,3))
 qqPlot(monthlyDiffs, "norm"); qqPlot(monthlyDiffs, "cauchy"); qqPlot(monthlyDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
-hurstexp(monthlyDiffs)
+hurstexp(monthlyDiffs) # Around 0.6
+## Result: Normal, stable, and Cauchy distributions fail to pass the chi-square 
+## goodness of fit test for the first differences of monthly average of open values, 
+## though the normal distribution seems to perform especially worse than the others.
 
-#Yearly
+
+## First Differences of Yearly Average of Open Values
 yearly <- DJI; yearly$Date <- as.Date(yearly$Date)
 yearly$Date <- format(as.Date(yearly$Date, format="%d/%m/%Y"),"%Y") 
 yearly <-  aggregate(yearly[,2:4], list(yearly$Date), mean, drop = TRUE) 
 colnames(yearly)[1] <- "Date"; head(yearly)
-
 par(mfrow = c(1,2))
 plot(yearly$Open, type = "l")
 yearlyDiffs <- diff(yearly$Open); hist(diff(yearly$Open), freq = FALSE, breaks = "FD")
 
 #Normal
 curve(dnorm(x, mean(yearlyDiffs), sd(yearlyDiffs)), col = "red", lwd = 2, add = TRUE)
+norm.breaks <- qnorm((0:4) * .25, mean(yearlyDiffs), sd(yearlyDiffs))
+norm.obs <- table(cut(yearlyDiffs, breaks = norm.breaks)); norm.obs
+norm.exp <- rep(length(yearlyDiffs) / 4, length(norm.obs)); norm.exp
+norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 2.142857
+pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0.1432349, fail to reject null
 
 #Stable
 stable.Xs <- quantile(yearlyDiffs, c(.05, .25, .5, .75, .95))
-
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
 stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
-
 #Using Table we calculate alpha and beta
 stable.a <- 1.35
 stable.b <- .721
-
 #Calculate Phi_3 
 stable.phi_3 <- 2.147
-
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(yearlyDiffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
+# Chi-square test
+stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.obs <- table(cut(yearlyDiffs, breaks = stable.breaks)); stable.obs
+stable.exp <- rep(length(yearlyDiffs) / 4, length(stable.obs)); stable.exp
+stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 4.885714
+pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0.08691218, fail to reject null
 
 #Cauchy
 cauchy.median <- median(yearlyDiffs)
-cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
+cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(yearlyDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
+# Chi-square test
+cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
+cauchy.obs <- table(cut(yearlyDiffs, breaks = cauchy.breaks)); cauchy.obs
+cauchy.exp <- rep(length(yearlyDiffs) / 4, length(cauchy.obs))
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 4.885714
+pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.02707983, reject null
 
 #QQ Plot
 par(mfrow = c(1,3))
 qqPlot(yearlyDiffs, "norm"); qqPlot(yearlyDiffs, "cauchy"); qqPlot(yearlyDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
-hurstexp(yearlyDiffs)
+hurstexp(yearlyDiffs) # Around 0.65
+## Result: Normal and stable distributions pass while Cauchy fails to pass the chi-square
+## goodness of fit test for the first differences of yearly average of open values, 
+## though the normal distribution seems to perform better than the stable. 
 
-#Log Price then take diffs :)
+## Comparing normal QQ Plots for yearly, monthly and daily averages of first difference
+par(mfrow = c(1,2))
+qqPlot(yearlyDiffs, "norm"); qqPlot(rnorm(length(yearlyDiffs), mean(yearlyDiffs), sd(yearlyDiffs)), "norm")
+# Good fit on yearly
+par(mfrow = c(1,2))
+qqPlot(monthlyDiffs, "norm"); qqPlot(rnorm(length(monthlyDiffs), mean(monthlyDiffs), sd(monthlyDiffs)), "norm")
+# OK fit on monthly
+par(mfrow = c(1,2))
+qqPlot(logDiffs, "norm"); qqPlot(rnorm(length(logDiffs), mean(logDiffs), sd(logDiffs)), "norm")
+# Poor fit on daily
+## Result: Data looks increasingly Gaussian as we average over longer time horizons. 
+
+
+## First Differences of Logarithm of Open values with Chi-square tests
 #Log Diffs:
 logDiffs <- diff(log(DJI$Open))
 
-#Normal
-hist(logDiffs, breaks = "FD", freq = FALSE)
+## Normal
+hist(logDiffs, breaks = "FD", freq = FALSE, prob = TRUE)
 curve(dnorm(x, mean(logDiffs), sd(logDiffs)), col = "red", lwd = 2, add = TRUE)
+# Chi-square test
+norm.breaks <- qnorm((0:4) * .25, mean(logDiffs), sd(logDiffs))
+norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
+norm.exp <- rep(length(logDiffs) / 4, length(norm.obs)); norm.exp
+norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 779.7705
+pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0, Reject null
 
-#Stable
+## Stable
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
-
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
 stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
-
 #Using Table we calculate alpha and beta
 stable.a <- 1.448
 stable.b <- .943
-
 #Calculate Phi_3 
 stable.phi_3 <- 2.11
-
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(logDiffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
+# Chi-square test
+stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
+stable.exp <- rep(length(logDiffs) / 4, length(stable.obs)); stable.exp
+stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 443.075
+pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0, Reject null
 
 #Cauchy
 cauchy.median <- median(logDiffs)
 cauchy.hiq <- (quantile(logDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
 curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
-
-#QQ Plot
-par(mfrow = c(1,3))
-qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
-hurstexp(logDiffs)
-
-#logDiffs of Prices Chi Square Test (cauchy):
+# Chi-square test
 cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
 cauchy.obs <- table(cut(logDiffs, breaks = cauchy.breaks)); cauchy.obs
 cauchy.exp <- rep(length(logDiffs) / 4, length(cauchy.obs))
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-pchisq(cauchy.cs, df = 2) #Fail to reject
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 0.6046065
+pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.4368258, Fail to reject
 
-#normal
-norm.breaks <- qnorm((0:4) * .25, mean(logDiffs), sd(logDiffs))
-norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
-norm.exp <- rep(length(logDiffs) / 4, length(norm.obs)); norm.exp
-norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs
-pchisq(norm.cs, df = 2) #It breaks 
+#QQ Plot on daily first differences on logarithm of Open values
+par(mfrow = c(1,3))
+qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
+# Cauchy looks like best fit. Most data is within the confidence interval. 
+hurstexp(logDiffs) # Around 0.5
+## Result: Normal and stable distributions fail to pass while Cauchy passes the chi-square
+## goodness of fit test for the first differences of of the logarithm of Open values. 
 
-#normal
-stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
-stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
-stable.exp <- rep(length(logDiffs) / 4, length(stable.obs)); stable.exp
-stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs
-pchisq(stable.cs, df = 4) #It breaks 
 
-#Comparing yearly Diffs to rnrom QQ Plots
-par(mfrow = c(1,2))
-qqPlot(yearlyDiffs, "norm"); qqPlot(rnorm(length(yearlyDiffs), mean(yearlyDiffs), sd(yearlyDiffs)), "norm")
-
-par(mfrow = c(1,2))
-qqPlot(monthlyDiffs, "norm"); qqPlot(rnorm(length(monthlyDiffs), mean(monthlyDiffs), sd(monthlyDiffs)), "norm")
-
-par(mfrow = c(1,2))
-qqPlot(logDiffs, "norm"); qqPlot(rnorm(length(logDiffs), mean(logDiffs), sd(logDiffs)), "norm")
 
 
 
