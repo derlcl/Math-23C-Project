@@ -296,12 +296,14 @@ head(pvals)
 rare <- max(pvals);rare #2.303366e-07, which is pretty much 0. 
 
 (1/rare)/365
-#If we interpret the p-value as the probability of an event taking place, and our events are measured in days,
-#then a given p-vakue tells us the probability of seeing that extreme of an event on any given days (i.e. a p-value of 
-#0.05 would correspond to an event that we'd "expect" to see once every 20 days, since it has a 1/20 chance of arising).
-#In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare 
-#of these rare events once in 11894.45 years.
+###If we interpret the p-value as the probability of an event taking place, and our events are measured in days,
+###then a given p-value tells us the probability of seeing that extreme of an event on any given days (i.e. a p-value of 
+###0.05 would correspond to an event that we'd "expect" to see once every 20 days, since it has a 1/20 chance of arising).
+###In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare 
+###of these rare events once in 11,894.45 years, but from the data it is clear that these events are far more
+###common than that.
 
+##Surveying the impact of the White House on the Dow Jones
 #Now that we have seen that the data follows a model with infinite variance, which somewhat resembles 
 #that of a random walk, let us consider the hypothesis that political regimes have an impact on 
 #the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering
@@ -331,24 +333,22 @@ regress.data <- data.frame(DJI,pres.binary)
 #presidents' terms
 ind.pres <- lm(regress.data$diffs ~ regress.data$Recession + regress.data$GHWB + regress.data$BC  + regress.data$GWB + regress.data$BO + regress.data$DJT)
 ind.pres
-#These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald 
-#Trump administration's success in boosting the DJIA to new heights.
+###These results are interesting becuase they seem out of line with the recent (2018-2019) rhetoric of the Donald 
+###Trump administration's success in boosting the DJIA to new heights.
 summary(ind.pres)
-#here again, we find that no presidents' presence in the White House had a significant impact on the Dow.
+###here again, we find that no presidents' presence in the White House had a significant impact on the Dow.
 
 #Let us now exclude the days when 5 sigma + events took place, that way we'll keep only the data for 
 #"normal/typical" days.
 regress.data.ne <- regress.data[-idx,]
 ind.pres.2 <- lm(regress.data.ne$diffs ~ + regress.data.ne$Recession + regress.data.ne$GHWB + regress.data.ne$BC + regress.data.ne$GWB + regress.data.ne$BO + regress.data.ne$DJT)
 summary(ind.pres.2)
-#These results seem to indicate that, excluding days with extreme events, and controlling for recessions 
-#(and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, 
-#the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush.
-#It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis,
-#which took place in the final months of his second term. Additionally, we should note that the only statistically 
-#signifficant coefficient was that of Donald Trump, which had a p-value well below 0.01.
-
-
+###These results seem to indicate that, excluding days with "extremely" events, and controlling for recessions 
+###(and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, 
+###the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush.
+###It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis,
+###which took place in the final months of his second term. Additionally, we should note that the only statistically 
+###signifficant coefficient was that of Donald Trump, which had a p-value well below 0.01.
 
 
 ##Logistic Regression: Recessions and Results
@@ -375,7 +375,7 @@ curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + res
 
 
 ## Hypothesis Testing With Permutation Test
-#
+
 #Set up indices for permutation test by party and president 
 index.Republican <- DJI$Republican ; sum(index.Republican) # 4822, matches
 index.RR <- (DJI$Regime == "RR") ; sum(index.RR) # 1005
@@ -428,7 +428,8 @@ mu.result.Democrat <- mean(result.Democrat) ; mu.result.Democrat ; mu.DemDiffs
 mean(result.Democrat >= mu.DemDiffs) 
 #2.83% chance. Whoa, both means are equally statistically significant.
 #
-#Rerun as a Combined Permutation Test
+
+##Combined Permutation Test
 RepAvg <- sum(DJI$diffs*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
 DemAvg <- sum(DJI$diffs*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
 Obs <-  DemAvg - RepAvg; Obs
@@ -445,8 +446,8 @@ mean(result.Combined) #inspecting that these are indeed close to zero
 hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
-# 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed
-#better during democratic regimes, a result that is statistically signifficant.
+### 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the 
+###DJI performed better during democratic regimes, a result that is statistically signifficant.
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
@@ -458,19 +459,23 @@ exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
 colnames(exp.tbl) <- c("Expansion", "Recession")
 rownames(exp.tbl) <- c("Democrat", "Republican")
 obs.tbl ; exp.tbl
+#As we can see from this contingency table, Republicans had more days in office during recessions, but 
+#they also had more days in office during expansions.
 chisq.test(DJI$Republican,DJI$Recession)
-# p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
-# small chance that the observed contingency table would arise by chance.
-# Thus, the observations provide sufficient evidence to reject the null hypothesis
-# that Republican and Democratic regimes are equally likely to be associated with recession
-# years from 1985 to early 2020. 
+### p-value is less than 2.2e-16, far below our .05 threshold, so there would be a very
+### small chance that the observed contingency table would arise by chance.
+### Thus, the observations provide sufficient evidence to reject the null hypothesis
+### that Republican and Democratic regimes are equally likely to be associated with recession
+### years from 1985 to early 2020. 
 #
 #Running this as chi-square test of contingency table including all regimes:
 obs.tbl <- table(DJI$Recession, DJI$Regime); rownames(obs.tbl) <- c("Expansion", "Recession"); obs.tbl #GWB had the most recession days
 exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl); rownames(exp.tbl) <- c("Expansion", "Recession"); exp.tbl
+#This table allows us to see a breakdown of how long each president was in office in terms of recessions and 
+#expansions
 chisqvalue <- sum((obs.tbl - exp.tbl)^2/exp.tbl)
 pchisq(chisqvalue, df = (2 - 1) * (6 - 1), lower.tail = FALSE) # p-value is 0
-#We reject the null hypothesis that recession years arise by chance across regimes. 
+#We reject the null hypothesis that recession years are equaly likely to arise across regimes. 
 #
 #Running this as chi-square test specific to each regime with p the observed probabilty of recession:
 q <- 1 - p; q # 0.8233235 probability of not being in a recession
@@ -479,12 +484,12 @@ min(prob) ; max(prob) ; sum(prob)
 for (i in unique(DJI$Regime)) {
   print(chisq.test(DJI$Recession, DJI$Regime == i, p = prob))
 }
-# Null hypothesis is that each regime has the observed probability p of recession across regimes. 
-# Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next
-#Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
-#that no individual regime is equally likely to be associated with recessions
-#from the years 1985 to early 2020. (We should look into if our statistical methods
-#are correct here.)
+###Null hypothesis is that each regime has the observed probability p of recession across regimes. 
+###Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next
+###Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates
+###that no individual regime is equally likely to be associated with recessions
+###from the years 1985 to early 2020. (We should look into if our statistical methods
+###are correct here.)
 
 
 # Fractal Tribute to Mandelbrot
