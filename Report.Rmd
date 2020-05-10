@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 <<<<<<< HEAD
 #Outline
 Exploratory Data Analysis
-Pareto Distribution
+The Impact of "Rare" Events
 Linear and Logistic Regression
 Fourier Analysis
 Random Walk
@@ -27,8 +27,21 @@ The Impact of Political Regimes - Hypothesis Testing With Permutation Test
 Hypothesis Testing: Contingency table with chi-square test
 =======
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+Exploratory Data Analysis
+```{r}
+# Visualize first differences of our Open price values
+hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
+abline(v = mean(diffs), col = "turquoise")
+# resembles normal distribution with narrow concentration around sharp peak at mean 
+# and heavy tails, with more extreme negative values than positive values
+qqnorm(diffs) # plot data with quantiles of the standard normal on the x-axis.
+qqline(diffs) # add straight line through the first and third quartiles of our data
+# data does not seem to follow normal distribution at tails
+
+
+```
+
+
 #Investigating Interesting Correlations - Regressions
 An interesting correlation that we would not have expected to be significant, but turns out to be so is that
 of Open prices and Volume:

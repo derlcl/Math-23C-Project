@@ -4,11 +4,69 @@
 ##Titles
 ###Results/Conclusions
 
-#Retrieve any functions we have made for this project
-source("prj_Functions.R")
-#Load Dow Jones Industrial dataset and prepare it for analysis
+#Packages to install:
+#install.packages("MASS")
+#install.packages("pracma")
+#install.packages("ggplot2")
+#install.packages("gganimate")
+#install.packages("fractaldim")
+#install.packages("fitdistrplus")
+#install.packages("gifski")
+#install.packages("fBasics")
+#install.packages("stabledist")
+#install.packages("car")
+
+#Import libraries
+library('pracma')
+library('fitdistrplus')
+library('MASS')
+library('ggplot2')
+library('gganimate')
+library('gifski')
+library('fractaldim')
+library('fBasics')
+library('stabledist')
+library('car')
+
+##Retrieve any functions we have made for this project
+#Define the Chi-Squared function
+ChiSq <- function(Obs,Exp){
+  sum((Obs - Exp)^2/Exp)
+}
+
+RunFourier <- function(ncoeff, data){
+  myCos <- function(m) cos((1:length(data))*m*2*pi/length(data))
+  mySin <- function(m) sin((1:length(data))*m*2*pi/length(data))
+  
+  #This function gives the Fourier coefficient a_m
+  coeffA <- function(m){
+    sum(data*2*myCos(m)/length(data))
+  }
+  #This function gives the Fourier coefficient b_m
+  coeffB <- function(m){
+    sum(data*2*mySin(m)/length(data))
+  }
+  
+  #Evaluate ncoeff coefficients
+  FourierA <- sapply(1:ncoeff,coeffA)
+  FourierB <- sapply(1:ncoeff,coeffB)
+  #Find the amplitude of the sum of the cosine and sine terms
+  Fourier <- sqrt(FourierA^2+FourierB^2)
+  Fourier.max <- which.max(Fourier)   #the largest value is for m
+  
+  #Reconstruction
+  recon <- mean(data)   #this is a_0
+  for (m in 1:ncoeff) {
+    recon <- recon + FourierA[m]*myCos(m)+FourierB[m]*mySin(m)
+  }
+  
+  plot(data,type = "l")
+  points(1:length(data),recon, type = "l", col = "red",lwd = 2) 
+}
+
+
+##Load Dow Jones Industrial dataset and prepare it for analysis
 DJI <- read.csv("DJI.csv")
-source("prj_DataPreparation.R")
 
 ## Exploratory Data Analysis
 summary(DJI)
@@ -56,12 +114,12 @@ max(AbsDiffs)/diffs.length / mu.AbsDiffs # single maximum value contributed .4% 
 # there are long tails of extreme values with large contributions to the mean
 hist(AbsDiffs, breaks = "fd", prob = TRUE) ; abline(v = mu.AbsDiffs)
 # could be modeled by a non-negative valued, long-tailed distribution 
-# (see below for Pareto analysis)
 
-# Logarithm of Absolute First Differences
+
+## Logarithm of Absolute First Differences
 logAbsDiffs <- log(AbsDiffs) ; summary(logAbsDiffs) ; 
 logAbsDiffs <- logAbsDiffs[logAbsDiffs > -Inf] ; summary(logAbsDiffs) ; length(logAbsDiffs)
-hist(logAbsDiffs, prob = TRUE, breaks = "fd")
+hist(logAbsDiffs, prob = TRUE, breaks = "fd") # could be modeled by a stable distribution with left skew
 
 ## Empirical Cumulative Distributions
 plot.ecdf(diffs)
@@ -144,6 +202,58 @@ rare <- max(pvals);rare #2.303366e-07, which is pretty much 0.
 ###In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare 
 ###of these rare events once in 11,894.45 years, but from the data it is clear that these events are far more
 ###common than that.
+
+
+##Prepare data for political analysis
+#
+#Create 'Regime' Categories (Regan, Bush, etc.)
+DJI["Regime"] <- "None" #Set blank column
+#Set the dates for each regime. Each 'term' is denoted from inaugaration day to the day 
+#before the next regime's inaugaration day.
+dates <- sapply(DJI["Date"], function(x) as.Date(x)) 
+#Convert CSV date character objects to date objects.
+DJI[dates < as.Date("1989-01-20"), "Regime"] <- "RR"
+DJI[dates >= as.Date("1989-01-20") & dates < as.Date("1993-01-20"), "Regime"] <- "GHWB"
+DJI[dates >= as.Date("1993-01-20") & dates < as.Date("2001-01-20"), "Regime"] <- "BC"
+DJI[dates >= as.Date("2001-01-20") & dates < as.Date("2009-01-20"), "Regime"] <- "GWB"
+DJI[dates >= as.Date("2009-01-20") & dates < as.Date("2017-01-20"), "Regime"] <- "BO"
+DJI[dates >= as.Date("2017-01-20"), "Regime"] <- "DJT"
+#
+#Create a binary category for the political party in control of the White House 
+#(Republican = 1, Democrat = 0)
+Republican <- (DJI$Regime == "RR") | (DJI$Regime == "GHWB") | (DJI$Regime == "GWB") | (DJI$Regime == "DJT")
+DJI <- data.frame(DJI, Republican); head(DJI); sum(Republican); mean(Republican)
+#
+#Create a binary category for expansion vs recession year
+DJI["Recession"] <- FALSE
+#Extract years from date column
+DJI.year <- format(as.Date(DJI$Date),"%Y")
+#Set the dates
+DJI[DJI.year == 1980, "Recession"] <- TRUE
+DJI[DJI.year >= 1981 & DJI.year  <= 1981, "Recession"] <- TRUE
+DJI[DJI.year >= 1990 & DJI.year  <= 1991, "Recession"] <- TRUE
+DJI[DJI.year == 2001, "Recession"] <- TRUE
+DJI[DJI.year >= 2007 & DJI.year <= 2009, "Recession"] <- TRUE
+DJI[DJI.year >= 2020, "Recession"] <- TRUE
+
+#Note that we got this dataset from the FRED website, and this is real GDP growth (which had larger fluxes)
+#Note 2: I did this based on quarter over quarter fluxes.
+GDPb <- read.csv("GDPC1.csv"); head(GDPb) 
+N <- length(GDPb$GDPC1)
+GDPg <- numeric(N) #now creating a vector to store the flux in GDP for each quarter
+for(i in 2:N){ 
+  #since we're not interested the data until 1989, we can start from the second row
+  GDPg[i] <- GDPb$GDPC1[i] - GDPb$GDPC1[i-1]
+}
+Recess <- numeric(N)
+for(i in 1:N){
+  Recess[i] <- GDPg[i] < 0
+}
+GDPb <- data.frame(GDPb,GDPg, Recess) ; GDPb$DATE <- as.Date(GDPb$DATE); head(GDPb)
+#selecting only the relevant years for our analysis
+GDP <- subset(GDPb, DATE >= "1989-01-01" & DATE <= "2019-01-01"); head(GDP) 
+sum(GDP$Recess) #So there have been 12 quarters with recessions
+GDP[GDP$Recess == 1,]
 
 ##Surveying the impact of the White House on the Dow Jones
 #Now that we have seen that the data follows a model with infinite variance, which somewhat resembles 

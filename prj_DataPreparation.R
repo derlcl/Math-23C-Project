@@ -29,16 +29,3 @@ DJI[DJI.year >= 1990 & DJI.year  <= 1991, "Recession"] <- TRUE
 DJI[DJI.year == 2001, "Recession"] <- TRUE
 DJI[DJI.year >= 2007 & DJI.year <= 2009, "Recession"] <- TRUE
 DJI[DJI.year >= 2020, "Recession"] <- TRUE
-
-# Add values for max, min and range
-Open <- DJI$Open 
-N <- length(Open) ; range.Open <- cbind(numeric(N),numeric(N))
-for (i in 1:N) {
-  range.Open[i,] <- range(Open[1:i])
-}
-head(range.Open)
-min.Open <- range.Open[,1]
-max.Open <- range.Open[,2]
-range.Open <- max.Open - min.Open
-head(min.Open) ; head(max.Open) ; head(range.Open)
-plot(max.Open)
