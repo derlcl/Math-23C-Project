@@ -163,8 +163,90 @@ This is a fairly interesting result because its graph looks different than the n
 
 
 #Cauchy Distribution
-```{r}
+Given the shape of the data's histogram, and the underlying theoretical basis, let us investigate whether our data is well modelled by a Cauchy distribution.
+```{r, echo= T}
+hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
+     Cauchy Model", xlab = "First Differences")
+```
+We estimated the paramaters for Cauchy thanks to this paper by M. Mahdizadeh, and Ehsan Zamanzade:
+#https://www.sciencedirect.com/science/article/pii/S1018364718313193?via%3Dihub
+```{r,echo=T}
+#Median:
+diffs.median <- median(diffs); diffs.median #
+#Half Interquartile Range:
+diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq # 36.41016
+# Result: Doesn't look normal, possibly Cauchy. 
 
+#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
+#uses better paramater estimation, we will use our fit.diffs values.
+fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
+hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
+     Cauchy Model", xlab = "First Differences")
+curve(dcauchy(x, location = diffs.median, scale =  diffs.hiq), add = TRUE, lwd = 3, col = "red")
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 1, col = "cyan")
+```
+This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
+```{r, echo=T}
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+cauchy.breaks <- qcauchy((0:4)*.25, location = diffs.median, scale = diffs.hiq)
+#Get observed data
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
+#Get expected data:
+cauchy.exp <- rep(length(diffs)/4, 4); cauchy.exp 
+
+#Get initial Chi Square Statistic:
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+
+#Run simulation: 
+N <- 10^4; results.Cauchy <- pvalues.Chisq <- numeric(N)
+for (i in 1:N) {
+  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
+  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+  pvalues.Chisq[i] <- pchisq(results.Cauchy[i],4-3,lower.tail=F)
+}
+hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
+abline(v = cauchy.cs, col = "red", lwd = 3)
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
+```
+This gives us a P value of approximately 24%. Therefore, we fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely not a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance, it appears our data's distribution also has infinite variance.
+
+As a robustness test, we perform the same analysis using Octiles:
+```{r,echo=T}
+hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
+     Cauchy Model", xlab = "First Differences")
+#Median:
+diffs.median <- median(diffs); diffs.median #
+#Half Interquartile Range:
+diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
+
+#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
+#uses better paramater estimation, we will use our fit.diffs values.
+fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
+curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
+#Get observed data
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
+#Get expected data:
+cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
+
+#Get initial Chi Square Statistic:
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+
+#Run simulation: 
+N <- 10^4; results.Cauchy <- numeric(N)
+for (i in 1:N) {
+  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
+  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+}
+hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
+abline(v = cauchy.cs, col = "red", lwd = 3)
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
+```
+And we get P value of approximately 12%. Thus, we fail to reject the null hypothesis again, and gain some more confidence that our data is well modeled by some variation of a Cauchy distribution.
 ```
 
 #Bootstrap
