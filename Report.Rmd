@@ -32,12 +32,10 @@ Exploratory Data Analysis
 # Visualize first differences of our Open price values
 hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
 abline(v = mean(diffs), col = "turquoise")
-# resembles normal distribution with narrow concentration around sharp peak at mean 
-# and heavy tails, with more extreme negative values than positive values
+# resembles normal distribution with narrow concentration around sharp peak at mean and heavy tails, with more extreme negative values than positive values
 qqnorm(diffs) # plot data with quantiles of the standard normal on the x-axis.
-qqline(diffs) # add straight line through the first and third quartiles of our data
-# data does not seem to follow normal distribution at tails
-
+qqline(diffs) # add straight line through the first and third quartiles of our data, which does not seem to follow normal distribution at tails
+# we could potentially model this with a heavy-tailed distribution, but what?
 
 ```
 
@@ -162,9 +160,7 @@ results@coef
 curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + results@coef[2]*x)),col = "blue", add=TRUE)
 ```
 This is a fairly interesting result because its graph looks different than the normal logistic curve. Of course, this becomes obvious when one considers the nature of the regression, namely that recessions are events that are expected to correlate with negative values of first differences (i.e. price drops).In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones correlate with economic recessions.
-=======
-Partial Variance
-=======
+
 
 #Cauchy Distribution
 ```{r}
