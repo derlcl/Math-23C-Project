@@ -312,6 +312,9 @@ rare <- max(pvals);rare #2.303366e-07, which is pretty much 0.
 #the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering
 #the impact of political party on the performance of the market. 
 
+
+
+
 regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
 #At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.
 #But let us look a little closer:
@@ -365,7 +368,18 @@ plot(log(Open)~log(Volume)) # looks most promising
 # Compare logarithms of open price and trade volume variables
 x <- log(Volume)
 y <- log(Open)
+#Let us first manually run the regression, and then we'll check our results against the built-in
+#function. First, let's find the slope of the line
+b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b 
+#Alternative - works because division by n-1 cancels out
+cov(x,y)/var(x)
+#Here is the formula for the intercept
+a <- mean(y) - b*mean(x);a    
+#We can add this regression line to the plot of the data
+abline(a, b, col = "red")
+#It is quicker to use the built-in R function
 linmod <- lm(y~x)
+linmod; a; b #And we get the same result
 plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
 abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
 summary(linmod) # R-squared is 0.7298, so the linear model explains 73% of the data
