@@ -559,7 +559,7 @@ norm.breaks <- qnorm((0:4) * .25, mean(logDiffs), sd(logDiffs))
 norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
 norm.exp <- rep(length(logDiffs) / 4, length(norm.obs)); norm.exp
 norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 62.27596
-pchisq(norm.cs, df = 4 - 1, lower.tail = F) # 0, Reject null
+pchisq(norm.cs, df = 4 - 3, lower.tail = F) # 0, Reject null
 
 #Stable
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
@@ -580,7 +580,7 @@ stable.breaks <- c(-Inf, qstable((1:3) * .25, alpha = stable.a, beta = stable.b,
 stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
 stable.exp <- rep(length(logDiffs) / 4, length(stable.obs)); stable.exp
 stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 9.198371
-pchisq(stable.cs, df = 4 - 2, lower.tail = F) # 0.01006002, reject null
+pchisq(stable.cs, df = 4 - 3, lower.tail = F) # 0.002422305, reject null
 
 #Cauchy
 cauchy.median <- median(logDiffs)
@@ -591,7 +591,7 @@ cauchy.breaks <- qcauchy((0:4) * .25, cauchy.median, cauchy.hiq)
 cauchy.obs <- table(cut(logDiffs, breaks = cauchy.breaks)); cauchy.obs
 cauchy.exp <- rep(length(logDiffs) / 4, length(cauchy.obs))
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 9.198371
-pchisq(cauchy.cs, df = 4 - 1, lower.tail = F) # 0.02676645, fail to reject null
+pchisq(cauchy.cs, df = 4 - 3, lower.tail = F) # 0.002422305, reject null
 
 #QQ Plot
 par(mfrow = c(1,3))
@@ -733,7 +733,6 @@ qqPlot(logDiffs, "norm"); qqPlot(rnorm(length(logDiffs), mean(logDiffs), sd(logD
 
 
 ## First Differences of Logarithm of Open values with Chi-square tests
-#Log Diffs:
 logDiffs <- diff(log(DJI$Open))
 
 ## Normal
@@ -785,8 +784,3 @@ qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable",
 hurstexp(logDiffs) # Around 0.5
 ## Result: Normal and stable distributions fail to pass while Cauchy passes the chi-square
 ## goodness of fit test for the first differences of of the logarithm of Open values. 
-
-
-
-
-

@@ -173,6 +173,7 @@ plot(function(x) pnorm(x), lwd = 3, add = TRUE)
 ## than there are in the eCDFs for the normal, indicating the possibility of 
 ## significantly greater Kolmogorov-Smirnov test statistics. This requires testing. 
 
+
 # Bootstrap sampling distribution of standardized sample observations
 hist(Z.diffs, breaks = "fd", prob = TRUE) # looks normal
 hist(Z.iqrCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
@@ -181,6 +182,7 @@ hist(Z.norm, breaks = "fd", prob = TRUE) # looks normal
 # Result: Central Limit Theorem explains approximation of standard normal for larger sample sizes. 
 # However, due to infinite variance of Cauchy distribution, extreme values from heavy tails
 # require very large sample size to approximate standard normal distribution. 
+# Cauchy has inconsistent center, shape and spread on different iterations. 
 
 # Bootstrap sampling distribution of sample variances
 hist(varY.diffs, breaks = "fd", prob = TRUE) # somewhat normal with somewhat heavy right tail
