@@ -28,10 +28,12 @@ Random Walk
 Graphical Volatility
 Fractal Analysis and Hurst Exponent
 Cauchy Distribution
+Divergent Integrals
 Stable Distribution
 Kolmogorov-Smirnov tests
 Logarithms, absolute values and varying time horizons
 
+<<<<<<< HEAD
 #Investigating Interesting Correlations - Regressions
 An interesting correlation that we would not have expected to be significant, but turns out to be so is that
 of Open prices and Volume:
@@ -152,6 +154,61 @@ results@coef
 curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + results@coef[2]*x)),col = "blue", add=TRUE)
 ```
 This is a fairly interesting result because its graph looks different than the normal logistic curve. Of course, this becomes obvious when one considers the nature of the regression, namely that recessions are events that are expected to correlate with negative values of first differences (i.e. price drops).In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones correlate with economic recessions.
+=======
+Partial Variance
+```{r}
+# Partial Variance to test for convergence of variance
+N <- length(Open) - 1; 
+variances.normal <- variances.cauchy <- variances.Open <- variances.diffs <- numeric(N)
+sample.normal <- rnorm(N + 1) ; sample.cauchy <- rcauchy(N + 1)
+Open <- DJI$Open ; diffs.Open <- DJI$diffs
+index <- 1:N
+for (i in 2:(N + 1)) {
+  variances.normal[i - 1] <- var(sample.normal[1:i])
+  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
+  variances.Open[i - 1] <- var(Open[1:i])
+  variances.diffs[i - 1] <- var(diffs.Open[1:i])
+}
+variances.diffs <- variances.diffs[-1]
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x", ylab = "Normal Variance", xlab = "Sample Size") # converges
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy",ylab = "Cauchy Variance", xlab = "Sample Size") # diverges jagged
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy",ylab = "Open Variance", xlab = "Sample Size") # diverges
+plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy", ylab = "Firs Diff. Variance", xlab = "Sample Size") # diverges
+par(mfrow = c(1,1)) # revert to 1x1 plot matrix
+summary(variances.normal) # data is centered closely around mean and median
+summary(variances.cauchy) # seems to be large spread
+summary(variances.Open) # extremely large spread
+summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
+### Result: As index increases, partial variance converges for normal distribution,
+### but it diverges in jagged jumps for Cauchy distribution and
+### in smoother curves for both Open values and first differences. 
+### This indicates that our data may have undefined or infinite variance. 
+```
+
+
+Divergent Integrals
+```{r}
+## Divergent Integration For Calculating Variance
+
+#Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
+#scale parameters above, that it does indeed have infinite variance. 
+#To do that, we'll need to define functions that will describe the integrands that will allow us to
+#use the tail-integral theorem. First, we'll define the integrand that will give us E(X).
+#Since the underlying distribution can be modeled by a Cauchy distribution, we will use 
+#dcauchy with the right parameters as our mu_x:
+integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
+#and now we have E(X):
+exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
+
+#In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
+integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
+#And E(X^2)
+exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
+#And it appears that the integral is divergent! This means that 
+#Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
+```
+>>>>>>> ab7de49cc1c3eccf96c2ecf068143a939a62150a
 
 
 #The Impact of Political Regimes - Hypothesis Testing With Permutation Test 

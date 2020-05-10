@@ -93,11 +93,11 @@ x <- log(Volume)
 y <- log(Open)
 #Let us first manually run the regression, and then we'll check our results against the built-in
 #function. First, let's find the slope of the line
-b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b 
+b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2)) # 0.6014286
 #Alternative - works because division by n-1 cancels out
-cov(x,y)/var(x)
+cov(x,y)/var(x) # 0.6014286
 #Here is the formula for the intercept
-a <- mean(y) - b*mean(x);a    
+a <- mean(y) - b*mean(x) ; a # -2.041207
 
 #It is quicker to use the built-in R function
 linmod <- lm(y~x)
