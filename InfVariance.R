@@ -184,7 +184,7 @@ fracd.estimates <- fd.estimate(DJI$Open, methods = c("variogram", "madogram",
 #Correct again. We get .5 across all 4 methods. The Dow Jones Index seems to be following a
 #random walk.
 
-#Standard deviation and expectation are undefined for our model because it is a Cauchy distribution.
+#Standard deviation is undefined for models with infinite variance.
 #Therefore, we will have to test our stock market drop against a gaussian random walk.
 # Calculate the first difference series rw.drift_diff
 rw.drift_diff <- diff(rw.drift)

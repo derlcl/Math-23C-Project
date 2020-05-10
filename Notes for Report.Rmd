@@ -9,23 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Exploratory Data Analysis - Center and shape, visualizations, first differences, magnitude, logarithm, 
-Bootstrapping for empirical cumulative distribution
-Bootstrapped sampling distributions and central limit theorem
-Partial variance
-Pareto analysis
-Rare events, linear regression, logistic regression
-Hypothesis testing with permutation tests, contingency tables, and chi-square tests
-
-Fourier Analysis
-Random Walk
-Graphical Volatility
-Fractal Analysis and Hurst Exponent
-Cauchy Distribution
-Stable Distribution
-Kolmogorov-Smirnov tests
-Logarithms, absolute values and varying time horizons
-
 # TD
 Rakeen
 1. Compare different price variables (?) including volume vs. first difference. (In progress, is it helpful?)

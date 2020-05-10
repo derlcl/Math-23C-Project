@@ -22,7 +22,7 @@ diffs <- diff(DJI$Open) #Get first difference of our Open values.
 diffs.length <- length(diffs) # 8857, concatenate with 0 as starting value to fit data frame
 DJI <- data.frame(DJI,"diffs" = c(0,diffs)) ; head(DJI) # Add to data frame
 
-# Center and Shape
+## Center and Shape
 summary(diffs)  ; boxplot(diffs) # Five-number summary and boxplot visualization
 # Min.        1st Qu.    Median      Mean    3rd Qu.  Max. 
 # -2419.920   -30.400     3.430     2.142    42.420   1171.961 
