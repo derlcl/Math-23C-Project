@@ -6,13 +6,11 @@
 
 #Retrieve any functions we have made for this project
 source("prj_Functions.R")
-
 #Load Dow Jones Industrial dataset and prepare it for analysis
 DJI <- read.csv("DJI.csv")
 source("prj_DataPreparation.R")
 
 ## Exploratory Data Analysis
-
 summary(DJI)
 # Minimum, 1st quartile, median, mean, 3rd quartile, and maximum values look similar
 # across Open, High, Low, Close and Adjusted Close. We will work with Open values.
@@ -72,6 +70,7 @@ plot(AbsDiffsCDF) # could be modeled by non-negative, long-tailed distribution
 #
 LogAbsDiffs <- log(AbsDiffs)
 plot(LogAbsDiffs) # could be modeled by random walk with positive drift value
+plot.ecdf(LogAbsDiffs) # produces error because of presence of -Inf values
 #
 CDF.diffs <- ecdf(diffs)
 plot(CDF.diffs) # logistic regression model could fit
@@ -210,15 +209,12 @@ hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
 par(mfrow = c(1,1)) # reset to 1x1 plot matrix
 
 # Exploratory Data Analysis of Partial Variance to test for convergence of variance
-N <- length(Open) ; 
-variances.normal <- numeric(N - 1)
-variances.cauchy <- numeric(N - 1)
-variances.Open <- numeric(N - 1)
-variances.diffs <- numeric(N - 1)
-sample.normal <- rnorm(N) ; sample.cauchy <- rcauchy(N)
+N <- length(Open) - 1; 
+variances.normal <- variances.cauchy <- variances.Open <- variances.diffs <- numeric(N)
+sample.normal <- rnorm(N + 1) ; sample.cauchy <- rcauchy(N + 1)
 Open <- DJI$Open ; diffs.Open <- DJI$diffs
-index <- 1:(N - 1)
-for (i in 2:N) {
+index <- 1:N
+for (i in 2:(N + 1)) {
  variances.normal[i - 1] <- var(sample.normal[1:i])
  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
  variances.Open[i - 1] <- var(Open[1:i])
@@ -235,9 +231,13 @@ summary(variances.normal) # data is centered closely around mean and median
 summary(variances.cauchy) # seems to be large spread
 summary(variances.Open) # extremely large spread
 summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
-# variance seems to diverge for both Open prices and for first differences
+### Result: As index increases, partial variance converges for normal distribution,
+### but it diverges in jagged jumps for Cauchy distribution and
+### in smoother curves for both Open values and first differences. 
+### This indicates that our data may have undefined or infinite variance. 
 
-## An interesting correlation that we would not have expected to be signifficant, but turns out to be so:
+## An interesting correlation that we would not have expected to be significant, 
+## but turns out to be so:
 # Finding interesting linear relationships
 Volume <- DJI$Volume
 plot(DJI$diffs~Volume)
@@ -265,7 +265,7 @@ abline(a, b, col = "cyan")
 abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
 summary(linmod) 
 ###R-squared is 0.7298, so the linear model explains 73% of the data, and it appears that volume and open
-###prices are positively correlated
+###prices are positively correlated.
 
 ##Let's shift now to taking a look at presumably rare events, and how they are impacting our results:
 #Let's consider each of the days in our data and examine how far from the mean flux in value 
