@@ -122,7 +122,7 @@ for (i in 1:N){
 }
 head(SDs);head(diffs)
 length(SDs)
-SDs.data <- c(0,SDs[2:length(SDs)]); head(SDs.data) 
+SDs.data <- c(0,SDs[1:length(SDs)]); head(SDs.data) 
 DJI <- data.frame(DJI,SDs.data)
 idx <- which(abs(SDs.data) > 5); head(idx)
 unusual <- DJI[idx,]; head(unusual) 
