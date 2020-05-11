@@ -713,42 +713,6 @@ Thinking about each a graph as a fractal, we see that curve is losing it's "roug
 
 Does this mean that yearly stock prices follow a normal distribution? Not necessarily. In fact, we hyptohesize the opposite. For instance, we have 8857 data points (or days) in our Daily Stock Price Data compared to 35 data points (or years) in our yearly averages. We believe that if were to check stock market prices of our yearly averages in 8000 years, they would be better fit by a stable distribution with $\alpha \xrightarrow{} 2$ or "more cauchy".
 
-#Simulated Cauchy p-value test 
-This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
-```{r, echo=T}
-#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
-cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
-#Get observed data
-cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
-#Get expected data:
-cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
-
-#Get initial Chi Square Statistic:
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-
-#Run simulation: 
-N <- 10^4; results.Cauchy <- pvalues.Chisq <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
-  pvalues.Chisq[i] <- pchisq(results.Cauchy[i],4-3,lower.tail=F)
-}
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
-```
-This gives us a P value of approximately 24%. Therefore, we fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely not a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance, it appears our data's distribution also has infinite variance.
-
-Further investigation is needed to confirm this hypothesis, and would require acces to an abundance of intraday data. But, the a deeper question that is not answered in this report is whether or not there a concerete relationship between the volume of data and our $\alpha$ paramater?
-
-
-That being said, we feel that there is enough evidence from the relationship between our data and the normal, cauchy, and stable distributions to suggest that our data more than likely has infinite variance.
-
-To clearly demonstrate this relationship we will run a series of goodness-of-fit tests and explain some of the complexities and challenges we faced when attempting to confirm the fit of our model.
-
-#Goodness-of-Fit Tests - Chi Squared
-
 #Goodness-of-Fit Tests - Kolmogorov-Smirnov
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
@@ -771,6 +735,13 @@ sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples
 abline(v = 0.05, col = "red")}
 ```
 About 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions. (refer to main R script for similar analysis using interquartile range and median as estimated Cauchy parameters)
+
+
+Further investigation is needed to confirm this hypothesis, and would require access to an abundance of intra-day data. But, the a deeper question that is not answered in this report is whether  there exists a concerete relationship between the volume of data and our $\alpha$ paramater.
+
+That being said, we feel that there is enough evidence from the relationship between our data and the normal, cauchy, and stable distributions to suggest that our data more than likely has infinite variance.
+
+To clearly demonstrate this relationship we will run a series of goodness-of-fit tests and explain some of the complexities and challenges we faced when attempting to confirm the fit of our model.
 
 #As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
 Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then taking chi-squares:
