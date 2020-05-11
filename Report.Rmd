@@ -612,6 +612,103 @@ And we get P value of approximately 12%. Thus, we fail to reject the null hypoth
 
 
 
+#Kolmogorov-Smirnov
+Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
+```{r,echo=T, warning=FALSE}
+nn <- 500 #sample size. 
+rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
+{hist(rand, probability = TRUE, breaks = "FD")
+curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
+
+#using interquartile parameters
+N <- 10^4
+ks.stats <- numeric(N)
+for (i in 1:N) {
+  rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
+  diff.samp <- sample(diffs,nn, replace = TRUE)
+  ks.stats[i] <- ks.test(diff.samp,rand)$p.value
+}
+mean(ks.stats)#mean p-values = 0.1976958
+sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
+{hist(ks.stats)
+abline(v = 0.05, col = "red")}
+
+```
+It appears that the results are favorable to the hypothesis that the data matches a Cauchy distribution, since 72% of the time the p-value from the K-S test was less than 0.05.
+
+Now we'll try sing fitdist parameters:
+```{r,echo=T, warning = F}
+rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
+hist(rand2, probability = TRUE, breaks = "FD")
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
+
+N <- 10^3
+ks.stats2 <- numeric(N)
+for (i in 1:N) {
+  rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
+  diff.samp2 <- sample(diffs,nn, replace = TRUE)
+  ks.stats2[i] <- ks.test(diff.samp2,rand2)$p.value
+}
+mean(ks.stats2) #mean pvalues =  0.4248467
+sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
+{hist(ks.stats2, breaks = "fd")
+abline(v = 0.05, col = "red")}
+```
+And we get even better results here! As about 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions.
+
+#As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
+Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then taking chi-squares:
+```{r,echo=T, warning = FALSE}
+N <- 10^3
+samp.rand <- numeric(N)
+nn <- 500
+ks.samp.rand <- numeric(N)
+for(i in 1:N){
+  diff.samp <- sample(diffs, nn, replace = TRUE)
+  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
+  cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  ks.samp.rand[i] <- ks.test(diff.samp, cauchy.samp)$p.value
+}
+mean(ks.samp.rand)
+sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
+{hist(ks.samp.rand, breaks = "fd")
+abline(v = 0.05, col = "red")}
+```
+
+Doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test:
+```{r,echo=T,warning=FALSE}
+samp.rand.cs <- numeric(N); pvals.chi <- numeric(N)
+for(i in 1:N){
+  diff.samp <- sample(diffs, nn, replace = TRUE)
+  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
+  cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  cauchy.breaks <- qcauchy((0:10)*.1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  cauchy.obs <- table(cut(diff.samp, breaks = cauchy.breaks)); cauchy.obs
+  cauchy.exp <- rep(nn/10, 10); cauchy.exp 
+  samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+  pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
+}
+hist(samp.rand.cs, breaks = "FD")
+{hist(pvals.chi, breaks = "FD")
+  abline(v = 0.05, col = "red")}
+sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
+```
+
+#Now to show the impact of sample sizes on the K-S test:
+```{r,echo=T, warning=F}
+N <- 10^3
+ks.stat <- numeric(N)
+for (i in 1:N) {
+  diff.samp <- sample(diffs, i+1, replace = TRUE)
+  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
+  cauchy.samp <- rcauchy(i + 1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
+}
+plot(ks.stat, pch = ".")
+hist(ks.stat, breaks = "FD", probability = TRUE)
+```
+
+
 #Surveying the impact of the White House on the Dow Jones
 Now that we have seen that the data follows a model with infinite variance, which somewhat resembles that of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
 
