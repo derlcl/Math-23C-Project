@@ -617,7 +617,8 @@ Another way to consider whether our data is well modeled by a given distribution
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
 rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-{hist(rand, probability = TRUE, breaks = "FD")
+{hist(rand, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
+      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
 curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
 
 #using interquartile parameters
@@ -630,7 +631,7 @@ for (i in 1:N) {
 }
 mean(ks.stats)#mean p-values = 0.1976958
 sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats)
+{hist(ks.stats, main = "Histogram of K-S Statistics", xlab = "K-S Stats")
 abline(v = 0.05, col = "red")}
 
 ```
