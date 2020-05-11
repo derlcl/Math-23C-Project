@@ -617,7 +617,8 @@ Another way to consider whether our data is well modeled by a given distribution
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
 rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-{hist(rand, probability = TRUE, breaks = "FD")
+{hist(rand, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
+      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
 curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
 
 #using interquartile parameters
@@ -630,7 +631,7 @@ for (i in 1:N) {
 }
 mean(ks.stats)#mean p-values = 0.1976958
 sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats)
+{hist(ks.stats, main = "Histogram of K-S p-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 
 ```
@@ -639,7 +640,8 @@ It appears that the results are favorable to the hypothesis that the data matche
 Now we'll try sing fitdist parameters:
 ```{r,echo=T, warning = F}
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
-hist(rand2, probability = TRUE, breaks = "FD")
+hist(rand2, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
+      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
 
 N <- 10^3
@@ -651,7 +653,7 @@ for (i in 1:N) {
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats2, breaks = "fd")
+{hist(ks.stats2, breaks = "fd", main = "Histogram of K-S p-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 ```
 And we get even better results here! As about 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions.
@@ -671,7 +673,7 @@ for(i in 1:N){
 }
 mean(ks.samp.rand)
 sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.samp.rand, breaks = "fd")
+{hist(ks.samp.rand, breaks = "fd", main = "Histogram of K-S P-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 ```
 
@@ -688,25 +690,27 @@ for(i in 1:N){
   samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
   pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
 }
-hist(samp.rand.cs, breaks = "FD")
-{hist(pvals.chi, breaks = "FD")
+hist(samp.rand.cs, breaks = "FD", main = "Histogram of Chi-Squared Stats", xlab = "K-S Stats")
+{hist(pvals.chi, breaks = "FD",  main = "Histogram of Chi-Squared p-values", xlab = "p-values")
   abline(v = 0.05, col = "red")}
 sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
 ```
 
 #Now to show the impact of sample sizes on the K-S test:
+This script does take a long time to run, but unfortunatly decreasing the number of samples being drawn compromises the completeness of the plot.
 ```{r,echo=T, warning=F}
-N <- 10^3
+N <- 6000
 ks.stat <- numeric(N)
 for (i in 1:N) {
   diff.samp <- sample(diffs, i+1, replace = TRUE)
   fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(i + 1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  cauchy.samp <- rcauchy(i + 1, location = fit.diffs[1], scale = fit.diffs[2])
   ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
-plot(ks.stat, pch = ".")
-hist(ks.stat, breaks = "FD", probability = TRUE)
+plot(ks.stat, pch = ".", main = "Plot of K-S p-values as Sample Size Increases", xlab = "Sample Size")
+hist(ks.stat, breaks = "FD", probability = TRUE, main = "Histogram of K-S p-values", xlab = "K-S p-values" )
 ```
+And what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
 
 
 #Surveying the impact of the White House on the Dow Jones
