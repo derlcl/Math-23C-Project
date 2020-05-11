@@ -571,9 +571,10 @@ for (i in 1:N) {
   diff.samp <- sample(diffs,nn, replace = TRUE)
   ks.stats[i] <- ks.test(diff.samp,rand)$p.value
 }
-mean(ks.stats) #mean p-values = 0.1976958
+mean(ks.stats)#mean p-values = 0.1976958
+sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
 hist(ks.stats)
-
+  abline(v = 0.05, col = "red")
 
 #Using fitdist parameters
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
@@ -588,7 +589,9 @@ for (i in 1:N) {
   ks.stats2[i] <- ks.test(diff.samp2,rand2)$p.value
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
-hist(ks.stats2)
+sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
+hist(ks.stats2, breaks = "fd")
+  abline(v = 0.05, col = "red")
 
 #Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to an 
 #rCauchy dist with those same parameters, and then taking chi-squares and looking at the histogram
@@ -601,8 +604,10 @@ for(i in 1:N){
   cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
   ks.samp.rand[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
-hist(ks.samp.rand, breaks = "FD")
 mean(ks.samp.rand)
+sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
+hist(ks.samp.rand, breaks = "fd")
+  abline(v = 0.05, col = "red")
 
 #doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test
 samp.rand.cs <- numeric(N); pvals.chi <- numeric(N)
@@ -617,14 +622,17 @@ for(i in 1:N){
   pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
 }
 hist(samp.rand.cs, breaks = "FD")
-hist(pvals.chi, breaks = "FD")
+{hist(pvals.chi, breaks = "FD")
+  abline(v = 0.05, col = "red")}
+sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
 
 #Checking how the K-S statistic is affected by sample size
+N <- 6000
 ks.stat <- numeric(N)
 for (i in 1:N) {
   diff.samp <- sample(diffs, i+1, replace = TRUE)
   fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(i + 1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
+  cauchy.samp <- rcauchy(i + 1, location = fit.diffs[1], scale = fit.diffs[2])
   ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
 plot(ks.stat, pch = ".")
