@@ -748,28 +748,7 @@ And we get P value of approximately 12%. Thus, we fail to reject the null hypoth
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
-rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-{hist(rand, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
-      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
-curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
-
-#using interquartile parameters
-N <- 10^4
-ks.stats <- numeric(N)
-for (i in 1:N) {
-  rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-  diff.samp <- sample(diffs,nn, replace = TRUE)
-  ks.stats[i] <- ks.test(diff.samp,rand)$p.value
-}
-mean(ks.stats)#mean p-values = 0.1976958
-sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats, main = "Histogram of K-S p-values", xlab = "K-S p-values")
-abline(v = 0.05, col = "red")}
-
-```
-It appears that the results are favorable to the hypothesis that the data matches a Cauchy distribution, since 72% of the time the p-value from the K-S test was less than 0.05.
-
-Now we'll try sing fitdist parameters:
+#Now we will try sing fitdist parameters:
 ```{r,echo=T, warning = F}
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
 hist(rand2, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
@@ -788,7 +767,7 @@ sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples
 {hist(ks.stats2, breaks = "fd", main = "Histogram of K-S p-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 ```
-And we get even better results here! As about 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions.
+About 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions. (refer to main R script for similar analysis using interquartile range and median as estimated Cauchy parameters)
 
 #As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
 Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then taking chi-squares:
