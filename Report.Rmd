@@ -707,8 +707,8 @@ for (i in 1:N) {
   cauchy.samp <- rcauchy(i + 1, location = fit.diffs[1], scale = fit.diffs[2])
   ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
-plot(ks.stat, pch = ".")
-hist(ks.stat, breaks = "FD", probability = TRUE)
+plot(ks.stat, pch = ".", main = "Plot of K-S p-values as Sample Size Increases", xlab = "Sample Size")
+hist(ks.stat, breaks = "FD", probability = TRUE, main = "Histogram of K-S p-values", xlab = "K-S p-values" )
 ```
 And what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis. 
 
