@@ -753,33 +753,9 @@ To clearly demonstrate this relationship we will run a series of goodness-of-fit
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
-rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-{hist(rand, probability = TRUE, breaks = "FD")
-curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
-
-#using interquartile parameters
-N <- 10^4
-ks.stats <- numeric(N)
-for (i in 1:N) {
-  rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-  diff.samp <- sample(diffs,nn, replace = TRUE)
-  ks.stats[i] <- ks.test(diff.samp,rand)$p.value
-}
-mean(ks.stats)#mean p-values = 0.1976958
-sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats)
-abline(v = 0.05, col = "red")}
-
-```
-It appears that the results are favorable to the hypothesis that the data matches a Cauchy distribution, since 72% of the time the p-value from the K-S test was less than 0.05.
-
-Now we'll try sing fitdist parameters:
-```{r,echo=T, warning = F}
-
-#Now we will try sing fitdist parameters:
-
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
-hist(rand2, probability = TRUE, breaks = "FD")
+hist(rand2, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
+      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
 
 N <- 10^3
@@ -791,7 +767,7 @@ for (i in 1:N) {
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats2, breaks = "fd")
+{hist(ks.stats2, breaks = "fd", main = "Histogram of K-S p-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 ```
 About 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions. (refer to main R script for similar analysis using interquartile range and median as estimated Cauchy parameters)
@@ -809,50 +785,15 @@ for(i in 1:N){
   cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
   ks.samp.rand[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
-mean(ks.samp.rand)
 sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.samp.rand, breaks = "fd")
+{hist(ks.samp.rand, breaks = "fd", main = "Histogram of K-S P-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
-```
-
-Doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test:
-```{r,echo=T,warning=FALSE}
-samp.rand.cs <- numeric(N); pvals.chi <- numeric(N)
-for(i in 1:N){
-  diff.samp <- sample(diffs, nn, replace = TRUE)
-  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
-  cauchy.breaks <- qcauchy((0:10)*.1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
-  cauchy.obs <- table(cut(diff.samp, breaks = cauchy.breaks)); cauchy.obs
-  cauchy.exp <- rep(nn/10, 10); cauchy.exp 
-  samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-  pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
-}
-hist(samp.rand.cs, breaks = "FD")
-{hist(pvals.chi, breaks = "FD")
-  abline(v = 0.05, col = "red")}
-sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
-```
-
-#Now to show the impact of sample sizes on the K-S test:
-```{r,echo=T, warning=F}
-N <- 10^3
-ks.stat <- numeric(N)
-for (i in 1:N) {
-  diff.samp <- sample(diffs, i+1, replace = TRUE)
-  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(i + 1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
-  ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
-}
-plot(ks.stat, pch = ".")
-hist(ks.stat, breaks = "FD", probability = TRUE)
 ```
 For further robustness tests, as well as for an analysis of sensitivity to sample sizes, refer to the main R script. In summary what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
 
+#Goodness-of-Fit Tests - QQ Plots
 
 The issue that seems to arise from our goodness-of-fit tests is that the quantity of data we are working with produces large error statistics that result in rejecting the null hypothesis. Therefore, we used QQ Plots to better understand the the fit of our 3 distributions across our 3 different time frames:
-
-#Goodness-of-Fit Tests - QQ Plots
 ```{r,echo=T, warning=F}
 #Daily:
 par(mfrow = c(1,3))
