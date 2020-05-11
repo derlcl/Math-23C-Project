@@ -27,7 +27,7 @@ The Impact of Political Regimes - Hypothesis Testing With Permutation Test
 Hypothesis Testing: Contingency table with chi-square test
 =======
 
-Exploratory Data Analysis
+#Exploratory Data Analysis
 ```{r}
 # Visualize first differences of our Open price values
 hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
