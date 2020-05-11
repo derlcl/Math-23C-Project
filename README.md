@@ -37,7 +37,7 @@ https://www.asc.ohio-state.edu/mcculloch.2/papers/stabparm.pdf
 Michael Grabchak &Gennady Samorodnitsky
 Do financial returns have finite or infinite variance? A paradox and an explanation
 Pages 883-893 | Received 29 Jan 2009, Accepted 02 Dec 2009, Published online: 14 Jul 2010
-https://people.orie.cornell.edu/gennady/techreports/RetTailParadoxExplFinal.pdf
+  https://people.orie.cornell.edu/gennady/techreports/RetTailParadoxExplFinal.pdf
 
 An Empirical Examination of Daily Stock
 Return Distributions for U.S. Stocks
