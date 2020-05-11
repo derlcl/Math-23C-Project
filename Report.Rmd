@@ -538,13 +538,145 @@ curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd
 
 As you can see, the stable distribution is a good fit for our Stock Price Changes and an excellent fit for our logarithmic stock price changes. We feel that with better paramater estimation techniques, we could more accurately fit the distribution. 
 
-This relationship between normal, stable, and cauchy distributions answers the complexity that was raised in the bootstrapping phenomenon that we explored earlier.
+This relationship between normal, stable, and cauchy distributions provides insight into the complexity that was raised in the bootstrapping phenomenon that we explored earlier. More specifically, it answers the question of why certain time frames of stock returns (Daily, Montly, and Yearly) demonstrate properties of different distributions. First, let's look at the graphs of the three distributions across all three time frames:
+
+
+```{r, echo=T}
+#Histogram:
+hist(diffs, breaks = "FD", freq = FALSE, main = "Histogram of Stock Price Changes (Daily)", xlab = "Price Change")
+
+#Set Parameters for Cauchy and Stable:
+#Daily Cuachy
+diffs.median <- median(diffs) #3.429688
+#Half Interquartile Range:
+diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2
+#Daily - Stable
+stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]])
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]])
+
+#Using McCulloch's table we calculate alpha and beta
+stable.a <- 1.13
+stable.b <- 0
+
+#Calculate Phi_3 from the table as well
+stable.phi_3 <- 2.312
+
+#Use phi_3 to calculate scale.
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
+
+#Since beta = 0, the location is simply the median. (We will also use this method with any small value of beta):
+stable.location <- median(diffs)
+
+#Plot Curves:
+curve(dnorm(x, mean(diffs), sd(diffs)), add = TRUE, lwd = 2, col = "blue")
+curve(dcauchy(x, location = diffs.median, scale =  diffs.hiq), add = TRUE, lwd = 3, col = "red")
+curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "green")
+
+#Monthly
+#Get Data:
+monthly <- DJI; monthly$Date <- as.Date(monthly$Date)
+monthly$Date <- format(as.Date(monthly$Date, format = "%d/%m/%Y"),"%Y-%m") 
+monthly <-  aggregate(monthly[,2:4], list(monthly$Date), mean, drop = TRUE) 
+colnames(monthly)[1] <- "Date"
+monthlyDiffs <- diff(monthly$Open)
+
+#Histogram
+hist(monthlyDiffs, breaks = "FD", freq = FALSE, main = "Histogram of Stock Price Changes (Monthly)", xlab = "Price Change")
+
+# Set Paramaters for Stable and Cauchy Distributions:
+#Stable
+stable.Xs <- quantile(monthlyDiffs, c(.05, .25, .5, .75, .95))
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]])
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]])
+#Using Table we calculate alpha and beta
+stable.a <- 1.279
+stable.b <- 0
+#Calculate Phi_3 
+stable.phi_3 <- 1.955
+#Use phi_3 to calculate scale and then location is found from the table 
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
+stable.location <- median(monthlyDiffs)
+
+
+#Cauchy
+cauchy.median <- median(monthlyDiffs)
+cauchy.hiq <- (quantile(monthlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
+
+#Plot Curves:
+curve(dnorm(x, mean(monthlyDiffs), sd(monthlyDiffs)), col = "blue", lwd = 2, add = TRUE)
+curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "red")
+curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 
 
 
+#Yearly
+#Get Data:
+yearly <- DJI; yearly$Date <- as.Date(yearly$Date)
+yearly$Date <- format(as.Date(yearly$Date, format="%d/%m/%Y"),"%Y") 
+yearly <-  aggregate(yearly[,2:4], list(yearly$Date), mean, drop = TRUE) 
+colnames(yearly)[1] <- "Date"
+yearlyDiffs <- diff(yearly$Open)
+
+#Histogram:
+hist(yearlyDiffs, breaks = "FD", freq = FALSE, main = "Histogram of Stock Price Changes (Yearly)", xlab = "Price Changes")
+
+#Set Parameters for Stable and Cauchy Distribution:
+#Stable
+stable.Xs <- quantile(yearlyDiffs, c(.05, .25, .5, .75, .95))
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]])
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]])
+#Using Table we calculate alpha and beta
+stable.a <- 1.388
+stable.b <- -0.165
+#Calculate Phi_3 
+stable.phi_3 <- 1.795
+#Use phi_3 to calculate scale and then location is found from the table 
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
+stable.location <- median(yearlyDiffs)
+
+#Cauchy
+cauchy.median <- median(yearlyDiffs)
+cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(yearlyDiffs)[[2]]) / 2
+
+#Plot the Curves:
+curve(dnorm(x, mean(yearlyDiffs), sd(yearlyDiffs)), col = "blue", lwd = 2, add = TRUE)
+curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "red")
+curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
+
+```
+As you can see, the normal distribution becomes a better fit as the time frame accounts for longer periods of price change. This is sometimes considered a contradiction in the use of cauchy distributions to model price changes. This is why using a Stable distribution, as a generalized version of both Cuachy and Normal distributions, is so important to capturing the behavior of stock price changes over time.
+
+A simple observation of the hurst exponent at each time frame gives a better understanding of what is happening:
+
+```{r, echo=T}
+cat("Daily Price Change Hurst Exponent:\n")
+hurstexp(diffs)
+
+cat("\n\nMonthly Price Change Hurst Exponent:\n")
+hurstexp(monthlyDiffs)
+
+cat("\n\nYearly Price Change Hurst Exponent:\n")
+hurstexp(yearlyDiffs)
+```
+
+The hurst exponent is moving away from .5 as the data set accounts for broader periods of time. In other words, the stock prices show more mild randomness as we go from daily stock price changes to yearly stock price changes. 
 
 
 ###########################
+
+#To do:
+#Comment about their hurst exponents
+#Swtich to Goodness of Fit discussions
+#Add legends to histo grams if possible lol
+#Tie together all the other parts of the report
+#Finish bibliography
+#Clean up the script to match the report
+
+
 
 #Simulated Cuachy Pvalue test 
 This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
