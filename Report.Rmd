@@ -640,7 +640,8 @@ It appears that the results are favorable to the hypothesis that the data matche
 Now we'll try sing fitdist parameters:
 ```{r,echo=T, warning = F}
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
-hist(rand2, probability = TRUE, breaks = "FD")
+hist(rand2, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
+      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
 
 N <- 10^3
@@ -652,7 +653,7 @@ for (i in 1:N) {
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats2, breaks = "fd")
+{hist(ks.stats2, breaks = "fd", main = "Histogram of K-S Statistics", xlab = "K-S Stats")
 abline(v = 0.05, col = "red")}
 ```
 And we get even better results here! As about 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions.
