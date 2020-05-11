@@ -293,6 +293,9 @@ diffs.median <- median(diffs) #3.429688
 #Half Interquartile Range:
 diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2 # 36.41016
 
+#Save the parameters for later in the report:
+daily.cauchy.params <- c(diffs.median, diffs.hiq)
+
 #Checking our paramaters against the fitdist paramaters (nearly equal). We will test both paramaters to add a layer of robustness:
 fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate)
 hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
@@ -531,6 +534,9 @@ stable.phi_3 <- 1.939
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 stable.location <- median(logDiffs)
 
+#Save these parameters for later in the report:
+daily.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
+
 hist(logDiffs, breaks = "FD", freq = FALSE, main = "Histogram of Logarithmic Stock Price Changes")
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "red")
 
@@ -545,34 +551,16 @@ This relationship between normal, stable, and cauchy distributions provides insi
 #Histogram:
 hist(diffs, breaks = "FD", freq = FALSE, main = "Histogram of Stock Price Changes (Daily)", xlab = "Price Change")
 
-#Set Parameters for Cauchy and Stable:
-#Daily Cuachy
-diffs.median <- median(diffs) #3.429688
-#Half Interquartile Range:
-diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2
-#Daily - Stable
-stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
-#Calculate V's
-stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]])
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]])
-
-#Using McCulloch's table we calculate alpha and beta
-stable.a <- 1.13
-stable.b <- 0
-
-#Calculate Phi_3 from the table as well
-stable.phi_3 <- 2.312
-
-#Use phi_3 to calculate scale.
-stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
-
-#Since beta = 0, the location is simply the median. (We will also use this method with any small value of beta):
-stable.location <- median(diffs)
-
 #Plot Curves:
 curve(dnorm(x, mean(diffs), sd(diffs)), add = TRUE, lwd = 2, col = "blue")
-curve(dcauchy(x, location = diffs.median, scale =  diffs.hiq), add = TRUE, lwd = 3, col = "red")
-curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "green")
+
+curve(dcauchy(x, location = daily.cauchy.params[1], 
+              scale =  daily.cauchy.params[2]), 
+      add = TRUE, lwd = 3, col = "red")
+
+curve(dstable(x, daily.stable.params[1], daily.stable.params[2],
+              daily.stable.params[3], daily.stable.params[4]), 
+      add = TRUE, lwd = 2, col = "green")
 
 #Monthly
 #Get Data:
@@ -600,10 +588,16 @@ stable.phi_3 <- 1.955
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 stable.location <- median(monthlyDiffs)
 
+#Save parameters for later in the report:
+monthly.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
+
 
 #Cauchy
 cauchy.median <- median(monthlyDiffs)
 cauchy.hiq <- (quantile(monthlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
+
+#Save parameters for later in the report:
+monthly.cauchy.params <- c(cauchy.median, cauchy.hiq)
 
 #Plot Curves:
 curve(dnorm(x, mean(monthlyDiffs), sd(monthlyDiffs)), col = "blue", lwd = 2, add = TRUE)
@@ -638,9 +632,15 @@ stable.phi_3 <- 1.795
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 stable.location <- median(yearlyDiffs)
 
+#Save parameters for later in the report:
+yearly.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
+
 #Cauchy
 cauchy.median <- median(yearlyDiffs)
 cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(yearlyDiffs)[[2]]) / 2
+
+#Save parameters for later in the report:
+yearly.cauchy.params <- c(cauchy.median, cauchy.hiq)
 
 #Plot the Curves:
 curve(dnorm(x, mean(yearlyDiffs), sd(yearlyDiffs)), col = "blue", lwd = 2, add = TRUE)
@@ -673,20 +673,17 @@ plot(yearly$Open, type = "l", xlab = "Trading Year", ylab = "Stock Price", , mai
 
 Thinking about each a graph as a fractal, we see that curve is losing it's "roughness", and therefore it experiences less wild randomness. To think about this in concrete terms, a 2000 point drop in Daily Stock Prices will appear as a more extreme outlier when compared to a 2000 point drop in Yearly Stock Prices.
 
-Does this mean that yearly stock prices follow a normal distribution? Not necessarily. In fact, we hyptohesize the opposite. For instance, we have 8857 data points (or days) in our Daily Stock Price Data
+Does this mean that yearly stock prices follow a normal distribution? Not necessarily. In fact, we hyptohesize the opposite. For instance, we have 8857 data points (or days) in our Daily Stock Price Data compared to 35 data points (or years) in our yearly averages. We believe that if were to check stock market prices of our yearly averages in 8000 years, they would be better fit by a stable distribution with $\alpha \xrightarrow{} 2$ or "more cauchy".
 
-###########################
+Further investigation is needed to confirm this hypothesis, and would require acces to an abundance of intraday data. But, the a deeper question that is not answered in this report is whether or not there a concerete relationship between the volume of data and our $\alpha$ paramater?
 
-#To do:
-#Swtich to Goodness of Fit discussions
-#Add legends to histo grams if possible lol
-#Tie together all the other parts of the report
-#Finish bibliography
-#Clean up the script to match the report
+That being said, we feel that there is enough evidence from the relationship between our data and the normal, cauchy, and stable distributions to suggest that our data more than likely has infinite variance.
 
+To clearly demonstrate this relationship we will run a series of goodness-of-fit tests and explain some of the complexities and challenges we faced when attempting to confirm the fit of our model.
 
+#Goodness-of-Fit Tests - Chi Squared
 
-#Kolmogorov-Smirnov
+#Goodness-of-Fit Tests - Kolmogorov-Smirnov
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
@@ -790,6 +787,34 @@ hist(ks.stat, breaks = "FD", probability = TRUE)
 For further robustness tests, as well as for an analysis of sensitivity to sample sizes, refer to the main R script. In summary what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
 >>>>>>> 4d8ec1650887a8a7f4565592714bfcb9144c5e43
 
+The issue that seems to arise from our goodness-of-fit tests is that the quantity of data we are working with produces large error statistics that result in rejecting the null hypothesis. Therefore, we used QQ Plots to better understand the the fit of our 3 distributions across our 3 different time frames:
+
+#Goodness-of-Fit Tests - QQ Plots
+```{r,echo=T, warning=F}
+#Daily:
+par(mfrow = c(1,3))
+qqPlot(diffs, "norm", mean = mean(diffs), sd = sd(diffs), id = FALSE) 
+qqPlot(diffs, "cauchy", location = daily.cauchy.params[1], scale = daily.cauchy.params[2], id = FALSE)
+qqPlot(diffs, "stable", alpha = daily.stable.params[1], beta = daily.stable.params[2], gamma = daily.stable.params[3], delta = daily.stable.params[4], id = FALSE)
+mtext("QQ-Plots of Daily Stock Price Changes", side = 3, line = -1.2, outer = TRUE)
+
+#Monthly
+par(mfrow = c(1,3))
+qqPlot(monthlyDiffs, "norm",mean =  mean(monthlyDiffs),sd =  sd(monthlyDiffs), id = FALSE)
+qqPlot(monthlyDiffs, "cauchy", location = monthly.cauchy.params[1], scale = monthly.cauchy.params[2], id = FALSE)
+qqPlot(monthlyDiffs, "stable", alpha = monthly.stable.params[1], beta = monthly.stable.params[2],gamma = monthly.stable.params[3], delta = monthly.stable.params[4], id = FALSE)
+mtext("QQ-Plots of Monthly Stock Price Changes", side = 3, line = -1.2, outer = TRUE)
+
+#Yearly
+par(mfrow = c(1,3))
+qqPlot(yearlyDiffs, "norm", mean =  mean(yearlyDiffs),sd =  sd(yearlyDiffs), id = FALSE); 
+qqPlot(yearlyDiffs, "cauchy", location =  yearly.cauchy.params[1], scale = yearly.cauchy.params[2], id = FALSE)
+qqPlot(yearlyDiffs, "stable", alpha = yearly.stable.params[1], beta = yearly.stable.params[2], gamma = yearly.stable.params[3], delta = yearly.stable.params[4], id = FALSE)
+mtext("QQ-Plots of Yearly Stock Price Changes", side = 3, line = -1.2, outer = TRUE)
+
+```
+
+Across all three time frames we notice that the longere the time period, the better the normal distrubition fits the data. Inversely, the worst the Cauchy distribution fits the data. However, the QQ Plot shows the power of the stable distribution as it changes with our time frame to keep a relatively consistent fit. And, since the data seems to be 'converging' to a stable distribution with $\alpha \xrightarrow{} 2$, this suffices to demonstrate that our data has infinite variance. Therefore, our stock prices are a random walk with Levy-flight.
 
 #Surveying the impact of the White House on the Dow Jones
 Now that we have seen that the data follows a model with infinite variance, which somewhat resembles that of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
@@ -915,4 +940,5 @@ Null hypothesis is that each regime has the observed probability p of recession 
 Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next.
 Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates that no individual regime is equally likely to be associated with recessions from the years 1985 to early 2020. 
 
+#Conclusion
 
