@@ -749,7 +749,6 @@ Another way to consider whether our data is well modeled by a given distribution
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
 #Now we will try sing fitdist parameters:
-```{r,echo=T, warning = F}
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
 hist(rand2, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
       Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
