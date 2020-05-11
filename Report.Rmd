@@ -30,6 +30,29 @@ Hypothesis Testing: Contingency table with chi-square test
 #Exploratory Data Analysis
 The first differences of DJI Open price values present an interesting challenge. The histogram resembles a symmetric distribution with a sharp peak around the mean, heavy tails, and a left skew. The normal distribution does not seem to be a good fit at first glance, but a heavy-tailed distribution could help us model our data
 ```{r}
+#Import libraries
+library('pracma')
+library('fitdistrplus')
+library('MASS')
+library('ggplot2')
+library('gganimate')
+library('gifski')
+library('fractaldim')
+library('fBasics')
+library('stabledist')
+library('car')
+
+#Import Cleaned Data
+source("prj_DataPreparation.R")
+source("prj_Functions.R")
+
+#This is a graphical representation of the Dow Jones Index from 1985 to 2020
+plot(DJI$Open, type = "l", xlab = "Time", 
+     ylab = "Random Daily Opens", main = "Random Walk Model",
+     ylim = c(-10000,50000))
+
+#Get the first difference of the time series data
+diffs <- diff(DJI$Open)
 hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
 abline(v = mean(diffs), col = "turquoise")
 qqnorm(diffs)
@@ -486,7 +509,7 @@ $s(2, \beta, 0, 1) = \text{exp}(-t^{2})$ which the characteristic function of th
 Cauchy Distribution ($\alpha = 1$ and $\beta = 0$):
 With $\beta = 0$, we are left with: $s(1, 0, 0, 1) = \text{exp}(-t^{\alpha})$. However, since $\alpha = 1$, we get $s(1, 0, 0, 1) = \text{exp}(-t)$ which is the characteristic function of a standard cauchy distribution which can be further generalized to the characteristic function of the Cauchy distribution. $\blacksquare$
 
-#Implmenting the Stable Distribution
+#Implementing the Stable Distribution
 Although powerful, the stable distribution is tedious to paramaterize from a data set. There are many methods to investigate on how to efficiently and accurately esimate parameters but we will be relying on a fairly consistent inner quartile method popularized by J. Huston McCulloch, PHD (Ohio State University). Our implmentation using our first differences and our log first differences is as follows:
 
 ```{r}
@@ -670,7 +693,7 @@ The hurst exponent is moving away from .5 as the data set accounts for broader p
 
 #To do:
 #Comment about their hurst exponents
-#Swtich to Goodness of Fit discussions
+#Switch to Goodness of Fit discussions
 #Add legends to histo grams if possible lol
 #Tie together all the other parts of the report
 #Finish bibliography
@@ -678,7 +701,7 @@ The hurst exponent is moving away from .5 as the data set accounts for broader p
 
 
 
-#Simulated Cuachy Pvalue test 
+#Simulated Cauchy p-value test 
 This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
 ```{r, echo=T}
 #Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
