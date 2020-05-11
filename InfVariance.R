@@ -449,25 +449,6 @@ summary(variances.diffs) # spread is larger than it is for Cauchy but less than 
 ### This indicates that our data may have undefined or infinite variance. 
 
 
-## Divergent Integration For Calculating Variance
-
-#Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
-#scale parameters above, that it does indeed have infinite variance. 
-#To do that, we'll need to define functions that will describe the integrands that will allow us to
-#use the tail-integral theorem. First, we'll define the integrand that will give us E(X).
-#Since the underlying distribution can be modeled by a Cauchy distribution, we will use 
-#dcauchy with the right parameters as our mu_x:
-integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
-#and now we have E(X):
-exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
-
-#In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
-integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
-#And E(X^2)
-exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
-#And it appears that the integral is divergent! This means that 
-#Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
-
 
 
 ## Stable Distribution Model
@@ -912,3 +893,24 @@ qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable",
 hurstexp(logDiffs) # Around 0.5
 ## Result: Normal and stable distributions fail to pass while Cauchy passes the chi-square
 ## goodness of fit test for the first differences of of the logarithm of Open values. 
+
+
+
+## Divergent Integration For Calculating Variance
+
+#Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
+#scale parameters above, that it does indeed have infinite variance. 
+#To do that, we'll need to define functions that will describe the integrands that will allow us to
+#use the tail-integral theorem. First, we'll define the integrand that will give us E(X).
+#Since the underlying distribution can be modeled by a Cauchy distribution, we will use 
+#dcauchy with the right parameters as our mu_x:
+integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
+#and now we have E(X):
+exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
+
+#In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
+integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
+#And E(X^2)
+exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
+#And it appears that the integral is divergent! This means that 
+#Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
