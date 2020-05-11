@@ -1,3 +1,15 @@
+#Import libraries
+library('pracma')
+library('fitdistrplus')
+library('MASS')
+library('ggplot2')
+library('gganimate')
+library('gifski')
+library('fractaldim')
+library('fBasics')
+library('stabledist')
+library('car')
+
 #Import Cleaned Data
 source("prj_DataPreparation.R")
 source("prj_Functions.R")

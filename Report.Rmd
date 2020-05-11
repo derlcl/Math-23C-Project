@@ -28,15 +28,12 @@ Hypothesis Testing: Contingency table with chi-square test
 =======
 
 #Exploratory Data Analysis
+The first differences of DJI Open price values present an interesting challenge. The histogram resembles a symmetric distribution with a sharp peak around the mean, heavy tails, and a left skew. The normal distribution does not seem to be a good fit at first glance, but a heavy-tailed distribution could help us model our data
 ```{r}
-# Visualize first differences of our Open price values
 hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
 abline(v = mean(diffs), col = "turquoise")
-# resembles normal distribution with narrow concentration around sharp peak at mean and heavy tails, with more extreme negative values than positive values
-qqnorm(diffs) # plot data with quantiles of the standard normal on the x-axis.
-qqline(diffs) # add straight line through the first and third quartiles of our data, which does not seem to follow normal distribution at tails
-# we could potentially model this with a heavy-tailed distribution, but what?
-
+qqnorm(diffs)
+qqline(diffs)
 ```
 
 #The Impact of "Rare" Events
@@ -377,23 +374,11 @@ abline(v = cauchy.cs, col = "red", lwd = 3)
 cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
 ```
 And we get P value of approximately 12%. Thus, we fail to reject the null hypothesis again, and gain some more confidence that our data is well modeled by some variation of a Cauchy distribution.
-```
 
-#Bootstrap
+# Bootstrap 
+If our first differences data are observations from independent and identically distributed random variables from a distribution with light tails, then the shape of a histogram of our standardized data should approximate that of a standard normal disttribution with moderately large sample sizes. If however our data comes from a heavy-tailed distribution, the presence of extreme values will limit the approximation to a standard normal. We compare our first differences with the normal distribution and two Cauchy distributions parameterized differently in a bootstrap. The first differences sample data are treated as a population and similarly sized data are randomly drawn from the reference distributions fitted to the first differences data. Then, we treat our samples as populations and draw bootstrap samples of size n from each N times. The bootstrap samples are standardized and plotted as empirical cumulative distributions (eCDF) to get a sense of their typical Kolmogorov-Smirnov test statistic, the max delta between the eCDF and the reference CDF which is plotted as a standard normal eCDF in our case. 
 ```{r}
-## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
-#
-# Sources: 
-# https://stats.stackexchange.com/questions/2504/test-for-finite-variance 
-# Chihara and Hesterberg's Mathematical Statistics with Resampling
-#
-# If our sample is an independent and identically distributed realization 
-# from a light-tailed distribution, the central limit theorem should hold
-# even at smaller sample sizes. If we have a heavy-tailed distribution, 
-# larger sample sizes will be needed to approximate the standard normal distribution.
-# Use bootstrap resampling to demonstrate this.
-
-## Bootstrap For A Single Population
+#Bootstrap For A Single Population
 par(mfrow = c(2,2)) # create 2x2 plot matrix
 sampsize <- length(diffs) # starting sample size to draw from
 N <- 100 # number of boostrap samples to run
@@ -471,15 +456,6 @@ meanY.norm <- meanY
 varY.norm <- varY
 Z.norm <- Z
 plot(function(x) pnorm(x), lwd = 3, add = TRUE)
-
-#########################################################
-## Result: Empirical cumulative distribution for standardized random variable from
-## bootstrap sampling distribution seems to indicate similarity between first differences
-## and standard normal as well as dissimilarity between first differences and Cauchy. 
-## Though there are indicates of wider dispersion in the eCDFs for the first differences
-## than there are in the eCDFs for the normal, indicating the possibility of 
-## significantly greater Kolmogorov-Smirnov test statistics. This requires testing. 
-
 
 # Bootstrap sampling distribution of standardized sample observations
 hist(Z.diffs, breaks = "fd", prob = TRUE) # looks normal
