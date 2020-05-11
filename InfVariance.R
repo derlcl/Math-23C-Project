@@ -579,7 +579,7 @@ hist(ks.stats)
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
 hist(rand2, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
-#doesn't look great, let's try with 8857 samples
+
 N <- 10^3
 ks.stats2 <- numeric(N)
 for (i in 1:N) {
