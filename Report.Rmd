@@ -340,6 +340,11 @@ curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd
 As we can see from the curves, the Cauchy distribution does a good job of fitting our original data visually, and an excellent job of modeling the first difference of the logarithm of our stock prices. This is not definitive proof that our data comes from a cauchy distribution. However, this is a good time to demonstrate that if our data is modeled by a Cauchy distribution with the location and scale parameters above, then it does indeed have infinite variance. To do that, we'll need to define functions that will describe the integrands that will allow us to use the tail-integral theorem. First, we'll define the integrand that will give us $E(X)$, as well as well as $E(X^2) - E(X)^2$:
 
 #Divergent Integrals, Divergent Variance - Cauchy Distribution
+All we are doing here is using a given distribution to calculate $E(X)$ and $E(X^2)$ in this manner:
+$$E(X) = \int_{-\infty}^{\infty} x \cdot \mu_X $$
+$$E(X^2) = \int_{-\infty}^{\infty} x^2 \cdot \mu_X $$
+Which gives us 
+$$Var(X) = E(X^2) - E(X)^2$$
 ```{r}
 ## Divergent Integration For Calculating Variance
 integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
