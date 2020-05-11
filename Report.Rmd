@@ -631,7 +631,7 @@ for (i in 1:N) {
 }
 mean(ks.stats)#mean p-values = 0.1976958
 sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats, main = "Histogram of K-S Statistics", xlab = "K-S Stats")
+{hist(ks.stats, main = "Histogram of K-S p-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 
 ```
@@ -653,7 +653,7 @@ for (i in 1:N) {
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats2, breaks = "fd", main = "Histogram of K-S Statistics", xlab = "K-S Stats")
+{hist(ks.stats2, breaks = "fd", main = "Histogram of K-S p-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 ```
 And we get even better results here! As about 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions.
@@ -673,7 +673,7 @@ for(i in 1:N){
 }
 mean(ks.samp.rand)
 sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.samp.rand, breaks = "fd")
+{hist(ks.samp.rand, breaks = "fd", main = "Histogram of K-S P-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 ```
 
@@ -690,8 +690,8 @@ for(i in 1:N){
   samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
   pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
 }
-hist(samp.rand.cs, breaks = "FD")
-{hist(pvals.chi, breaks = "FD")
+hist(samp.rand.cs, breaks = "FD", main = "Histogram of Chi-Squared Stats", xlab = "K-S Stats")
+{hist(pvals.chi, breaks = "FD",  main = "Histogram of Chi-Squared p-values", xlab = "p-values")
   abline(v = 0.05, col = "red")}
 sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
 ```
