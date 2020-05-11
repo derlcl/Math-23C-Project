@@ -56,7 +56,7 @@ diffs <- diff(DJI$Open)
 hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
 abline(v = mean(diffs), col = "turquoise")
 qqnorm(diffs)
-qqline(diffs)
+qqline(diffs, col = "red")
 ```
 
 #The Impact of "Rare" Events
