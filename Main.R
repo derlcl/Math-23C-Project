@@ -60,7 +60,7 @@ RunFourier <- function(ncoeff, data, change){
     recon <- recon + FourierA[m]*myCos(m)+FourierB[m]*mySin(m)
   }
   
-  if (change = TRUE){
+  if (change == FALSE){
     plot(data,type = "l",xlab = "Trading Day", ylab = "Stock",
          main = "Stock Price over Trading Days")
     points(1:length(data),recon, type = "l", col = "red",
