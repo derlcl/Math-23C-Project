@@ -309,7 +309,7 @@ As we might expect, our random walk model is also experiencing wild randomness. 
 The Cauchy Distribution is best known for it's undefined moment generating functions. As a result, the distribution has infinite variance which results in a high peak and long heavy tails.
 
 Surprisngly, the distribution is only characterized by two parameters: location and scale which we esimated using the median and an innerquartile method used the $\textit{Goodness-of-Fit Testing for the Cauchy Distribution with Application to Financial Modeling}$ by M. Mahdizadeh, and Ehsan Zamanzade. Given the shape of the our data's histogram, and the underlying theoretical basis, we can investigate whether our data or the log of our data is well modeled by a Cauchy distribution:
-```{r,echo=T}
+```{r,echo=T, warning = FALSE}
 #First Difference of our data:
 #Median:
 diffs.median <- median(diffs) #3.429688
@@ -354,7 +354,7 @@ exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x
 #In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
 integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
 #And E(X^2)
-exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
+exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value 
 #And it appears that the integral is divergent! This means that 
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
 ```
