@@ -283,7 +283,9 @@ hurstexp(diff(rw.drift))
 As we might expect, our random walk model is also experiencing wild randomness. Therefore, we can conclude with near certainty that our stock price data is a form of a random walk but not a Gaussian Random Walk. Furthermore, we cannot conclude any details about the distribution of the first difference from the hurst exponent other than it is not normally distributed. Although this means more investigation, it is a beautiful problem to have because it signals that there is even more depth and richness to the concept of randomness. We have to deal with the step sizes of our random walk, which means we must return to our first difference distribution and attempt to incorporate the high peaks and heavy tails into our model. This will serve as the core test of whether or not our data has infinite variance but it requires that we investigate two new distributions. The first of which, is the Cauchy Distribution.
 
 #Cauchy Distribution
-The Cauchy Distribution is most notably characterized by it's undefined moment generating functions. As a result, it the distribution has infinite variance which results in a high peak and long heavy tails. Surprisngly, the distribution is only characterized by two parameters: location and scale which we esimated using the median and an innerquartile method used the $\textit{Goodness-of-Fit Testing for the Cauchy Distribution with Application to Financial Modeling}$ by M. Mahdizadeh, and Ehsan Zamanzade. Given the shape of the our data's histogram, and the underlying theoretical basis, we can investigate whether our data or the log of our data is well modeled by a Cauchy distribution:
+The Cauchy Distribution is best known for it's undefined moment generating functions. As a result, the distribution has infinite variance which results in a high peak and long heavy tails.
+
+Surprisngly, the distribution is only characterized by two parameters: location and scale which we esimated using the median and an innerquartile method used the $\textit{Goodness-of-Fit Testing for the Cauchy Distribution with Application to Financial Modeling}$ by M. Mahdizadeh, and Ehsan Zamanzade. Given the shape of the our data's histogram, and the underlying theoretical basis, we can investigate whether our data or the log of our data is well modeled by a Cauchy distribution:
 ```{r,echo=T}
 #First Difference of our data:
 #Median:
@@ -309,71 +311,53 @@ hist(diff(log(DJI$Open)), prob = TRUE, breaks = "FD", main = "Histogram of Logar
 curve(dcauchy(x, location = diffs.median, scale =  diffs.hiq), add = TRUE, lwd = 3, col = "red")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 1, col = "cyan")
 ```
-As we can see from the curves, the Cauchy distribution does a good job of modeling our original data, and an excellent job of modeling the logarithm of our data.
+As we can see from the curves, the Cauchy distribution does a good job of fitting our original data visually, and an excellent job of modeling the first difference of the logarithm of our stock prices. This is not definitive proof that our data comes from a cauchy distribution. However, this is a good time to demonstrate that if our data is modeled by a Cauchy distribution with the location and scale parameters above, then it does indeed have infinite variance. To do that, we'll need to define functions that will describe the integrands that will allow us to use the tail-integral theorem. First, we'll define the integrand that will give us $E(X)$, as well as well as $E(X^2) - E(X)^2$:
 
+#Divergent Integrals, Divergent Variance - Cauchy Distribution
+```{r}
+## Divergent Integration For Calculating Variance
+integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
+#and now we have E(X):
+exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
 
-This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
-```{r, echo=T}
-#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
-cauchy.breaks <- qcauchy((0:4)*.25, location = diffs.median, scale = diffs.hiq)
-#Get observed data
-cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
-#Get expected data:
-cauchy.exp <- rep(length(diffs)/4, 4); cauchy.exp 
-
-#Get initial Chi Square Statistic:
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-
-#Run simulation: 
-N <- 10^4; results.Cauchy <- pvalues.Chisq <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
-  pvalues.Chisq[i] <- pchisq(results.Cauchy[i],4-3,lower.tail=F)
-}
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
+#In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
+integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
+#And E(X^2)
+exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
+#And it appears that the integral is divergent! This means that 
+#Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
 ```
-This gives us a P value of approximately 24%. Therefore, we fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely not a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance, it appears our data's distribution also has infinite variance.
 
-As a robustness test, we perform the same analysis using Octiles:
-```{r,echo=T}
-hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
-     Cauchy Model", xlab = "First Differences")
-#Median:
-diffs.median <- median(diffs); diffs.median #
-#Half Interquartile Range:
-diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
+The result is as we expected, the integrals diverge. However, before we run a goodness-of-fit test, we need to demonstrate a few phenomenons we discovered while attempting to model our data with a cauchy distribution. The first of which occurs is a phenomenon that we found while modeling the partial variance of our data.
 
-#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
-#uses better paramater estimation, we will use our fit.diffs values.
-fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
-curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
-#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
-cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
-#Get observed data
-cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
-#Get expected data:
-cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
-
-#Get initial Chi Square Statistic:
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-
-#Run simulation: 
-N <- 10^4; results.Cauchy <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+#Partial Variance
+```{r}
+# Partial Variance to test for convergence of variance
+N <- length(Open) - 1; 
+variances.normal <- variances.cauchy <- variances.Open <- variances.diffs <- numeric(N)
+sample.normal <- rnorm(N + 1) ; sample.cauchy <- rcauchy(N + 1)
+Open <- DJI$Open ; diffs.Open <- DJI$diffs
+index <- 1:N
+for (i in 2:(N + 1)) {
+  variances.normal[i - 1] <- var(sample.normal[1:i])
+  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
+  variances.Open[i - 1] <- var(Open[1:i])
+  variances.diffs[i - 1] <- var(diffs.Open[1:i])
 }
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
+variances.diffs <- variances.diffs[-1]
+par(mfrow = c(2,2)) # create 2x2 plot matrix
+plot(index,variances.normal, type = "l", col = "steelblue", log = "x", ylab = "Normal Variance", xlab = "Sample Size") # converges
+plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy",ylab = "Cauchy Variance", xlab = "Sample Size") # diverges jagged
+plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy",ylab = "Open Variance", xlab = "Sample Size") # diverges
+plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy", ylab = "Firs Diff. Variance", xlab = "Sample Size") # diverges
+par(mfrow = c(1,1)) # revert to 1x1 plot matrix
+summary(variances.normal) # data is centered closely around mean and median
+summary(variances.cauchy) # seems to be large spread
+summary(variances.Open) # extremely large spread
+summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
 ```
-And we get P value of approximately 12%. Thus, we fail to reject the null hypothesis again, and gain some more confidence that our data is well modeled by some variation of a Cauchy distribution.
+
+As index increases, partial variance converges for the normal distribution, but it diverges in jagged jumps for the Cauchy distribution and in smoother curves for both Open values and first differences. This indicates that our data may have undefined or infinite variance. Although this provides more evidence for the Cauchy distribution, the next phenomenon we discovered provides competing evidence.
 
 # Bootstrap 
 If our first differences data are observations from independent and identically distributed random variables from a distribution with light tails, then the shape of a histogram of our standardized data should approximate that of a standard normal disttribution with moderately large sample sizes. If however our data comes from a heavy-tailed distribution, the presence of extreme values will limit the approximation to a standard normal. We compare our first differences with the normal distribution and two Cauchy distributions parameterized differently in a bootstrap. The first differences sample data are treated as a population and similarly sized data are randomly drawn from the reference distributions fitted to the first differences data. Then, we treat our samples as populations and draw bootstrap samples of size n from each N times. The bootstrap samples are standardized and plotted as empirical cumulative distributions (eCDF) to get a sense of their typical Kolmogorov-Smirnov test statistic, the max delta between the eCDF and the reference CDF which is plotted as a standard normal eCDF in our case. 
@@ -481,71 +465,151 @@ hist(meanY.fdCauchy, breaks = "fd", prob = TRUE) # looks like stable distributio
 hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
 # Result: Mean for first difference resembles shape and spread of normal sample mean, not Cauhcy.
 
-## Overall Result: Our first differences data may lie somewhere between Gaussian and Cauchy 
-## on the parameter scale for stable distributions. However, the data is a sample from 
-## an underlying population, so the limited accessibilility to a sample size of only 8857 
-## limits the capture of extreme values from possibly heavy right tails. 
+
+```
+The overall result is that our first differences data may lie somewhere between Gaussian and Cauchy on the parameter scale for stable distributions. However, the data is a sample from an underlying population, so the limited accessibilility to a sample size of only 8857 limits the capture of extreme values from possibly heavy right tails. This phenomenon will be even more pronounced when we analyze monthly and yearly price change averages. But first, we need to introduce a distribution that can capture both normal and cauchy features depending on it's paramters. For that, we turn to the (Pareto-Levy) Stable distribution.
+
+
+
+
+#(Pareto-Levy) Stable Distribution
+The (Pareto-Levy) Stable Distribution or simply, the stable distribution is considered a generalization of both cauchy and normal distributions. It is paramaterized by four paramaters $s(\alpha, \beta, \gamma, \delta)$. When $\alpha = 1$ the distribution is normal and when $\alpha = 2$ and $\beta = 0$ the distribution is Cuachy. A small proof of this is demonstrated as such.
+
+Consider the characteristic function of the stable distribution:
+$$s(\alpha, \beta, \gamma, \delta)  = \text{exp}(it\mu - |ct|^{\alpha} (1 - i \beta \text{sgn}(t) \Phi))$$ where $Phi$ is defined as: $$\Phi = \begin{cases} \tan(\frac{\pi \alpha}{2}) & \alpha \neq 1 \\ -\frac{2}{\pi} \log |t| & \alpha = 1) \end{cases}$$
+
+The standard stable distribution characteristic function can be written as:
+$$s(\alpha, \beta, 0, 1) = \text{exp}(-|t|^{\alpha}(1+i\beta \text{sgn}(t)\Phi))$$
+
+Normal Distribution ($\alpha = 2$):
+With $\alpha = 2$, $\Phi = tan(\pi) = 0$, therefore we are left with:
+$s(2, \beta, 0, 1) = \text{exp}(-t^{2})$ which the characteristic function of the standard normal distribution which can be further generalized to the characteristic function of the normal distribution.
+
+Cauchy Distribution ($\alpha = 1$ and $\beta = 0$):
+With $\beta = 0$, we are left with: $s(1, 0, 0, 1) = \text{exp}(-t^{\alpha})$. However, since $\alpha = 1$, we get $s(1, 0, 0, 1) = \text{exp}(-t)$ which is the characteristic function of a standard cauchy distribution which can be further generalized to the characteristic function of the Cauchy distribution. $\blacksquare$
+
+#Implmenting the Stable Distribution
+Although powerful, the stable distribution is tedious to paramaterize from a data set. There are many methods to investigate on how to efficiently and accurately esimate parameters but we will be relying on a fairly consistent inner quartile method popularized by J. Huston McCulloch, PHD (Ohio State University). Our implmentation using our first differences and our log first differences is as follows:
+
+```{r}
+#Stock Price Changes:
+stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
+
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+
+#Using McCulloch's table we calculate alpha and beta
+stable.a <- 1.13
+stable.b <- 0
+
+#Calculate Phi_3 from the table as well
+stable.phi_3 <- 2.312
+
+#Use phi_3 to calculate scale.
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
+
+#Since beta = 0, the location is simply the median. (We will also use this method with any small value of beta):
+stable.location <- median(diffs)
+
+#Plot:
+hist(diffs, breaks = "FD", freq = FALSE, main = "Stock Price Changes")
+curve(dstable(x, (stable.a),(stable.b),stable.c, stable.location), add = TRUE, col = "cyan")
+
+
+#Log Stock Price Changes:
+logDiffs <- diff(log(DJI$Open))
+
+stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
+#Calculate V's
+stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
+stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
+#Using Table we calculate alpha and beta
+stable.a <- 1.484
+stable.b <- 0
+#Calculate Phi_3 
+stable.phi_3 <- 1.939
+#Use phi_3 to calculate scale and then location is found from the table 
+stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
+stable.location <- median(logDiffs)
+
+hist(logDiffs, breaks = "FD", freq = FALSE, main = "Histogram of Logarithmic Stock Price Changes")
+curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "red")
+
 ```
 
+As you can see, the stable distribution is a good fit for our Stock Price Changes and an excellent fit for our logarithmic stock price changes. We feel that with better paramater estimation techniques, we could better fit the distribution with even more accuracy. 
 
-#Partial Variance
-```{r}
-# Partial Variance to test for convergence of variance
-N <- length(Open) - 1; 
-variances.normal <- variances.cauchy <- variances.Open <- variances.diffs <- numeric(N)
-sample.normal <- rnorm(N + 1) ; sample.cauchy <- rcauchy(N + 1)
-Open <- DJI$Open ; diffs.Open <- DJI$diffs
-index <- 1:N
-for (i in 2:(N + 1)) {
-  variances.normal[i - 1] <- var(sample.normal[1:i])
-  variances.cauchy[i - 1] <- var(sample.cauchy[1:i])
-  variances.Open[i - 1] <- var(Open[1:i])
-  variances.diffs[i - 1] <- var(diffs.Open[1:i])
+
+
+
+
+###########################
+
+#Simulated Cuachy Pvalue test 
+This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
+```{r, echo=T}
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
+#Get observed data
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
+#Get expected data:
+cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
+
+#Get initial Chi Square Statistic:
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+
+#Run simulation: 
+N <- 10^4; results.Cauchy <- pvalues.Chisq <- numeric(N)
+for (i in 1:N) {
+  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
+  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+  pvalues.Chisq[i] <- pchisq(results.Cauchy[i],4-3,lower.tail=F)
 }
-variances.diffs <- variances.diffs[-1]
-par(mfrow = c(2,2)) # create 2x2 plot matrix
-plot(index,variances.normal, type = "l", col = "steelblue", log = "x", ylab = "Normal Variance", xlab = "Sample Size") # converges
-plot(index,variances.cauchy, type = "l", col = "firebrick", log = "xy",ylab = "Cauchy Variance", xlab = "Sample Size") # diverges jagged
-plot(index,variances.Open, type = "l", col = "yellowgreen", log = "xy",ylab = "Open Variance", xlab = "Sample Size") # diverges
-plot(head(index,-1),variances.diffs, type = "l", col = "slategray", log = "xy", ylab = "Firs Diff. Variance", xlab = "Sample Size") # diverges
-par(mfrow = c(1,1)) # revert to 1x1 plot matrix
-summary(variances.normal) # data is centered closely around mean and median
-summary(variances.cauchy) # seems to be large spread
-summary(variances.Open) # extremely large spread
-summary(variances.diffs) # spread is larger than it is for Cauchy but less than Open prices
-### Result: As index increases, partial variance converges for normal distribution,
-### but it diverges in jagged jumps for Cauchy distribution and
-### in smoother curves for both Open values and first differences. 
-### This indicates that our data may have undefined or infinite variance. 
+hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
+abline(v = cauchy.cs, col = "red", lwd = 3)
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
 ```
+This gives us a P value of approximately 24%. Therefore, we fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely not a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance, it appears our data's distribution also has infinite variance.
 
+As a robustness test, we perform the same analysis using Octiles:
+```{r,echo=T}
+hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
+     Cauchy Model", xlab = "First Differences")
+#Median:
+diffs.median <- median(diffs); diffs.median #
+#Half Interquartile Range:
+diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
 
-#Divergent Integrals, Divergent Variance
-```{r}
-## Divergent Integration For Calculating Variance
+#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
+#uses better paramater estimation, we will use our fit.diffs values.
+fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
+curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
+curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
+#Get observed data
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
+#Get expected data:
+cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
 
-#Now let us try to show that, if our data is modeled by a Cauchy distribution with the location and 
-#scale parameters above, that it does indeed have infinite variance. 
-#To do that, we'll need to define functions that will describe the integrands that will allow us to
-#use the tail-integral theorem. First, we'll define the integrand that will give us E(X).
-#Since the underlying distribution can be modeled by a Cauchy distribution, we will use 
-#dcauchy with the right parameters as our mu_x:
-integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
-#and now we have E(X):
-exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
+#Get initial Chi Square Statistic:
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
 
-#In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
-integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
-#And E(X^2)
-exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
-#And it appears that the integral is divergent! This means that 
-#Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
+#Run simulation: 
+N <- 10^4; results.Cauchy <- numeric(N)
+for (i in 1:N) {
+  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
+  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
+  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
+}
+hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
+abline(v = cauchy.cs, col = "red", lwd = 3)
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
 ```
+And we get P value of approximately 12%. Thus, we fail to reject the null hypothesis again, and gain some more confidence that our data is well modeled by some variation of a Cauchy distribution.
 
-#Stable Distribution
-```{r}
-
-```
 
 
 #Surveying the impact of the White House on the Dow Jones
