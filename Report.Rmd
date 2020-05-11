@@ -316,6 +316,9 @@ diffs.median <- median(diffs) #3.429688
 #Half Interquartile Range:
 diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2 # 36.41016
 
+#Save the parameters for later in the report:
+daily.cauchy.params <- c(diffs.median, diffs.hiq)
+
 #Checking our paramaters against the fitdist paramaters (nearly equal). We will test both paramaters to add a layer of robustness:
 fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate)
 hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
@@ -554,6 +557,9 @@ stable.phi_3 <- 1.939
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 stable.location <- median(logDiffs)
 
+#Save these parameters for later in the report:
+daily.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
+
 hist(logDiffs, breaks = "FD", freq = FALSE, main = "Histogram of Logarithmic Stock Price Changes")
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "red")
 
@@ -568,34 +574,16 @@ This relationship between normal, stable, and cauchy distributions provides insi
 #Histogram:
 hist(diffs, breaks = "FD", freq = FALSE, main = "Histogram of Stock Price Changes (Daily)", xlab = "Price Change")
 
-#Set Parameters for Cauchy and Stable:
-#Daily Cuachy
-diffs.median <- median(diffs) #3.429688
-#Half Interquartile Range:
-diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2
-#Daily - Stable
-stable.Xs <- quantile(diffs, c(.05, .25, .5, .75, .95))
-#Calculate V's
-stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]])
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[3]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]])
-
-#Using McCulloch's table we calculate alpha and beta
-stable.a <- 1.13
-stable.b <- 0
-
-#Calculate Phi_3 from the table as well
-stable.phi_3 <- 2.312
-
-#Use phi_3 to calculate scale.
-stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
-
-#Since beta = 0, the location is simply the median. (We will also use this method with any small value of beta):
-stable.location <- median(diffs)
-
 #Plot Curves:
 curve(dnorm(x, mean(diffs), sd(diffs)), add = TRUE, lwd = 2, col = "blue")
-curve(dcauchy(x, location = diffs.median, scale =  diffs.hiq), add = TRUE, lwd = 3, col = "red")
-curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "green")
+
+curve(dcauchy(x, location = daily.cauchy.params[1], 
+              scale =  daily.cauchy.params[2]), 
+      add = TRUE, lwd = 3, col = "red")
+
+curve(dstable(x, daily.stable.params[1], daily.stable.params[2],
+              daily.stable.params[3], daily.stable.params[4]), 
+      add = TRUE, lwd = 2, col = "green")
 
 #Monthly
 #Get Data:
@@ -623,10 +611,16 @@ stable.phi_3 <- 1.955
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 stable.location <- median(monthlyDiffs)
 
+#Save parameters for later in the report:
+monthly.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
+
 
 #Cauchy
 cauchy.median <- median(monthlyDiffs)
 cauchy.hiq <- (quantile(monthlyDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
+
+#Save parameters for later in the report:
+monthly.cauchy.params <- c(cauchy.median, cauchy.hiq)
 
 #Plot Curves:
 curve(dnorm(x, mean(monthlyDiffs), sd(monthlyDiffs)), col = "blue", lwd = 2, add = TRUE)
@@ -661,9 +655,15 @@ stable.phi_3 <- 1.795
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 stable.location <- median(yearlyDiffs)
 
+#Save parameters for later in the report:
+yearly.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
+
 #Cauchy
 cauchy.median <- median(yearlyDiffs)
 cauchy.hiq <- (quantile(yearlyDiffs)[[4]] - quantile(yearlyDiffs)[[2]]) / 2
+
+#Save parameters for later in the report:
+yearly.cauchy.params <- c(cauchy.median, cauchy.hiq)
 
 #Plot the Curves:
 curve(dnorm(x, mean(yearlyDiffs), sd(yearlyDiffs)), col = "blue", lwd = 2, add = TRUE)
@@ -686,9 +686,9 @@ cat("\n\nYearly Price Change Hurst Exponent:\n")
 hurstexp(yearlyDiffs)
 ```
 
-The hurst exponent is moving away from .5 as the data set accounts for broader periods of time. In other words, the stock prices show more mild randomness as we go from daily stock price changes to yearly stock price changes. 
+The hurst exponent is moving away from .5 as the data set accounts for broader periods of time. In other words, the stock prices show more mild randomness as we go from daily stock price changes to yearly stock price changes. A graphical representation of our stock prices over time explains why this is occuring:
 
-
+<<<<<<< HEAD
 ###########################
 
 #To do:
@@ -698,9 +698,19 @@ The hurst exponent is moving away from .5 as the data set accounts for broader p
 #Tie together all the other parts of the report
 #Finish bibliography
 #Clean up the script to match the report
+=======
+```{r, echo=T}
+plot(DJI$Open, type = "l", xlab = "Trading Day", ylab = "Stock Price", main = "Daily Stock Prices Over Time")
+plot(monthly$Open, type = "l", xlab = "Trading Month", ylab = "Stock Price", main = "Monthly Stock Prices Averages Over Time")
+plot(yearly$Open, type = "l", xlab = "Trading Year", ylab = "Stock Price", , main = "Yearly Stock Prices Averages Over Time")
+```
+>>>>>>> fa482ff28c4d3314f76dd70d6a42d48f58aded82
 
+Thinking about each a graph as a fractal, we see that curve is losing it's "roughness", and therefore it experiences less wild randomness. To think about this in concrete terms, a 2000 point drop in Daily Stock Prices will appear as a more extreme outlier when compared to a 2000 point drop in Yearly Stock Prices.
 
+Does this mean that yearly stock prices follow a normal distribution? Not necessarily. In fact, we hyptohesize the opposite. For instance, we have 8857 data points (or days) in our Daily Stock Price Data compared to 35 data points (or years) in our yearly averages. We believe that if were to check stock market prices of our yearly averages in 8000 years, they would be better fit by a stable distribution with $\alpha \xrightarrow{} 2$ or "more cauchy".
 
+<<<<<<< HEAD
 #Simulated Cauchy p-value test 
 This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
 ```{r, echo=T}
@@ -727,53 +737,23 @@ abline(v = cauchy.cs, col = "red", lwd = 3)
 cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
 ```
 This gives us a P value of approximately 24%. Therefore, we fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely not a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance, it appears our data's distribution also has infinite variance.
+=======
+Further investigation is needed to confirm this hypothesis, and would require acces to an abundance of intraday data. But, the a deeper question that is not answered in this report is whether or not there a concerete relationship between the volume of data and our $\alpha$ paramater?
+>>>>>>> fa482ff28c4d3314f76dd70d6a42d48f58aded82
 
-As a robustness test, we perform the same analysis using Octiles:
-```{r,echo=T}
-hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
-     Cauchy Model", xlab = "First Differences")
-#Median:
-diffs.median <- median(diffs); diffs.median #
-#Half Interquartile Range:
-diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
+That being said, we feel that there is enough evidence from the relationship between our data and the normal, cauchy, and stable distributions to suggest that our data more than likely has infinite variance.
 
-#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
-#uses better paramater estimation, we will use our fit.diffs values.
-fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
-curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
-#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
-cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
-#Get observed data
-cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
-#Get expected data:
-cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
+To clearly demonstrate this relationship we will run a series of goodness-of-fit tests and explain some of the complexities and challenges we faced when attempting to confirm the fit of our model.
 
-#Get initial Chi Square Statistic:
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
+#Goodness-of-Fit Tests - Chi Squared
 
-#Run simulation: 
-N <- 10^4; results.Cauchy <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
-}
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
-```
-And we get P value of approximately 12%. Thus, we fail to reject the null hypothesis again, and gain some more confidence that our data is well modeled by some variation of a Cauchy distribution.
-
-
-
-#Kolmogorov-Smirnov
+#Goodness-of-Fit Tests - Kolmogorov-Smirnov
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
+<<<<<<< HEAD
 rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
-{hist(rand, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
-      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
+{hist(rand, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
 
 #using interquartile parameters
@@ -786,7 +766,7 @@ for (i in 1:N) {
 }
 mean(ks.stats)#mean p-values = 0.1976958
 sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats, main = "Histogram of K-S p-values", xlab = "K-S p-values")
+{hist(ks.stats)
 abline(v = 0.05, col = "red")}
 
 ```
@@ -794,9 +774,11 @@ It appears that the results are favorable to the hypothesis that the data matche
 
 Now we'll try sing fitdist parameters:
 ```{r,echo=T, warning = F}
+=======
+#Now we will try sing fitdist parameters:
+>>>>>>> 4d8ec1650887a8a7f4565592714bfcb9144c5e43
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
-hist(rand2, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
-      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
+hist(rand2, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
 
 N <- 10^3
@@ -808,10 +790,10 @@ for (i in 1:N) {
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.stats2, breaks = "fd", main = "Histogram of K-S p-values", xlab = "K-S p-values")
+{hist(ks.stats2, breaks = "fd")
 abline(v = 0.05, col = "red")}
 ```
-And we get even better results here! As about 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions.
+About 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions. (refer to main R script for similar analysis using interquartile range and median as estimated Cauchy parameters)
 
 #As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
 Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then taking chi-squares:
@@ -828,9 +810,10 @@ for(i in 1:N){
 }
 mean(ks.samp.rand)
 sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
-{hist(ks.samp.rand, breaks = "fd", main = "Histogram of K-S P-values", xlab = "K-S p-values")
+{hist(ks.samp.rand, breaks = "fd")
 abline(v = 0.05, col = "red")}
 ```
+<<<<<<< HEAD
 
 Doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test:
 ```{r,echo=T,warning=FALSE}
@@ -845,28 +828,57 @@ for(i in 1:N){
   samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
   pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
 }
-hist(samp.rand.cs, breaks = "FD", main = "Histogram of Chi-Squared Stats", xlab = "K-S Stats")
-{hist(pvals.chi, breaks = "FD",  main = "Histogram of Chi-Squared p-values", xlab = "p-values")
+hist(samp.rand.cs, breaks = "FD")
+{hist(pvals.chi, breaks = "FD")
   abline(v = 0.05, col = "red")}
 sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
 ```
 
 #Now to show the impact of sample sizes on the K-S test:
-This script does take a long time to run, but unfortunatly decreasing the number of samples being drawn compromises the completeness of the plot.
 ```{r,echo=T, warning=F}
-N <- 6000
+N <- 10^3
 ks.stat <- numeric(N)
 for (i in 1:N) {
   diff.samp <- sample(diffs, i+1, replace = TRUE)
   fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(i + 1, location = fit.diffs[1], scale = fit.diffs[2])
+  cauchy.samp <- rcauchy(i + 1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
   ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
-plot(ks.stat, pch = ".", main = "Plot of K-S p-values as Sample Size Increases", xlab = "Sample Size")
-hist(ks.stat, breaks = "FD", probability = TRUE, main = "Histogram of K-S p-values", xlab = "K-S p-values" )
+plot(ks.stat, pch = ".")
+hist(ks.stat, breaks = "FD", probability = TRUE)
 ```
-And what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
+=======
+For further robustness tests, as well as for an analysis of sensitivity to sample sizes, refer to the main R script. In summary what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
+>>>>>>> 4d8ec1650887a8a7f4565592714bfcb9144c5e43
 
+The issue that seems to arise from our goodness-of-fit tests is that the quantity of data we are working with produces large error statistics that result in rejecting the null hypothesis. Therefore, we used QQ Plots to better understand the the fit of our 3 distributions across our 3 different time frames:
+
+#Goodness-of-Fit Tests - QQ Plots
+```{r,echo=T, warning=F}
+#Daily:
+par(mfrow = c(1,3))
+qqPlot(diffs, "norm", mean = mean(diffs), sd = sd(diffs), id = FALSE) 
+qqPlot(diffs, "cauchy", location = daily.cauchy.params[1], scale = daily.cauchy.params[2], id = FALSE)
+qqPlot(diffs, "stable", alpha = daily.stable.params[1], beta = daily.stable.params[2], gamma = daily.stable.params[3], delta = daily.stable.params[4], id = FALSE)
+mtext("QQ-Plots of Daily Stock Price Changes", side = 3, line = -1.2, outer = TRUE)
+
+#Monthly
+par(mfrow = c(1,3))
+qqPlot(monthlyDiffs, "norm",mean =  mean(monthlyDiffs),sd =  sd(monthlyDiffs), id = FALSE)
+qqPlot(monthlyDiffs, "cauchy", location = monthly.cauchy.params[1], scale = monthly.cauchy.params[2], id = FALSE)
+qqPlot(monthlyDiffs, "stable", alpha = monthly.stable.params[1], beta = monthly.stable.params[2],gamma = monthly.stable.params[3], delta = monthly.stable.params[4], id = FALSE)
+mtext("QQ-Plots of Monthly Stock Price Changes", side = 3, line = -1.2, outer = TRUE)
+
+#Yearly
+par(mfrow = c(1,3))
+qqPlot(yearlyDiffs, "norm", mean =  mean(yearlyDiffs),sd =  sd(yearlyDiffs), id = FALSE); 
+qqPlot(yearlyDiffs, "cauchy", location =  yearly.cauchy.params[1], scale = yearly.cauchy.params[2], id = FALSE)
+qqPlot(yearlyDiffs, "stable", alpha = yearly.stable.params[1], beta = yearly.stable.params[2], gamma = yearly.stable.params[3], delta = yearly.stable.params[4], id = FALSE)
+mtext("QQ-Plots of Yearly Stock Price Changes", side = 3, line = -1.2, outer = TRUE)
+
+```
+
+Across all three time frames we notice that the longere the time period, the better the normal distrubition fits the data. Inversely, the worst the Cauchy distribution fits the data. However, the QQ Plot shows the power of the stable distribution as it changes with our time frame to keep a relatively consistent fit. And, since the data seems to be 'converging' to a stable distribution with $\alpha \xrightarrow{} 2$, this suffices to demonstrate that our data has infinite variance. Therefore, our stock prices are a random walk with Levy-flight.
 
 #Surveying the impact of the White House on the Dow Jones
 Now that we have seen that the data follows a model with infinite variance, which somewhat resembles that of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
@@ -992,4 +1004,5 @@ Null hypothesis is that each regime has the observed probability p of recession 
 Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next.
 Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates that no individual regime is equally likely to be associated with recessions from the years 1985 to early 2020. 
 
+#Conclusion
 
