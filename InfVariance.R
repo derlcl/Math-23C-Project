@@ -235,7 +235,6 @@ cauchy.breaks <- qcauchy((0:4)*.25, location = diffs.median, scale = diffs.hiq)
 cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
 #Get expected data:
 cauchy.exp <- rep(length(diffs)/4, 4); cauchy.exp 
-
 #Get initial Chi Square Statistic:
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
 
