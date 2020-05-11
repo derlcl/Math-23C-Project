@@ -573,8 +573,8 @@ for (i in 1:N) {
 }
 mean(ks.stats)#mean p-values = 0.1976958
 sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
-hist(ks.stats)
-  abline(v = 0.05, col = "red")
+{hist(ks.stats, main = "Histogram of K-S p-values", xlab = "K-S p-values")
+  abline(v = 0.05, col = "red")}
 
 #Using fitdist parameters
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
@@ -590,13 +590,14 @@ for (i in 1:N) {
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
-hist(ks.stats2, breaks = "fd")
-  abline(v = 0.05, col = "red")
+{hist(ks.stats2, breaks = "fd", main = "Histogram of K-S p-values", xlab = "K-S p-values")
+  abline(v = 0.05, col = "red")}
 
 #Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to an 
 #rCauchy dist with those same parameters, and then taking chi-squares and looking at the histogram
+N <- 10^3
 samp.rand <- numeric(N)
-nn <- 200
+nn <- 500
 ks.samp.rand <- numeric(N)
 for(i in 1:N){
   diff.samp <- sample(diffs, nn, replace = TRUE)
@@ -606,8 +607,8 @@ for(i in 1:N){
 }
 mean(ks.samp.rand)
 sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
-hist(ks.samp.rand, breaks = "fd")
-  abline(v = 0.05, col = "red")
+{hist(ks.samp.rand, breaks = "fd", main = "Histogram of K-S P-values", xlab = "K-S p-values")
+  abline(v = 0.05, col = "red")}
 
 #doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test
 samp.rand.cs <- numeric(N); pvals.chi <- numeric(N)
@@ -621,8 +622,8 @@ for(i in 1:N){
   samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
   pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
 }
-hist(samp.rand.cs, breaks = "FD")
-{hist(pvals.chi, breaks = "FD")
+hist(samp.rand.cs, breaks = "FD", main = "Histogram of Chi-Squared Stats", xlab = "K-S Stats")
+{hist(pvals.chi, breaks = "FD",  main = "Histogram of Chi-Squared p-values", xlab = "p-values")
   abline(v = 0.05, col = "red")}
 sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
 
@@ -635,8 +636,8 @@ for (i in 1:N) {
   cauchy.samp <- rcauchy(i + 1, location = fit.diffs[1], scale = fit.diffs[2])
   ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
 }
-plot(ks.stat, pch = ".")
-hist(ks.stat, breaks = "FD", probability = TRUE)
+plot(ks.stat, pch = ".", main = "Plot of K-S p-values as Sample Size Increases", xlab = "Sample Size")
+hist(ks.stat, breaks = "FD", probability = TRUE, main = "Histogram of K-S p-values", xlab = "K-S p-values" )
 
 #Combining a few ideas:
 plot(DJI$Open[seq(from = 1, to = length(diffs), by = 3)], typ = "l")
