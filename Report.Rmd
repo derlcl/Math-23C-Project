@@ -690,6 +690,7 @@ Does this mean that yearly stock prices follow a normal distribution? Not necess
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
+<<<<<<< HEAD
 rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
 {hist(rand, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
@@ -712,6 +713,9 @@ It appears that the results are favorable to the hypothesis that the data matche
 
 Now we'll try sing fitdist parameters:
 ```{r,echo=T, warning = F}
+=======
+#Now we will try sing fitdist parameters:
+>>>>>>> 4d8ec1650887a8a7f4565592714bfcb9144c5e43
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
 hist(rand2, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
@@ -728,7 +732,7 @@ sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples
 {hist(ks.stats2, breaks = "fd")
 abline(v = 0.05, col = "red")}
 ```
-And we get even better results here! As about 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions.
+About 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions. (refer to main R script for similar analysis using interquartile range and median as estimated Cauchy parameters)
 
 #As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
 Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then taking chi-squares:
@@ -748,6 +752,7 @@ sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random s
 {hist(ks.samp.rand, breaks = "fd")
 abline(v = 0.05, col = "red")}
 ```
+<<<<<<< HEAD
 
 Doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test:
 ```{r,echo=T,warning=FALSE}
@@ -781,6 +786,9 @@ for (i in 1:N) {
 plot(ks.stat, pch = ".")
 hist(ks.stat, breaks = "FD", probability = TRUE)
 ```
+=======
+For further robustness tests, as well as for an analysis of sensitivity to sample sizes, refer to the main R script. In summary what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
+>>>>>>> 4d8ec1650887a8a7f4565592714bfcb9144c5e43
 
 
 #Surveying the impact of the White House on the Dow Jones
