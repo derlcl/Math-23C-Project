@@ -214,9 +214,6 @@ abs(min(diffs) / sd.diff)
 
 
 ## Cauchy Distribution Model
-
-# Checking a 5 sigma Event
-#
 hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
      Cauchy Model", xlab = "First Differences")
 #Paramaters for Cauchy thanks to the paper by M. Mahdizadeh, and Ehsan Zamanzade.
@@ -250,20 +247,16 @@ for (i in 1:N) {
   results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
   pvalues.Chisq[i] <- pchisq(results.Cauchy[i],4-3,lower.tail=F)
 }
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
+hist(results.Cauchy, breaks = "FD", probability = TRUE, main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
 abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 24%.
-#We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
-#from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
-#NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
-#have infinite variance, it appears our data's distribution also has infinite variance.
-
-#analysis of pvalues for chi-square statistics
-hist(pvalues.Chisq, breaks = "FD", prob = T)
-abline(v = .05, col = "blue")
-cauchy.cs.pvalue <- pchisq(cauchy.cs,df=4-3,lower.tail=F)
-abline(v = cauchy.cs.pvalue, col = "red")
-pvalues.pvalue <- mean(pvalues.Chisq >= cauchy.cs.pvalue) ; pvalues.pvalue
+cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue# P value of approximately 24%.
+#This would lead us fail to reject the null hypothesis. But the built in chi-square test gives us a different result:
+pchisq(cauchy.cs, df = 4 - 3, lower.tail = FALSE)
+#So we will try to use other goodness of fit tests that give more conclusive results.
+#But in any way, there seems to be significant evidence to suggest that our data pulls from (at the very least) 
+#a family-member of heavy tail stable distributions. Although it is definitely NOT a gaussian distribution.
+#It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance,
+#it appears our data's distribution also has infinite variance.
 
 #using Octiles
 hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
@@ -274,22 +267,11 @@ hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
 diffs.median <- median(diffs); diffs.median #
 #Half Interquartile Range:
 diffs.hiq <- (quantile(diffs, c(seq(0.0,1,by = 0.125)))[[7]] - quantile(diffs, c(seq(0.0,1,by = 0.1)))[[3]])/2; diffs.hiq #44.32993
-
-#Checking our paramaters against the fitdist paramaters (nearly equal). But, because fit.diffs
-#uses better paramater estimation, we will use our fit.diffs values.
-fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
-curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 1, col = "cyan")
-#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
+#Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins using estimated parameters:
 cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
-#Get observed data
-cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
-#Get expected data:
-cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp 
-
-#Get initial Chi Square Statistic:
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-
+cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs #Get observed data
+cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp #Get expected data
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs #Get initial Chi Square Statistic
 #Run simulation: 
 N <- 10^4; results.Cauchy <- numeric(N)
 for (i in 1:N) {
@@ -300,10 +282,13 @@ for (i in 1:N) {
 hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
 abline(v = cauchy.cs, col = "red", lwd = 3)
 cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 12%.
-#We fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls
-#from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely
-#NOT a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian
-#have infinite variance, our could originate from a distribution with infinite variance.
+#This again would lead u to failt to reject the null hypothesis. But the built in chi-square test gives us a different result:
+pchisq(cauchy.cs, df = 8 - 3, lower.tail = FALSE)
+#So we will try to use other goodness of fit tests that give more conclusive results.
+#But in any way, there seems to be significant evidence to suggest that our data pulls from (at the very least) 
+#a family-member of heavy tail stable distributions. Although it is definitely NOT a gaussian distribution.
+#It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance,
+#it appears our data's distribution also has infinite variance.
 
 ## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
 #
