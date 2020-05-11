@@ -13,16 +13,16 @@ diffs <- diff(DJI$Open)
 ## Fourier Analysis
  
 #Can we capture DJI$Open by Fourier Analysis?
-RunFourier(length(DJI$Open)/2, DJI$Open) #Perfect Reconstruction 
-RunFourier(10, DJI$Open) #Using approx 1/400th of the basis vectors
+RunFourier(length(DJI$Open)/2, DJI$Open, FALSE) #Perfect Reconstruction 
+RunFourier(10, DJI$Open, FALSE) #Using approx 1/400th of the basis vectors
 #We capture a general trend of the market using very few basis vectors in our analysis.
 #However, the information that has been captureed is relatively useless as there is no
 #cyclical pattern to follow. 
 
 #Can the first differences be captured by fourier analysis?
-RunFourier(length(diffs) /2, diffs) #Perfect Reconstruction
-RunFourier(1000, diffs) #Pretty good reconstruction using only a fraction of the basis vectors
-RunFourier(10, diffs) #Useless
+RunFourier(length(diffs) /2, diffs, TRUE) #Perfect Reconstruction
+RunFourier(1000, diffs, TRUE) #Pretty good reconstruction using only a fraction of the basis vectors
+RunFourier(10, diffs, TRUE) #Useless
 #The first difference of the time series does even worse under the Fourier analysis.
 #Using a small number of basis vectors yields almost no information. Although we can
 #perfectly reconstruct the data, the more basis vectors added to our analysis mostly just
