@@ -5,8 +5,9 @@ date: "5/11/2020"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+source("Main.R") # RUN ME FIRST
 ```
 
 #Outline
@@ -92,38 +93,8 @@ rare <- max(pvals);rare #2.303366e-07, which is pretty much 0.
 ```
 If we interpret the p-value as the probability of an event taking place, and our events are measured in days, then a given p-value tells us the probability of seeing that extreme of an event on any given days (i.e. a p-value of 0.05 would correspond to an event that we'd "expect" to see once every 20 days, since it has a 1/20 chance of arising).In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare of these rare events once in 11,894.45 years, but from the data it is clear that these events are far more common than that.
 
-#Investigating Interesting Correlations - Regressions
-An interesting correlation that we would not have expected to be significant, but turns out to be so is that
-of Open prices and Volume:
-```{r,echo=T}
-plot(log(Open)~log(Volume)) 
-```
-This looks fairly  promising. 
-
-Compare logarithms of open price and trade volume variables
-```{r,echo=TRUE}
-x <- log(Volume)
-y <- log(Open)
-
-#Let us first manually run the regression, and then we'll check our results against the built-in
-#function. First, let's find the slope of the line
-b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2));b 
-#Alternative - works because division by n-1 cancels out
-cov(x,y)/var(x)
-#Here is the formula for the intercept
-a <- mean(y) - b*mean(x);a    
-#It is quicker to use the built-in R function
-linmod <- lm(y~x)
-linmod; a; b #And we get the same result
-plot(y~x, main = "Plot of First Differences by Volume", xlab = "log(Volume)", ylab = "log(Absolute First Differences)")
-abline(a, b, col = "cyan")
-abline(linmod$coefficients[1], linmod$coefficients[2], col = "red")
-summary(linmod) 
-```
-And we get an R-squared that is 0.7298, so the linear model explains 73% of the data, and it appears that volume and open prices are positively correlated.
-
 #Fourier Analysis
-Before analyzing our data for properties of a random walk and infinite varience, we first need to run a Fourier Analysis to ensure there is no cyclic patterns in our data:
+Before analyzing our data for properties of a random walk and infinite variance, we first need to run a Fourier Analysis to ensure there is no cyclic patterns in our data:
 
 ```{r,echo=T}
 #We will begin analysing the Open Stock Price Data before shifting into it's first difference (or price change).
@@ -308,7 +279,7 @@ As we might expect, our random walk model is also experiencing wild randomness. 
 #Cauchy Distribution
 The Cauchy Distribution is best known for it's undefined moment generating functions. As a result, the distribution has infinite variance which results in a high peak and long heavy tails.
 
-Surprisngly, the distribution is only characterized by two parameters: location and scale which we esimated using the median and an innerquartile method used the $\textit{Goodness-of-Fit Testing for the Cauchy Distribution with Application to Financial Modeling}$ by M. Mahdizadeh, and Ehsan Zamanzade. Given the shape of the our data's histogram, and the underlying theoretical basis, we can investigate whether our data or the log of our data is well modeled by a Cauchy distribution:
+Surprisingly, the distribution is only characterized by two parameters: location and scale which we esimated using the median and an innerquartile method used the $\textit{Goodness-of-Fit Testing for the Cauchy Distribution with Application to Financial Modeling}$ by M. Mahdizadeh, and Ehsan Zamanzade. Given the shape of the our data's histogram, and the underlying theoretical basis, we can investigate whether our data or the log of our data is well modeled by a Cauchy distribution:
 ```{r,echo=T, warning = FALSE}
 #First Difference of our data:
 #Median:
@@ -335,7 +306,6 @@ diffs.hiq <-  (quantile(diff(log(DJI$Open)))[[4]] - quantile(diff(log(DJI$Open))
 hist(diff(log(DJI$Open)), prob = TRUE, breaks = "FD", main = "Histogram of Logarithm of the First Differences
      Cauchy Model", xlab = "Logarithm of First Differences")
 curve(dcauchy(x, location = diffs.median, scale =  diffs.hiq), add = TRUE, lwd = 3, col = "red")
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 1, col = "cyan")
 ```
 As we can see from the curves, the Cauchy distribution does a good job of fitting our original data visually, and an excellent job of modeling the first difference of the logarithm of our stock prices. This is not definitive proof that our data comes from a cauchy distribution. However, this is a good time to demonstrate that if our data is modeled by a Cauchy distribution with the location and scale parameters above, then it does indeed have infinite variance. To do that, we'll need to define functions that will describe the integrands that will allow us to use the tail-integral theorem. First, we'll define the integrand that will give us $E(X)$, as well as well as $E(X^2) - E(X)^2$:
 
@@ -392,112 +362,7 @@ As index increases, partial variance converges for the normal distribution, but 
 
 # Bootstrap 
 If our first differences data are observations from independent and identically distributed random variables from a distribution with light tails, then the shape of a histogram of our standardized data should approximate that of a standard normal disttribution with moderately large sample sizes. If however our data comes from a heavy-tailed distribution, the presence of extreme values will limit the approximation to a standard normal. We compare our first differences with the normal distribution and two Cauchy distributions parameterized differently in a bootstrap. The first differences sample data are treated as a population and similarly sized data are randomly drawn from the reference distributions fitted to the first differences data. Then, we treat our samples as populations and draw bootstrap samples of size n from each N times. The bootstrap samples are standardized and plotted as empirical cumulative distributions (eCDF) to get a sense of their typical Kolmogorov-Smirnov test statistic, the max delta between the eCDF and the reference CDF which is plotted as a standard normal eCDF in our case. 
-```{r}
-#Bootstrap For A Single Population
-par(mfrow = c(2,2)) # create 2x2 plot matrix
-sampsize <- length(diffs) # starting sample size to draw from
-N <- 100 # number of boostrap samples to run
-n <-  100 # bootstrap sample size to draw
-xlima <- -3 ; xlimb <- 3
 
-# Perform N boostrap resamples of size n from sample X
-meanY <- varY <- Z <- numeric(N)
-plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from First Differences")
-for (i in 1:N) {
-  X <- diffs
-  for (i in 1:N) {
-    Y <- sample(X,n,replace = TRUE) # Resample
-    meanY[i] <- mean(Y)
-    varY[i] <- var(Y)
-    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
-  }
-  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
-}
-meanY.diffs <- meanY
-varY.diffs <- varY
-Z.diffs <- Z
-plot(function(x) pnorm(x), lwd = 3, add = TRUE)
-
-# Perform N boostrap resamples of size n from sample Cauchy with interquartile parameters
-meanY <- varY <- Z <- numeric(N)
-plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (Interquartile)")
-for (i in 1:N) {
-  X <- rcauchy(sampsize, location = diffs.median, scale = diffs.hiq)
-  for (i in 1:N) {
-    Y <- sample(X,n,replace = TRUE) # Resample
-    meanY[i] <- mean(Y)
-    varY[i] <- var(Y)
-    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
-  }
-  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
-}
-meanY.iqrCauchy <- meanY
-varY.iqrCauchy <- varY
-Z.iqrCauchy <- Z
-plot(function(x) pnorm(x), lwd = 3, add = TRUE)
-
-# Perform N boostrap resamples of size n from Cauchy with fitdist parameters
-meanY <- varY <- Z <- numeric(N)
-plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Cauchy (FitDist)")
-for (i in 1:N) {
-  X <- rcauchy(sampsize, location = fit.diffs[1], scale = fit.diffs[2])
-  for (i in 1:N) {
-    Y <- sample(X,n,replace = TRUE) # Resample
-    meanY[i] <- mean(Y)
-    varY[i] <- var(Y)
-    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
-  }
-  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
-}
-meanY.fdCauchy <- meanY
-varY.fdCauchy <- varY
-Z.fdCauchy <- Z
-plot(function(x) pnorm(x), lwd = 3, add = TRUE)
-
-# Perform N boostrap resamples of size n from normal distribution
-meanY <- varY <- Z <- numeric(N)
-plot(function(x) pnorm(x), xlim = c(xlima,xlimb), lwd = 5, main = "eCDF of Z from Normal")
-for (i in 1:N) {
-  X <- rnorm(sampsize, mean(diffs), sd(diffs)) 
-  for (i in 1:N) {
-    Y <- sample(X,n,replace = TRUE) # Resample
-    meanY[i] <- mean(Y)
-    varY[i] <- var(Y)
-    Z[i] <- (mean(Y) - mean(X)) / (sd(Y)/sqrt(n))# Compute Z test statistic
-  }
-  lines(ecdf(Z), col = rgb(runif(1,0,1),runif(1,0,1),runif(1,0,1)), cex = .1)
-}
-meanY.norm <- meanY
-varY.norm <- varY
-Z.norm <- Z
-plot(function(x) pnorm(x), lwd = 3, add = TRUE)
-
-# Bootstrap sampling distribution of standardized sample observations
-hist(Z.diffs, breaks = "fd", prob = TRUE) # looks normal
-hist(Z.iqrCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
-hist(Z.fdCauchy, breaks = "fd", prob = TRUE) # somewhat normal, inconsistent center on iteration
-hist(Z.norm, breaks = "fd", prob = TRUE) # looks normal
-# Result: Central Limit Theorem explains approximation of standard normal for larger sample sizes. 
-# However, due to infinite variance of Cauchy distribution, extreme values from heavy tails
-# require very large sample size to approximate standard normal distribution. 
-# Cauchy has inconsistent center, shape and spread on different iterations. 
-
-# Bootstrap sampling distribution of sample variances
-hist(varY.diffs, breaks = "fd", prob = TRUE) # somewhat normal with somewhat heavy right tail
-hist(varY.iqrCauchy, breaks = "fd", prob = TRUE) # heavy right tail
-hist(varY.fdCauchy, breaks = "fd", prob = TRUE) # heavy right tail
-hist(varY.norm, breaks = "fd", prob = TRUE) # looks normal
-# Result: Variance for first difference somewhat resembles shape and spread of Cauchy variance, not normal.
-
-# Bootstrap sampling distribution of sample means
-hist(meanY.diffs, breaks = "fd", prob = TRUE) # looks normal
-hist(meanY.iqrCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
-hist(meanY.fdCauchy, breaks = "fd", prob = TRUE) # looks like stable distribution with large variance
-hist(meanY.norm, breaks = "fd", prob = TRUE) # looks normal
-# Result: Mean for first difference resembles shape and spread of normal sample mean, not Cauhcy.
-
-
-```
 The overall result is that our first differences data may lie somewhere between Gaussian and Cauchy on the parameter scale for stable distributions. However, the data is a sample from an underlying population, so the limited accessibilility to a sample size of only 8857 limits the capture of extreme values from possibly heavy right tails. This phenomenon will be even more pronounced when we analyze monthly and yearly price change averages. But first, we need to introduce a distribution that can capture both normal and cauchy features depending on it's paramters. For that, we turn to the (Pareto-Levy) Stable distribution.
 
 
@@ -541,6 +406,9 @@ stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 #Since beta = 0, the location is simply the median. (We will also use this method with any small value of beta):
 stable.location <- median(diffs)
 
+#Save these parameters for later in the report:
+daily.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
+
 #Plot:
 hist(diffs, breaks = "FD", freq = FALSE, main = "Stock Price Changes")
 curve(dstable(x, (stable.a),(stable.b),stable.c, stable.location), add = TRUE, col = "cyan")
@@ -561,9 +429,6 @@ stable.phi_3 <- 1.939
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3
 stable.location <- median(logDiffs)
-
-#Save these parameters for later in the report:
-daily.stable.params <- c(stable.a, stable.b, stable.c, stable.location)
 
 hist(logDiffs, breaks = "FD", freq = FALSE, main = "Histogram of Logarithmic Stock Price Changes")
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "red")
@@ -693,15 +558,6 @@ hurstexp(yearlyDiffs)
 
 The hurst exponent is moving away from .5 as the data set accounts for broader periods of time. In other words, the stock prices show more mild randomness as we go from daily stock price changes to yearly stock price changes. A graphical representation of our stock prices over time explains why this is occuring:
 
-
-#To do:
-#Comment about their hurst exponents
-#Switch to Goodness of Fit discussions
-#Add legends to histo grams if possible lol
-#Tie together all the other parts of the report
-#Finish bibliography
-#Clean up the script to match the report
-
 ```{r, echo=T}
 plot(DJI$Open, type = "l", xlab = "Trading Day", ylab = "Stock Price", main = "Daily Stock Prices Over Time")
 plot(monthly$Open, type = "l", xlab = "Trading Month", ylab = "Stock Price", main = "Monthly Stock Prices Averages Over Time")
@@ -717,10 +573,6 @@ Does this mean that yearly stock prices follow a normal distribution? Not necess
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
-rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
-hist(rand2, probability = TRUE, breaks = "FD", main = "   Histogram of One Random Cauchy Sample 
-      Overlayed by Cauchy Estimated Parameters", xlab = "rCauchy Values")
-curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
 
 N <- 10^3
 ks.stats2 <- numeric(N)

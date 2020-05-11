@@ -10,10 +10,6 @@ library('fBasics')
 library('stabledist')
 library('car')
 
-#Import Cleaned Data
-source("prj_DataPreparation.R")
-source("prj_Functions.R")
-
 #This is a graphical representation of the Dow Jones Index from 1985 to 2020
 plot(DJI$Open, type = "l", xlab = "Time", 
      ylab = "Random Daily Opens", main = "Random Walk Model",
@@ -23,7 +19,7 @@ plot(DJI$Open, type = "l", xlab = "Time",
 diffs <- diff(DJI$Open)
 
 ## Fourier Analysis
- 
+
 #Can we capture DJI$Open by Fourier Analysis?
 RunFourier(length(DJI$Open)/2, DJI$Open, FALSE) #Perfect Reconstruction 
 RunFourier(10, DJI$Open, FALSE) #Using approx 1/400th of the basis vectors
@@ -237,25 +233,7 @@ cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
 cauchy.exp <- rep(length(diffs)/4, 4); cauchy.exp 
 #Get initial Chi Square Statistic:
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-
-#Run simulation: 
-N <- 10^4; results.Cauchy <- pvalues.Chisq <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
-  pvalues.Chisq[i] <- pchisq(results.Cauchy[i],4-3,lower.tail=F)
-}
-hist(results.Cauchy, breaks = "FD", probability = TRUE, main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue# P value of approximately 24%.
-#This would lead us fail to reject the null hypothesis. But the built in chi-square test gives us a different result:
-pchisq(cauchy.cs, df = 4 - 3, lower.tail = FALSE)
-#So we will try to use other goodness of fit tests that give more conclusive results.
-#But in any way, there seems to be significant evidence to suggest that our data pulls from (at the very least) 
-#a family-member of heavy tail stable distributions. Although it is definitely NOT a gaussian distribution.
-#It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance,
-#it appears our data's distribution also has infinite variance.
+pchisq(cauchy.cs, df = 4 - 3, lower.tail = FALSE) # 0, reject null
 
 #using Octiles
 hist(diffs, prob = TRUE, breaks = "FD", main = "Histogram of First Differences
@@ -271,23 +249,7 @@ cauchy.breaks <- qcauchy((0:8)*.125, location = diffs.median, scale = diffs.hiq)
 cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs #Get observed data
 cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp #Get expected data
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs #Get initial Chi Square Statistic
-#Run simulation: 
-N <- 10^4; results.Cauchy <- numeric(N)
-for (i in 1:N) {
-  obs.sim.cauchy <- rcauchy(1:length(diffs), fit.diffs[1], fit.diffs[2])
-  obs.sim.cauchy <- table(cut(obs.sim.cauchy, breaks = cauchy.breaks))
-  results.Cauchy[i] <- ChiSq(obs.sim.cauchy, cauchy.exp)
-}
-hist(results.Cauchy, breaks = "FD", main = "Chi-Square Values Cauchy Simulation", xlab = "Chi-Square Stat")
-abline(v = cauchy.cs, col = "red", lwd = 3)
-cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue # P value of approximately 12%.
-#This again would lead u to failt to reject the null hypothesis. But the built in chi-square test gives us a different result:
-pchisq(cauchy.cs, df = 8 - 3, lower.tail = FALSE)
-#So we will try to use other goodness of fit tests that give more conclusive results.
-#But in any way, there seems to be significant evidence to suggest that our data pulls from (at the very least) 
-#a family-member of heavy tail stable distributions. Although it is definitely NOT a gaussian distribution.
-#It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance,
-#it appears our data's distribution also has infinite variance.
+pchisq(cauchy.cs, df = 8-3, lower.tail=FALSE) # 0 , reject null
 
 ## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
 #
