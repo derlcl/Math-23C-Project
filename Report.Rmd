@@ -808,41 +808,7 @@ sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random s
 {hist(ks.samp.rand, breaks = "fd", main = "Histogram of K-S P-values", xlab = "K-S p-values")
 abline(v = 0.05, col = "red")}
 ```
-
-Doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test:
-```{r,echo=T,warning=FALSE}
-samp.rand.cs <- numeric(N); pvals.chi <- numeric(N)
-for(i in 1:N){
-  diff.samp <- sample(diffs, nn, replace = TRUE)
-  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
-  cauchy.breaks <- qcauchy((0:10)*.1, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
-  cauchy.obs <- table(cut(diff.samp, breaks = cauchy.breaks)); cauchy.obs
-  cauchy.exp <- rep(nn/10, 10); cauchy.exp 
-  samp.rand.cs[i] <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs
-  pvals.chi[i] <-pchisq(samp.rand.cs[i], df = 7, lower.tail = FALSE)
-}
-hist(samp.rand.cs, breaks = "FD", main = "Histogram of Chi-Squared Stats", xlab = "K-S Stats")
-{hist(pvals.chi, breaks = "FD",  main = "Histogram of Chi-Squared p-values", xlab = "p-values")
-  abline(v = 0.05, col = "red")}
-sum(pvals.chi > 0.05)/length(pvals.chi)# p-values are greater than 0.05 about 62% of the time
-```
-
-#Now to show the impact of sample sizes on the K-S test:
-This script does take a long time to run, but unfortunatly decreasing the number of samples being drawn compromises the completeness of the plot.
-```{r,echo=T, warning=F}
-N <- 6000
-ks.stat <- numeric(N)
-for (i in 1:N) {
-  diff.samp <- sample(diffs, i+1, replace = TRUE)
-  fit.samp <- fitdist(diff.samp, "cauchy", "mle")
-  cauchy.samp <- rcauchy(i + 1, location = fit.diffs[1], scale = fit.diffs[2])
-  ks.stat[i] <- ks.test(diff.samp, cauchy.samp)$p.value
-}
-plot(ks.stat, pch = ".", main = "Plot of K-S p-values as Sample Size Increases", xlab = "Sample Size")
-hist(ks.stat, breaks = "FD", probability = TRUE, main = "Histogram of K-S p-values", xlab = "K-S p-values" )
-```
-And what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
+For further robustness tests, as well as for an analysis of sensitivity to sample sizes, refer to the main R script. In summary what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
 
 
 #Surveying the impact of the White House on the Dow Jones
