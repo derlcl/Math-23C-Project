@@ -8,7 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-<<<<<<< HEAD
+
 #Outline
 Exploratory Data Analysis
 The Impact of "Rare" Events
@@ -25,7 +25,7 @@ Stable Distribution
 KS Test / Chi-Squared Test (Chi-square Test on Varying Time Scales) / Complexities of Goodness of Fit Test
 The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
 Hypothesis Testing: Contingency table with chi-square test
-=======
+
 
 #Exploratory Data Analysis
 The first differences of DJI Open price values present an interesting challenge. The histogram resembles a symmetric distribution with a sharp peak around the mean, heavy tails, and a left skew. The normal distribution does not seem to be a good fit at first glance, but a heavy-tailed distribution could help us model our data
@@ -693,8 +693,6 @@ hurstexp(yearlyDiffs)
 
 The hurst exponent is moving away from .5 as the data set accounts for broader periods of time. In other words, the stock prices show more mild randomness as we go from daily stock price changes to yearly stock price changes. A graphical representation of our stock prices over time explains why this is occuring:
 
-<<<<<<< HEAD
-###########################
 
 #To do:
 #Comment about their hurst exponents
@@ -703,19 +701,18 @@ The hurst exponent is moving away from .5 as the data set accounts for broader p
 #Tie together all the other parts of the report
 #Finish bibliography
 #Clean up the script to match the report
-=======
+
 ```{r, echo=T}
 plot(DJI$Open, type = "l", xlab = "Trading Day", ylab = "Stock Price", main = "Daily Stock Prices Over Time")
 plot(monthly$Open, type = "l", xlab = "Trading Month", ylab = "Stock Price", main = "Monthly Stock Prices Averages Over Time")
 plot(yearly$Open, type = "l", xlab = "Trading Year", ylab = "Stock Price", , main = "Yearly Stock Prices Averages Over Time")
 ```
->>>>>>> fa482ff28c4d3314f76dd70d6a42d48f58aded82
+
 
 Thinking about each a graph as a fractal, we see that curve is losing it's "roughness", and therefore it experiences less wild randomness. To think about this in concrete terms, a 2000 point drop in Daily Stock Prices will appear as a more extreme outlier when compared to a 2000 point drop in Yearly Stock Prices.
 
 Does this mean that yearly stock prices follow a normal distribution? Not necessarily. In fact, we hyptohesize the opposite. For instance, we have 8857 data points (or days) in our Daily Stock Price Data compared to 35 data points (or years) in our yearly averages. We believe that if were to check stock market prices of our yearly averages in 8000 years, they would be better fit by a stable distribution with $\alpha \xrightarrow{} 2$ or "more cauchy".
 
-<<<<<<< HEAD
 #Simulated Cauchy p-value test 
 This appears to be a good fit. But let us see if it stands up to goodness of fitness tests:
 ```{r, echo=T}
@@ -742,9 +739,9 @@ abline(v = cauchy.cs, col = "red", lwd = 3)
 cauchy.pvalue <- mean(results.Cauchy >= cauchy.cs); cauchy.pvalue
 ```
 This gives us a P value of approximately 24%. Therefore, we fail to reject the null hypothesis. There is significant evidence to suggest that our data pulls from (at the very least) a family-member of heavy tail stable distributions. Although it is definitely not a gaussian distribution. It may or may not be Cauchy, but since all Stable distributions besides Gaussian have infinite variance, it appears our data's distribution also has infinite variance.
-=======
+
 Further investigation is needed to confirm this hypothesis, and would require acces to an abundance of intraday data. But, the a deeper question that is not answered in this report is whether or not there a concerete relationship between the volume of data and our $\alpha$ paramater?
->>>>>>> fa482ff28c4d3314f76dd70d6a42d48f58aded82
+
 
 That being said, we feel that there is enough evidence from the relationship between our data and the normal, cauchy, and stable distributions to suggest that our data more than likely has infinite variance.
 
@@ -756,7 +753,6 @@ To clearly demonstrate this relationship we will run a series of goodness-of-fit
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
-<<<<<<< HEAD
 rand <- rcauchy(nn, location = diffs.median, scale = diffs.hiq); head(rand)
 {hist(rand, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = diffs.median, scale = diffs.hiq), add = TRUE, lwd = 3, col = "blue")}
@@ -779,9 +775,9 @@ It appears that the results are favorable to the hypothesis that the data matche
 
 Now we'll try sing fitdist parameters:
 ```{r,echo=T, warning = F}
-=======
+
 #Now we will try sing fitdist parameters:
->>>>>>> 4d8ec1650887a8a7f4565592714bfcb9144c5e43
+
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
 hist(rand2, probability = TRUE, breaks = "FD")
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "blue") 
@@ -818,7 +814,6 @@ sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random s
 {hist(ks.samp.rand, breaks = "fd")
 abline(v = 0.05, col = "red")}
 ```
-<<<<<<< HEAD
 
 Doing the same thing as above, but instead of Kolmogorov-Smirnov, doing chi-square test:
 ```{r,echo=T,warning=FALSE}
@@ -852,9 +847,8 @@ for (i in 1:N) {
 plot(ks.stat, pch = ".")
 hist(ks.stat, breaks = "FD", probability = TRUE)
 ```
-=======
 For further robustness tests, as well as for an analysis of sensitivity to sample sizes, refer to the main R script. In summary what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
->>>>>>> 4d8ec1650887a8a7f4565592714bfcb9144c5e43
+
 
 The issue that seems to arise from our goodness-of-fit tests is that the quantity of data we are working with produces large error statistics that result in rejecting the null hypothesis. Therefore, we used QQ Plots to better understand the the fit of our 3 distributions across our 3 different time frames:
 
