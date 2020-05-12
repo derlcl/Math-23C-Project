@@ -652,7 +652,7 @@ mtext("QQ-Plots of Yearly Stock Price Changes", side = 3, line = -1.2, outer = T
 
 ```
 
-Across all three time frames we notice that the longere the time period, the better the normal distrubition fits the data. Inversely, the worst the Cauchy distribution fits the data. However, the QQ Plot shows the power of the stable distribution as it changes with our time frame to keep a relatively consistent fit. And, since the data seems to be 'converging' to a stable distribution with $\alpha \xrightarrow{} 2$, this suffices to demonstrate that our data has infinite variance. Therefore, our stock prices are a random walk with Levy-flight.
+Across all three time frames we notice that the longere the time period, the better the normal distrubition fits the data. Inversely, the worst the Cauchy distribution fits the data. However, the QQ Plot shows the power of the stable distribution as it changes with our time frame to keep a relatively consistent fit. And, since the data seems to be 'converging' to a stable distribution with $\alpha \xrightarrow{} 2$, this suffices to demonstrate that our data has infinite variance. Therefore, our stock prices follow a random walk with Levy-flight.
 
 #Surveying the impact of the White House on the Dow Jones
 Now that we have seen that the data follows a model with infinite variance, which somewhat resembles that of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
@@ -779,4 +779,5 @@ Note: There could exist carryover/lingering effects of recession or otherwise fr
 Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates that no individual regime is equally likely to be associated with recessions from the years 1985 to early 2020. 
 
 #Conclusion
+
 
