@@ -10,20 +10,35 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 #Outline
+
 Exploratory Data Analysis
+
 The Impact of "Rare" Events
+
 Linear and Logistic Regression
+
 Fourier Analysis
+
 Random Walk
+
 Normal Distribution
+
 Fractal Analysis
+
 Cauchy Distribution
+
 Bootstrap
+
 Partial Variance
+
 Divergent Integration
+
 Stable Distribution
+
 KS Test / Chi-Squared Test (Chi-square Test on Varying Time Scales) / Complexities of Goodness of Fit Test
-The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
+
+The Impact of Political Regimes - Hypothesis Testing With Permutation Test
+
 Hypothesis Testing: Contingency table with chi-square test
 
 
