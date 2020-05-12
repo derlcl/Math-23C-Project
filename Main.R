@@ -36,23 +36,23 @@
 
 
 ## Additional points for creativity or complexity (ONLY KEPT THE ONES THAT ARE RELEVANT)
-# ??????1. A data set with lots of columns, allowing comparison of many different variables. (by volume, decade, year, month) (Recession by Party and Regime)
+# 1. [DJI Accumulated Columns over Main.R] A data set with lots of columns, allowing comparison of many different variables. (by volume, decade, year, month) (Recession by Party and Regime)
 #2.[DJI] A data set that is so large that it can be used as a population from which samples are taken. (35 x ~365 rows) (Bootstrap sampling distribution)
 #4.[Overleaf] A one-page document that discusses ethical issues raised by conclusions reached from analysis of the data. (What would infinite variance in economic price indices mean for the long-term future of humanity?)
-#????5. A graphical display that is different from those in the textbook or in the class scripts.
+#5.[ECDF] A graphical display that is different from those in the textbook or in the class scripts.
 #6.[Line #764] Appropriate use of R functions for a probability distribution other than binomial, normal, or chi-square.
 #7.[Line #1415] Appropriate use of integration to calculate a significant result.
 #8.[Line #468] A convincing demonstration of a relationship that might not have been statistically significant but that turns out to be so.
 #9.[Line #792]A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.
-#10. Professional-looking software engineering (e.g defining and using your own functions).
+#10.[Yes] Professional-looking software engineering (e.g defining and using your own functions).
 #11.[Line #738] Nicely labeled graphics using ggplot, with good use of color, line styles, etc., that tell a convincing story.
 #12.[Lines #396-470] An example where permutation tests or other computational techniques clearly work better than classical methods. 
-#13.?????(We consider max and min in several places) Appropriate use of novel statistics (e.g. trimmed mean, maximum or minimum, skewness, ratios). 
+#13.[Hurst exponent, stable dist.] Appropriate use of novel statistics (e.g. trimmed mean, maximum or minimum, skewness, ratios). 
 #14.[Line #329] Use of linear regression. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday)
 #15.[Line #385] Calculation and display of a logistic regression curve.
 #16.[Line #219] Appropriate use of covariance or correlation.
-#18.?????[] Use of theoretical knowledge of sampling distributions.
-#19.????? A graphical display that is different from those in the class scripts.
+#18.[Bootstrapping] Use of theoretical knowledge of sampling distributions.
+#19.[ECDF] A graphical display that is different from those in the class scripts.
 #21.[Line #768] Appropriate use of quantiles to compare distributions. 
 
 
@@ -1360,5 +1360,4 @@ integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[
 exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
 #And it appears that the integral is divergent! This means that 
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
-
 ####{Add'l Points #7}

@@ -5,6 +5,7 @@ date: "5/11/2020"
 output:
   pdf_document: default
   html_document: default
+  slidy_presentation: default
 ---
 <style type="text/css">
 div.slide p {
@@ -27,40 +28,40 @@ div.slide h2 {
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#Outline
+# Outline
 
-Exploratory Data Analysis
+1. Exploratory Data Analysis
 
-The Impact of "Rare" Events
+2. The Impact of "Rare" Events
 
-Linear and Logistic Regression
+3. Linear and Logistic Regression
 
-Fourier Analysis
+4. Fourier Analysis
 
-Random Walk
+5. Random Walk
 
-Normal Distribution
+6. Normal Distribution
 
-Fractal Analysis
+7. Fractal Analysis
 
-Cauchy Distribution
+8. Cauchy Distribution
 
-Bootstrap
+9. Bootstrap
 
-Partial Variance
+10. Partial Variance
 
-Divergent Integration
+11. Divergent Integration
 
-Stable Distribution
+12. Stable Distribution
 
-KS Test / Chi-Squared Test (Chi-square Test on Varying Time Scales) / Complexities of Goodness of Fit Test
+13. KS Test / Chi-Squared Test (Chi-square Test on Varying Time Scales) / Complexities of Goodness of Fit Test
 
-The Impact of Political Regimes - Hypothesis Testing With Permutation Test
+14. The Impact of Political Regimes - Hypothesis Testing With Permutation Test
 
-Hypothesis Testing: Contingency table with chi-square test
+15. Hypothesis Testing: Contingency table with chi-square test
 
 
-#Exploratory Data Analysis
+# Exploratory Data Analysis
 The first differences of DJI Open price values present an interesting challenge. The histogram resembles a symmetric distribution with a sharp peak around the mean, heavy tails, and a left skew. The normal distribution does not seem to be a good fit at first glance, but a heavy-tailed distribution could help us model our data
 ```{r}
 #Import libraries
@@ -88,7 +89,7 @@ plot(DJI$Open, type = "l", xlab = "Time",
 diffs <- diff(DJI$Open)
 ```
 
-#The Impact of "Rare" Events
+# The Impact of "Rare" Events
 Let's begin by taking a look at presumably rare events, and how they're represented in our data. Let's consider each of the days where was a statistically significant price change assuming these price changes followed a normal distribution.
 ```{r,echo=T}
 mu <- mean(diffs); mu
@@ -122,7 +123,7 @@ If we interpret the p-value as the probability of an event taking place, and our
 
 This raises two questions, does the stock market have properties of random walk? And, if so, what is the underlying distribution of the step size of the random walk?
 
-#Fourier Analysis
+# Fourier Analysis
 Before analyzing our data for properties of a random walk and infinite variance, we first need to run a Fourier Analysis to ensure there is no cyclic patterns in our data:
 
 ```{r,echo=T}
@@ -149,7 +150,7 @@ RunFourier(10, diffs, TRUE)
 
 ```
 
-#Random Walk with Infinite Variance Demonstration (Introduction)
+# Random Walk with Infinite Variance Demonstration (Introduction)
 As we will show, a simple plot of our data resembles a random walk. But if it is a random walk, what kind of random walk is it? This is a good moment to introduce Benoit Mandelbrot's research from 1963. While analyzing stock prices, he associated two to three different probablility laws that describe the length of the step of a random walk: Gaussian, Levy Flight and the less popular Cauchy Flight. These probability laws are associated with the underlying distribution of the price changes over time. For instance, if a set of stock prices are a Gaussian random walk, their price change over time (first difference) follows a normal distribution, Levy flight follows a (Levy-Pareto) stable distribution, and Cauchy Flight follows a Cauchy distribution. Using our stock price data, we demonstrate the relationship between random walks, and the distribution of their first difference:
 ```{r,echo=T}
 ## We begin our test by assuming our data is a Gaussian random walk model created using a (0,1,0) Arima Time Series with a Drift.
@@ -187,7 +188,7 @@ for (i in 1:100) {
 
 ```
 
-#Normal Distribution
+# Normal Distribution
 Under a gaussian random walk assumption with finite mean and variance, our model takes on a significant range of values across the 100 simulations. We even experience some fairly significant volatility in certain outlier simulations that could potentially represent a sharp drop in stock prices, perhaps, from a recession. Therefore, it is tempting to stop here and assume our data is a Gaussian random walk. However, our model is based on finite variance and mean calculated from a sample rather than the population. Therefore, to fully understand what probability laws our data is following, we need to exmaine the first difference histograms of our data and our model. Then, we will compare the distributions.
 ```{r,echo=T}
 #Plot the distribution of our model and overlay a normal density curve:
@@ -206,7 +207,7 @@ curve(dnorm(x, mean(diff(log(DJI$Open))), sd(diff(log(DJI$Open)))), add = TRUE, 
 
 Off of inspection alone, we can see that the normal distribution is an excellent fit for the first difference of our gaussian random walk model. However, the normal curve fails to capture the high peak and heavy tails of our first difference data. To add a layer of robustness, we attempted to model the first diffrence of the logarithm of our data. As you can see, it also fails to capture both the high peak and heavy tails of the distribution. Later, we will run three different goodness of fit tests when we explore some of the complexities of modeling our data with various distributions. For now, however, we can continue our investigation of stock prices as random walks by introducing fractal analysis and a new way of thinking about randomness.
 
-#Fractal Analysis
+# Fractal Analysis
 The brilliance of Mandelbrot was not merely his grasp of the technical mathematics of various probability laws and their application. He also popularized a new, more generalized, way to think about randomness. Rather than randomness being a binary, the idea is simply that there are 'degrees' of randomness. This was explored in detail through his work with fractal geometry, especially as it pertains to the famous Mandelbrot Sets. Through fractal geometry, we can think of randomness as a measure of self-similarity or lack thereof. More specifically, for our data we will utilize fractal analysis to calculate the hurst exponent as well as the fractal dimesion since $H = 2 - D$ where $H$ is the hurst exponent and $D$ is the fractal dimension. (Note: hurst exponents are calcuated on stationary time series such as our first differences whereas fractal dimension is computed on our original stock price data. This will become clearer below.) If the hurst exponent is near or equal to $.5$, then we are experiencing 'wild randomness' in our data. If the hurst exponent is significantly above or below $.5$, then the data is experiencing a lesser degree of randomness. We demonstrate this here:
 
 ```{r,echo=T}
@@ -305,7 +306,7 @@ hurstexp(diff(rw.drift))
 
 As we might expect, our random walk model is also experiencing wild randomness. Therefore, we can conclude with near certainty that our stock price data is a form of a random walk but not a Gaussian Random Walk. Furthermore, we cannot conclude any details about the distribution of the first difference from the hurst exponent other than it is not normally distributed. Although this means more investigation, it is a beautiful problem to have because it signals that there is even more depth and richness to the concept of randomness. We have to deal with the step sizes of our random walk, which means we must return to our first difference distribution and attempt to incorporate the high peaks and heavy tails into our model. This will serve as the core test of whether or not our data has infinite variance but it requires that we investigate two new distributions. The first of which, is the Cauchy Distribution.
 
-#Cauchy Distribution
+# Cauchy Distribution
 The Cauchy Distribution is best known for its undefined moment generating functions. As a result, the distribution has infinite variance which results in a high peak and long heavy tails.
 
 Surprisingly, the distribution is only characterized by two parameters: location and scale which we esimated using the median and an innerquartile method used the $\textit{Goodness-of-Fit Testing for the Cauchy Distribution with Application to Financial Modeling}$ by M. Mahdizadeh, and Ehsan Zamanzade. Given the shape of the our data's histogram, and the underlying theoretical basis, we can investigate whether our data or the log of our data is well modeled by a Cauchy distribution:
@@ -338,7 +339,7 @@ curve(dcauchy(x, location = diffs.median, scale =  diffs.hiq), add = TRUE, lwd =
 ```
 As we can see from the curves, the Cauchy distribution does a good job of fitting our original data visually, and an excellent job of modeling the first difference of the logarithm of our stock prices. This is not definitive proof that our data comes from a cauchy distribution. However, this is a good time to demonstrate that if our data is modeled by a Cauchy distribution with the location and scale parameters above, then it does indeed have infinite variance. To do that, we'll need to define functions that will describe the integrands that will allow us to use the tail-integral theorem. First, we'll define the integrand that will give us $E(X)$, as well as well as $E(X^2) - E(X)^2$:
 
-#Divergent Integrals, Divergent Variance - Cauchy Distribution
+# Divergent Integrals, Divergent Variance - Cauchy Distribution
 All we are doing here is using a given distribution to calculate $E(X)$ and $E(X^2)$ in this manner:
 $$E(X) = \int_{-\infty}^{\infty} x \cdot \mu_X $$
 $$E(X^2) = \int_{-\infty}^{\infty} x^2 \cdot \mu_X $$
@@ -360,7 +361,7 @@ exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value
 
 The result is as we expected, the integrals diverge. However, before we run a goodness-of-fit test, we need to demonstrate a few phenomenons we discovered while attempting to model our data with a cauchy distribution. The first of which occurs is a phenomenon that we found while modeling the partial variance of our data.
 
-#Partial Variance
+# Partial Variance
 ```{r}
 # Partial Variance to test for convergence of variance
 Open <- DJI$Open; diffs.Open <- diff(Open)
@@ -395,7 +396,7 @@ If our first differences data are observations from independent and identically 
 The overall result is that our first differences data may lie somewhere between Gaussian and Cauchy on the parameter scale for stable distributions. However, the data is a sample from an underlying population, so the limited accessibilility to a sample size of only 8857 limits the capture of extreme values from possibly heavy right tails. This phenomenon will be even more pronounced when we analyze monthly and yearly price change averages. But first, we need to introduce a distribution that can capture both normal and cauchy features depending on it's paramters. For that, we turn to the (Pareto-Levy) Stable distribution.
 
 
-#(Pareto-Levy) Stable Distribution
+# (Pareto-Levy) Stable Distribution
 The (Pareto-Levy) Stable Distribution or simply, the stable distribution is considered a generalization of both cauchy and normal distributions. It is paramaterized by four paramaters $s(\alpha, \beta, \gamma, \delta)$. When $\alpha = 1$ the distribution is normal and when $\alpha = 2$ and $\beta = 0$ the distribution is Cuachy. A small proof of this is demonstrated as such.
 
 Consider the characteristic function of the stable distribution:
@@ -411,7 +412,7 @@ $s(2, \beta, 0, 1) = \text{exp}(-t^{2})$ which the characteristic function of th
 Cauchy Distribution ($\alpha = 1$ and $\beta = 0$):
 With $\beta = 0$, we are left with: $s(1, 0, 0, 1) = \text{exp}(-t^{\alpha})$. However, since $\alpha = 1$, we get $s(1, 0, 0, 1) = \text{exp}(-t)$ which is the characteristic function of a standard cauchy distribution which can be further generalized to the characteristic function of the Cauchy distribution. $\blacksquare$
 
-#Implementing the Stable Distribution
+# Implementing the Stable Distribution
 Although powerful, the stable distribution is tedious to paramaterize from a data set. There are many methods to investigate on how to efficiently and accurately esimate parameters but we will be relying on a fairly consistent inner quartile method popularized by J. Huston McCulloch, PHD (Ohio State University). Our implmentation using our first differences and our log first differences is as follows:
 
 ```{r}
@@ -598,7 +599,7 @@ Thinking about each a graph as a fractal, we see that curve is losing it's "roug
 
 Does this mean that yearly stock prices follow a normal distribution? Not necessarily. In fact, we hyptohesize the opposite. For instance, we have 8857 data points (or days) in our Daily Stock Price Data compared to 35 data points (or years) in our yearly averages. We believe that if were to check stock market prices of our yearly averages in 8000 years, they would be better fit by a stable distribution with $\alpha \xrightarrow{} 2$ or "more cauchy".
 
-#Goodness-of-Fit Tests - Kolmogorov-Smirnov
+# Goodness-of-Fit Tests - Kolmogorov-Smirnov
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
 ```{r,echo=T, warning=FALSE}
 nn <- 500 #sample size. 
@@ -617,14 +618,13 @@ abline(v = 0.05, col = "red")}
 ```
 About 92% of p-values are greater than 0.05, thus we have some convincing evidence in favor of the null hypothesis that the samples come from similar distributions. (refer to main R script for similar analysis using interquartile range and median as estimated Cauchy parameters)
 
-
 Further investigation is needed to confirm this hypothesis, and would require access to an abundance of intra-day data. But, the a deeper question that is not answered in this report is whether  there exists a concerete relationship between the volume of data and our $\alpha$ paramater.
 
 That being said, we feel that there is enough evidence from the relationship between our data and the normal, cauchy, and stable distributions to suggest that our data more than likely has infinite variance.
 
 To clearly demonstrate this relationship we will run a series of goodness-of-fit tests and explain some of the complexities and challenges we faced when attempting to confirm the fit of our model.
 
-#As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
+# As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
 Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then running a ks-test:
 ```{r,echo=T, warning = FALSE}
 N <- 10^3
@@ -643,7 +643,7 @@ abline(v = 0.05, col = "red")}
 ```
 For further robustness tests, as well as for an analysis of sensitivity to sample sizes, refer to the main R script. In summary what we can see is that the K-S test statistic is sensitive to the size of the random sample being drawn from the random Cauchy distribution. We conclude that this is a result of the fact that the diffs samples are drawn from a sample that has finite data (DJI), whereas the rcauchy samples are drawn from the true distribution, which has infinite variance and infinitely many data points. We note however, that samples with as many as 500 elements have provided good evidence that we should not reject the null hypothesis.
 
-#Goodness-of-Fit Tests - QQ Plots
+# Goodness-of-Fit Tests - QQ Plots
 
 The issue that seems to arise from our goodness-of-fit tests is that the quantity of data we are working with produces large error statistics that result in rejecting the null hypothesis. Therefore, we used QQ Plots to better understand the the fit of our 3 distributions across our 3 different time frames:
 ```{r,echo=T, warning=F}
@@ -672,8 +672,8 @@ mtext("QQ-Plots of Yearly Stock Price Changes", side = 3, line = -1.2, outer = T
 
 Across all three time frames we notice that the longere the time period, the better the normal distrubition fits the data. Inversely, the worst the Cauchy distribution fits the data. However, the QQ Plot shows the power of the stable distribution as it changes with our time frame to keep a relatively consistent fit. And, since the data seems to be 'converging' to a stable distribution with $\alpha \xrightarrow{} 2$, this suffices to demonstrate that our data has infinite variance. Therefore, our stock prices follow a random walk with Levy-flight.
 
-#Surveying the impact of the White House on the Dow Jones
-Now that we have seen that the data follows a model with infinite variance, which somewhat resembles that of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
+# Surveying the impact of the White House on the Dow Jones
+Now that we have seen that the data follows a random walk model with infinite variance, there still remains questions about autoregression in the stock market as it relates to fiscal and monetary policy. Let us consider the impact of such policies by exmaining the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones Industrial Average.
 
 ```{r,echo=T}
 regime <- lm(diff(DJI$Open)~DJI$Republican[1:length(diff(DJI$Open))] + DJI$Recession[1:length(diff(DJI$Open))])
@@ -713,7 +713,7 @@ summary(ind.pres.2)
 ```
 These results seem to indicate that, excluding days with "extremely" events, and controlling for recessions (and nothing else), when we compare the performance of the DJIA during the previous 6 US presidents, the results indeed appear to be most favorable to Donald Trump, and least favorable to George W Bush. It appears that the negative coefficient related to GWB comes from the effects of the 2008 housing crisis, which took place in the final months of his second term. Additionally, we should note that the only statistically significant coefficient was that of Donald Trump, which had a p-value well below 0.01.
 
-#Logistic Regression: Recessions and Results
+# Logistic Regression: Recessions and Results
 Given the earlier results, it seems that recessions have a large impact on first differences in daily Open values for the Dow Jones Industrial Average.Let us inspect how economic recessions correlate with the performance of the DJIA. 
 ```{r,echo=T}
 plot(DJI$diffs,DJI$Recession, xlim = c(-5000,5000))
@@ -731,7 +731,7 @@ curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + res
 This is a fairly interesting result because its graph looks different than the normal logistic curve. Of course, this becomes obvious when one considers the nature of the regression, namely that recessions are events that are expected to correlate with negative values of first differences (i.e. price drops).In any case, this provides some evidence to support the hypothesis that negative fluxes in the Dow Jones correlate with economic recessions.
 
 
-#The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
+# The Impact of Political Regimes - Hypothesis Testing With Permutation Test 
 ```{r, echo=TRUE}
 RepAvg <- sum(DJI$diffs*(DJI$Republican == TRUE))/sum(DJI$Republican == TRUE) ; RepAvg
 DemAvg <- sum(DJI$diffs*(DJI$Republican == FALSE))/sum(DJI$Republican == FALSE) ; DemAvg
@@ -750,7 +750,7 @@ hist(result.Combined, breaks = "FD", probability = TRUE, col = "steelblue")
 abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue
 ```
-Giving a p-value of 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed better during democratic regimes, a result that is statistically significant.
+Given a p-value of 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the DJI performed better during democratic regimes, a result that is statistically significant.
 
 # Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ```{r,echo=TRUE}
@@ -796,6 +796,6 @@ Null hypothesis is that each regime has the observed probability p of recession 
 Note: There could exist carryover/lingering effects of recession or otherwise from one regime to the next.
 Each p-value is less than 2.2e-16, far below the .05 threshold. This indicates that no individual regime is equally likely to be associated with recessions from the years 1985 to early 2020. 
 
-#Conclusion
+As you can see, fiscal and monetary policies seem to have an effect on the stock market. However, they are still subject to the volatility of the system and carry-over effects. To finish off, this raises questions about the indepdence of our random variables which is a topic for further research.
 
 
