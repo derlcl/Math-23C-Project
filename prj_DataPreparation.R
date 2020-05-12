@@ -1,6 +1,6 @@
 ## Prepare data for political analysis
 DJI <- read.csv("DJI.csv")
-
+diffs <- diff(DJI$Open)
 #Create 'Regime' Categories (Regan, Bush, etc.)
 DJI["Regime"] <- "None" #Set blank column
 #Set the dates for each regime. Each 'term' is denoted from inaugaration day to the day 
@@ -30,3 +30,5 @@ DJI[DJI.year >= 1990 & DJI.year  <= 1991, "Recession"] <- TRUE
 DJI[DJI.year == 2001, "Recession"] <- TRUE
 DJI[DJI.year >= 2007 & DJI.year <= 2009, "Recession"] <- TRUE
 DJI[DJI.year >= 2020, "Recession"] <- TRUE
+
+DJI <- data.frame(DJI,"diffs" = c(0,diffs))
