@@ -567,7 +567,7 @@ Does this mean that yearly stock prices follow a normal distribution? Not necess
 
 #Goodness-of-Fit Tests - Kolmogorov-Smirnov
 Another way to consider whether our data is well modeled by a given distribution is via the Kolmogorov-Smirnov test, which measures the maximum vertical difference between the CDF's of 2 functions. Let us then explore what this tells us about the DJI data. First, we'll consider our results from using the estimated interquartile parameters:
-```{r,echo=T, warning=FALSE}
+```{r,echo=T, warning=FALSE, error = TRUE}
 nn <- 500 #sample size. 
 
 N <- 10^3
@@ -575,7 +575,7 @@ ks.stats2 <- numeric(N)
 for (i in 1:N) {
   rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
   diff.samp2 <- sample(diffs,nn, replace = TRUE)
-  ks.stats2[i] <- ks.test(diff.samp2,rand2)$p.value
+  ks.stats2[i] <- ks.test(unique(diff.samp2),unique(rand2))$p.value
 }
 mean(ks.stats2) #mean pvalues =  0.4248467
 sum(ks.stats2 > 0.05)/length(ks.stats2)#About 92% of the time our random samples generate a p-value greater than 0.05
@@ -593,7 +593,7 @@ To clearly demonstrate this relationship we will run a series of goodness-of-fit
 
 #As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
 Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then running a ks-test:
-```{r,echo=T, warning = FALSE}
+```{r,echo=T, warning = FALSE, error = TRUE}
 N <- 10^3
 samp.rand <- numeric(N)
 nn <- 500
@@ -602,7 +602,7 @@ for(i in 1:N){
   diff.samp <- sample(diffs, nn, replace = TRUE)
   fit.samp <- fitdist(diff.samp, "cauchy", "mle")
   cauchy.samp <- rcauchy(nn, location = fit.samp$estimate[1], scale = fit.samp$estimate[2])
-  ks.samp.rand[i] <- ks.test(diff.samp, cauchy.samp)$p.value
+  ks.samp.rand[i] <- ks.test(unique(diff.samp), unique(cauchy.samp))$p.value
 }
 sum(ks.samp.rand > 0.05)/length(ks.samp.rand)#About 99% of the time our random samples generate a p-value greater than 0.05
 {hist(ks.samp.rand, breaks = "fd", main = "Histogram of K-S P-values", xlab = "K-S p-values")
@@ -643,7 +643,7 @@ Across all three time frames we notice that the longere the time period, the bet
 Now that we have seen that the data follows a model with infinite variance, which somewhat resembles that of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
 
 ```{r,echo=T}
-regime <- lm(diff(DJI$Open)~DJI$Republican[1:length(diff(DJI$Open))] + DJI$Recession[1:length(diff(DJI$Open))])
+regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
 summary(regime)
 ```
 At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.But let us look a little closer. Given the large standard error for the Republican coefficient, we cannot safely conclude that republican administrations correlate with losses in the Dow. (i.e. the p-value is .3, so we fail to reject the null hypothesis that this control variable has no impact on the response variable.)
