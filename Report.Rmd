@@ -1,5 +1,5 @@
 ---
-title: "Report"
+title: "50 Shades of Stable"
 author: "Derl Clausen, Bruno Komel, Rakeen Tanvir"
 date: "5/11/2020"
 output: pdf_document
