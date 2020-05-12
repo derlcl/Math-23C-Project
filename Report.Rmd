@@ -2,7 +2,25 @@
 title: "50 Shades of Stable"
 author: "Derl Clausen, Bruno Komel, Rakeen Tanvir"
 date: "5/11/2020"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document: default
+---
+<style type="text/css">
+div.slide p {
+  color: DarkBlue;
+  font-size:smaller;
+}
+div.slide h1 {
+  color: DarkRed;
+  font-size: 100%;
+}
+div.slide h2 {
+  color: DarkGreen;
+  font-size: smaller
+}
+</style>
+
 ---
 
 ```{r setup, include=FALSE, echo = FALSE}
