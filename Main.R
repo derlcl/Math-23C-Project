@@ -914,7 +914,6 @@ curve(dstable(x, (stable.a),(stable.b),stable.c, stable.location), add = TRUE, c
 
 #Breaks:
 stable.breaks <- c(-Inf, qstable((1:9) * .1, stable.a,stable.b,stable.c,stable.location), Inf)
-chisq.test(stable.obs, table(cut(rstable(1:length(diffs), (stable.a),(stable.b - .5),stable.c, stable.location), stable.breaks)))
 
 #Both Values
 stable.obs <- table(cut(diffs, stable.breaks)); stable.obs
@@ -1092,40 +1091,39 @@ par(mfrow = c(1,1)) # reset plot partitions
 
 bins <- 6
 
-## Logarithm of Absolute First Differences of Open Values
-logDiffs <- log(abs(diffs[diffs != 0]))
-# Fit normal, stable, and Cauchy distributions to data and run chi-square goodness of fit test.
+## First Differences of Logarithm of Open values with Chi-square tests
+logDiffs <- diff(log(DJI$Open))
 
-#Normal
-hist(logDiffs, breaks = "FD", freq = FALSE)
+## Normal
+hist(logDiffs, breaks = "FD", freq = FALSE, prob = TRUE)
 curve(dnorm(x, mean(logDiffs), sd(logDiffs)), col = "red", lwd = 2, add = TRUE)
 # Chi-square test
 norm.breaks <- qnorm((0:bins) * 1/bins, mean(logDiffs), sd(logDiffs))
 norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
 norm.exp <- rep(length(logDiffs) / bins, length(norm.obs)); norm.exp
-norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs
+norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 779.7705
 pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 
-#Stable
+## Stable
 stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
 #Calculate V's
 stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
 stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
 #Using Table we calculate alpha and beta
-stable.a <- 2
-stable.b <- -1
+stable.a <- 1.484
+stable.b <- 0
 #Calculate Phi_3 
-stable.phi_3 <- 1.908
+stable.phi_3 <- 1.939
 #Use phi_3 to calculate scale and then location is found from the table 
 stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
 stable.location <- median(logDiffs)
 curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
 # Chi-square test
-stable.breaks <- c(-Inf, qstable((1:(bins - 1)) * 1/bins, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
+stable.breaks <- c(-Inf, qstable((1:(bins-1)) * 1/bins, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
 stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
 stable.exp <- rep(length(logDiffs) / bins, length(stable.obs)); stable.exp
-stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 9.198371
-pchisq(stable.cs, df = bins - 3, lower.tail = F) # 0.002422305, reject null
+stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 443.075
+pchisq(stable.cs, df = bins - 3, lower.tail = F) # 0, Reject null
 
 #Cauchy
 cauchy.median <- median(logDiffs)
@@ -1135,16 +1133,16 @@ curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
 cauchy.breaks <- qcauchy((0:bins) * 1/bins, cauchy.median, cauchy.hiq)
 cauchy.obs <- table(cut(logDiffs, breaks = cauchy.breaks)); cauchy.obs
 cauchy.exp <- rep(length(logDiffs) / bins, length(cauchy.obs))
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 9.198371
-pchisq(cauchy.cs, df = bins - 3, lower.tail = F) # 0.002422305, reject null
+cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 0.6046065
+pchisq(cauchy.cs, df = bins - 3, lower.tail = F) # Reject null
 
-#QQ Plot
+#QQ Plot on daily first differences on logarithm of Open values
 par(mfrow = c(1,3))
 qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
-hurstexp(logDiffs) # Around 0.9, except for theoretical around 0.53
-## Result: Normal, stable, and Cauchy distributions fail to pass the chi-square 
-## goodness of fit test for the logarithm of absolute first differences of non-zero 
-## open values, though Cauchy seems to perform best and to look the best on the qqPlot. 
+# Cauchy looks like best fit. Most data is within the confidence interval. 
+hurstexp(logDiffs) # Around 0.5
+## Result: Normal and stable distributions fail to pass while Cauchy passes the chi-square
+## goodness of fit test for the first differences of of the logarithm of Open values. 
 
 
 ## First Differences of Monthly Average of Open Values
@@ -1275,61 +1273,6 @@ par(mfrow = c(1,2))
 qqPlot(logDiffs, "norm"); qqPlot(rnorm(length(logDiffs), mean(logDiffs), sd(logDiffs)), "norm")
 # Poor fit on daily
 ## Result: Data looks increasingly Gaussian as we average over longer time horizons. 
-
-
-## First Differences of Logarithm of Open values with Chi-square tests
-logDiffs <- diff(log(DJI$Open))
-
-## Normal
-hist(logDiffs, breaks = "FD", freq = FALSE, prob = TRUE)
-curve(dnorm(x, mean(logDiffs), sd(logDiffs)), col = "red", lwd = 2, add = TRUE)
-# Chi-square test
-norm.breaks <- qnorm((0:bins) * 1/bins, mean(logDiffs), sd(logDiffs))
-norm.obs <- table(cut(logDiffs, breaks = norm.breaks)); norm.obs
-norm.exp <- rep(length(logDiffs) / bins, length(norm.obs)); norm.exp
-norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 779.7705
-pchisq(norm.cs, df = bins - 3, lower.tail = F) # 0, Reject null
-
-## Stable
-stable.Xs <- quantile(logDiffs, c(.05, .25, .5, .75, .95))
-#Calculate V's
-stable.V_a <- (stable.Xs[[5]] - stable.Xs[[1]]) / (stable.Xs[[4]] - stable.Xs[[2]]); stable.V_a
-stable.V_b <- (stable.Xs[[5]] + stable.Xs[[1]] - (2*stable.Xs[[3]])) / (stable.Xs[[5]] - stable.Xs[[1]]); stable.V_b
-#Using Table we calculate alpha and beta
-stable.a <- 1.484
-stable.b <- 0
-#Calculate Phi_3 
-stable.phi_3 <- 1.939
-#Use phi_3 to calculate scale and then location is found from the table 
-stable.c <- (stable.Xs[[4]] - stable.Xs[[2]]) / stable.phi_3; stable.c
-stable.location <- median(logDiffs)
-curve(dstable(x, stable.a, stable.b, stable.c, stable.location), add = TRUE, lwd = 2, col = "blue")
-# Chi-square test
-stable.breaks <- c(-Inf, qstable((1:(bins-1)) * 1/bins, alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location), Inf)
-stable.obs <- table(cut(logDiffs, breaks = stable.breaks)); stable.obs
-stable.exp <- rep(length(logDiffs) / bins, length(stable.obs)); stable.exp
-stable.cs <- ChiSq(stable.obs, stable.exp); stable.cs # 443.075
-pchisq(stable.cs, df = bins - 3, lower.tail = F) # 0, Reject null
-
-#Cauchy
-cauchy.median <- median(logDiffs)
-cauchy.hiq <- (quantile(logDiffs)[[4]] - quantile(logDiffs)[[2]]) / 2
-curve(dcauchy(x, cauchy.median, cauchy.hiq), add = TRUE, col = "green", lwd = 3)
-# Chi-square test
-cauchy.breaks <- qcauchy((0:bins) * 1/bins, cauchy.median, cauchy.hiq)
-cauchy.obs <- table(cut(logDiffs, breaks = cauchy.breaks)); cauchy.obs
-cauchy.exp <- rep(length(logDiffs) / bins, length(cauchy.obs))
-cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs # 0.6046065
-pchisq(cauchy.cs, df = bins - 3, lower.tail = F) # Reject null
-
-#QQ Plot on daily first differences on logarithm of Open values
-par(mfrow = c(1,3))
-qqPlot(logDiffs, "norm"); qqPlot(logDiffs, "cauchy"); qqPlot(logDiffs, "stable", alpha = stable.a, beta = stable.b, gamma = stable.c, delta = stable.location)
-# Cauchy looks like best fit. Most data is within the confidence interval. 
-hurstexp(logDiffs) # Around 0.5
-## Result: Normal and stable distributions fail to pass while Cauchy passes the chi-square
-## goodness of fit test for the first differences of of the logarithm of Open values. 
-
 
 
 ## Divergent Integration For Calculating Variance

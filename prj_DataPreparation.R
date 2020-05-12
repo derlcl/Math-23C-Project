@@ -1,4 +1,5 @@
 ## Prepare data for political analysis
+DJI <- read.csv("DJI.csv")
 
 #Create 'Regime' Categories (Regan, Bush, etc.)
 DJI["Regime"] <- "None" #Set blank column

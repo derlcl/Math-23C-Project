@@ -5,7 +5,7 @@ ChiSq <- function(Obs,Exp){
   sum((Obs - Exp)^2/Exp)
 }
 
-RunFourier <- function(ncoeff, data){
+RunFourier <- function(ncoeff, data, change){
   myCos <- function(m) cos((1:length(data))*m*2*pi/length(data))
   mySin <- function(m) sin((1:length(data))*m*2*pi/length(data))
   
@@ -31,8 +31,16 @@ RunFourier <- function(ncoeff, data){
     recon <- recon + FourierA[m]*myCos(m)+FourierB[m]*mySin(m)
   }
   
-  plot(data,type = "l")
-  points(1:length(data),recon, type = "l", col = "red",lwd = 2) 
+  if (change == FALSE){
+    plot(data,type = "l",xlab = "Trading Day", ylab = "Stock",
+         main = "Stock Price over Trading Days")
+    points(1:length(data),recon, type = "l", col = "red",
+           lwd = 2) 
+  }
+  else{
+    plot(data,type = "l",xlab = "Trading Day", ylab = "Stock Price Change",
+         main = "Stock Price Change over Trading Days")
+    points(1:length(data),recon, type = "l", col = "red",
+           lwd = 2) 
+  }
 }
-
-

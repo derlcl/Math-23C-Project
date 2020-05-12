@@ -7,7 +7,6 @@ output: pdf_document
 
 ```{r setup, include=FALSE, echo = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-source("Main.R") # RUN ME FIRST
 ```
 
 #Outline
@@ -43,9 +42,9 @@ library('fBasics')
 library('stabledist')
 library('car')
 
-#Import Cleaned Data
-source("prj_DataPreparation.R")
-source("prj_Functions.R")
+source('prj_DataPreparation.R')
+source('prj_Functions.R')
+
 
 #This is a graphical representation of the Dow Jones Index from 1985 to 2020
 plot(DJI$Open, type = "l", xlab = "Time", 
@@ -54,15 +53,10 @@ plot(DJI$Open, type = "l", xlab = "Time",
 
 #Get the first difference of the time series data
 diffs <- diff(DJI$Open)
-hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
-abline(v = mean(diffs), col = "turquoise")
-qqnorm(diffs)
-qqline(diffs, col = "red")
 ```
 
 #The Impact of "Rare" Events
-Let's shift now to taking a look at presumably rare events, and how they are impacting our results:
-Let's consider each of the days in our data and examine how far from the mean flux in value each of them was. 
+Let's begin by taking a look at presumably rare events, and how they're represented in our data. Let's consider each of the days where was a statistically significant price change assuming these price changes followed a normal distribution.
 ```{r,echo=T}
 mu <- mean(diffs); mu
 sigma <- sd(diffs); sigma
@@ -79,7 +73,7 @@ DJI <- data.frame(DJI,SDs.data)
 idx <- which(abs(SDs.data) > 5); head(idx)
 unusual <- DJI[idx,]; head(unusual) 
 ```
-As we can see, there are 32 days in which the price flux for the Dow Jones was larger than 5 standard deviations away from the mean. To show just how bad of a fit the normal distribution is for our data consider the p-values for each of these events. 
+As we can see, there are 32 days in which the price flux for the Dow Jones was larger than 5 standard deviations away from the mean. To show just how bad of a fit the assume of normal distribution is for our data consider the p-values for each of these events. 
 ```{r,echo=T}
 N <- nrow(unusual)
 pvals <- numeric(N)
@@ -92,6 +86,8 @@ rare <- max(pvals);rare #2.303366e-07, which is pretty much 0.
 (1/rare)/365
 ```
 If we interpret the p-value as the probability of an event taking place, and our events are measured in days, then a given p-value tells us the probability of seeing that extreme of an event on any given days (i.e. a p-value of 0.05 would correspond to an event that we'd "expect" to see once every 20 days, since it has a 1/20 chance of arising).In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare of these rare events once in 11,894.45 years, but from the data it is clear that these events are far more common than that.
+
+This raises two questions, does the stock market have properties of random walk? And, if so, what is the underlying distribution of the step size of the random walk?
 
 #Fourier Analysis
 Before analyzing our data for properties of a random walk and infinite variance, we first need to run a Fourier Analysis to ensure there is no cyclic patterns in our data:
@@ -315,14 +311,14 @@ $$E(X) = \int_{-\infty}^{\infty} x \cdot \mu_X $$
 $$E(X^2) = \int_{-\infty}^{\infty} x^2 \cdot \mu_X $$
 Which gives us 
 $$Var(X) = E(X^2) - E(X)^2$$
-```{r}
+```{r error= TRUE}
 ## Divergent Integration For Calculating Variance
-integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
+integrand <- function(x) dcauchy(x, location = diffs.median, scale = diffs.hiq)*x
 #and now we have E(X):
 exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
 
 #In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
-integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
+integrand2 <- function(x) dcauchy(x, location = diffs.median, scale = diffs.hiq)*x^2
 #And E(X^2)
 exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value 
 #And it appears that the integral is divergent! This means that 
@@ -334,10 +330,10 @@ The result is as we expected, the integrals diverge. However, before we run a go
 #Partial Variance
 ```{r}
 # Partial Variance to test for convergence of variance
+Open <- DJI$Open; diffs.Open <- diff(Open)
 N <- length(Open) - 1; 
 variances.normal <- variances.cauchy <- variances.Open <- variances.diffs <- numeric(N)
 sample.normal <- rnorm(N + 1) ; sample.cauchy <- rcauchy(N + 1)
-Open <- DJI$Open ; diffs.Open <- DJI$diffs
 index <- 1:N
 for (i in 2:(N + 1)) {
   variances.normal[i - 1] <- var(sample.normal[1:i])
@@ -596,7 +592,7 @@ That being said, we feel that there is enough evidence from the relationship bet
 To clearly demonstrate this relationship we will run a series of goodness-of-fit tests and explain some of the complexities and challenges we faced when attempting to confirm the fit of our model.
 
 #As a robustness test, let's compare samples taken from the data to samples taken from a Cauchy distribution
-Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then taking chi-squares:
+Taking N samples from diffs and using fitdist to fit each of those. Then comparing each of those samples to a Cauchy distribution with those same parameters, and then running a ks-test:
 ```{r,echo=T, warning = FALSE}
 N <- 10^3
 samp.rand <- numeric(N)
@@ -647,7 +643,7 @@ Across all three time frames we notice that the longere the time period, the bet
 Now that we have seen that the data follows a model with infinite variance, which somewhat resembles that of a random walk, let us consider the hypothesis that political regimes have an impact on the market, here clearly represented by the Dow Jones industrial Average. We can do this by considering the impact of political party on the performance of the market. 
 
 ```{r,echo=T}
-regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
+regime <- lm(diff(DJI$Open)~DJI$Republican[1:length(diff(DJI$Open))] + DJI$Recession[1:length(diff(DJI$Open))])
 summary(regime)
 ```
 At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.But let us look a little closer. Given the large standard error for the Republican coefficient, we cannot safely conclude that republican administrations correlate with losses in the Dow. (i.e. the p-value is .3, so we fail to reject the null hypothesis that this control variable has no impact on the response variable.)
