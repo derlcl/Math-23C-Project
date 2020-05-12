@@ -41,7 +41,7 @@
 #4.[Overleaf] A one-page document that discusses ethical issues raised by conclusions reached from analysis of the data. (What would infinite variance in economic price indices mean for the long-term future of humanity?)
 #????5. A graphical display that is different from those in the textbook or in the class scripts.
 #6.[Line #764] Appropriate use of R functions for a probability distribution other than binomial, normal, or chi-square.
-#7.[Line #1414] Appropriate use of integration to calculate a significant result.
+#7.[Line #1415] Appropriate use of integration to calculate a significant result.
 #8.[Line #468] A convincing demonstration of a relationship that might not have been statistically significant but that turns out to be so.
 #9.[Line #792]A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.
 #10. Professional-looking software engineering (e.g defining and using your own functions).
@@ -53,7 +53,7 @@
 #16.[Line #219] Appropriate use of covariance or correlation.
 #18.?????[] Use of theoretical knowledge of sampling distributions.
 #19.????? A graphical display that is different from those in the class scripts.
-#21.[Line #770] Appropriate use of quantiles to compare distributions. 
+#21.[Line #768] Appropriate use of quantiles to compare distributions. 
 
 
 #Packages to install:
@@ -1411,10 +1411,11 @@ hurstexp(logDiffs) # Around 0.5
 integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
 #and now we have E(X):
 exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
-
 #In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
 integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
 #And E(X^2)
 exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
 #And it appears that the integral is divergent! This means that 
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
+
+####{Add'l Points #7}
