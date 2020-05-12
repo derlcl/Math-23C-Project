@@ -1,8 +1,60 @@
 #Math 23C Term Project by Rakeen Tanvir, Bruno Kömel, and Derl Clausen
 
-#Comments
+#For the grader's sake, we have indexed our problem by number of #'s in each comment in the following way:
+
+#Comments 
 ##Titles
 ###Results/Conclusions
+####{Rubric Cross Reference}
+
+#Additionally, for your convenience, we pasted the grading rubric here, and cross referenced the sections in our script
+#that we believe meet the respective requirements:
+
+## Required dataset standards (DONE)
+#1. A dataframe. (DJI)
+#2. At least two categorical or logical columns. (DJI)
+#3. At least two numeric columns. (DJI)
+#4. At least 20 rows, preferably more, but real-world data may be limited. (DJI - 8858 rows)
+
+## Required graphical displays (all graphs must be colored and nicely labeled) (TD)
+#1. A barplot. (line #422)
+#2. A histogram. (line #158 is the first)
+#3. A probability density graph overlaid on a histogram. (lines #733 and #734 is one example)
+#4. A contingency table. (line #480 is one example)
+
+## Required analysis (TD)
+#1. A permutation test. (lines #396-470 we run a series of permutations)
+#2. A p-value or other statistic based on a distribution function. (line #268 is one example)
+#3. Analysis of a contingency table. (line #482 is one example)
+#4. Comparison of analysis by classical methods (chi-square, CLT) and simulation methods. (lines #1035-#1045)
+
+## Required submission uploads (DONE)
+#1. A .csv file with the dataset (DJI)
+#2. A long, well-commented script that loads the dataset, explores it, and does all the analysis. (Main.R file)
+#3. A shorter .Rmd with compiled .pdf or .html file that presents highlights in ten minutes. (Report.Rmd file)
+#4. A one-page handout that explains the dataset and summarizes the analysis. (https://www.overleaf.com/project/5e7665484b0d3600011e16d0)
+
+
+## Additional points for creativity or complexity (ONLY KEPT THE ONES THAT ARE RELEVANT)
+# ??????1. A data set with lots of columns, allowing comparison of many different variables. (by volume, decade, year, month) (Recession by Party and Regime)
+#2.[DJI] A data set that is so large that it can be used as a population from which samples are taken. (35 x ~365 rows) (Bootstrap sampling distribution)
+#4.[Overleaf] A one-page document that discusses ethical issues raised by conclusions reached from analysis of the data. (What would infinite variance in economic price indices mean for the long-term future of humanity?)
+#????5. A graphical display that is different from those in the textbook or in the class scripts.
+#6.[Line #764] Appropriate use of R functions for a probability distribution other than binomial, normal, or chi-square.
+#7.[Line #1415] Appropriate use of integration to calculate a significant result.
+#8.[Line #468] A convincing demonstration of a relationship that might not have been statistically significant but that turns out to be so.
+#9.[Line #792]A convincing demonstration of a relationship that might have been statistically significant but that turns out not to be so.
+#10. Professional-looking software engineering (e.g defining and using your own functions).
+#11.[Line #738] Nicely labeled graphics using ggplot, with good use of color, line styles, etc., that tell a convincing story.
+#12.[Lines #396-470] An example where permutation tests or other computational techniques clearly work better than classical methods. 
+#13.?????(We consider max and min in several places) Appropriate use of novel statistics (e.g. trimmed mean, maximum or minimum, skewness, ratios). 
+#14.[Line #329] Use of linear regression. (keep aberrant data but disregard events?, boolean variable, e.g. coronavirus, black monday)
+#15.[Line #385] Calculation and display of a logistic regression curve.
+#16.[Line #219] Appropriate use of covariance or correlation.
+#18.?????[] Use of theoretical knowledge of sampling distributions.
+#19.????? A graphical display that is different from those in the class scripts.
+#21.[Line #768] Appropriate use of quantiles to compare distributions. 
+
 
 #Packages to install:
 #install.packages("MASS")
@@ -103,6 +155,7 @@ sd(diffs) # 117.3051 standard deviation
 # Visualize
 hist(diffs, breaks = "fd", prob = TRUE, main = "Histogram of First Differences", xlab = "First Differences") 
 abline(v = mean(diffs), col = "turquoise")
+####{Histogram Requirement}
 # resembles normal distribution with narrow concentration around sharp peak at mean 
 # and heavy tails, with more extreme negative values than positive values
 qqnorm(diffs) # plot data with quantiles of the standard normal on the x-axis.
@@ -163,6 +216,7 @@ y <- log(Open)
 b <- sum( (x-mean(x))*(y-mean(y)) / sum((x-mean(x))^2)) # 0.6014286
 #Alternative - works because division by n-1 cancels out
 cov(x,y)/var(x) # 0.6014286
+####{Add'l Point #16}
 #Here is the formula for the intercept
 a <- mean(y) - b*mean(x) ; a # -2.041207
 
@@ -211,6 +265,7 @@ rare <- max(pvals);rare #2.303366e-07, which is pretty much 0.
 ###In other words, if the DJI first differences followed a normal distribution,we would expect to see the least rare 
 ###of these rare events once in 11,894.45 years, but from the data it is clear that these events are far more
 ###common than that.
+####{P-value requirement}
 
 
 ##Prepare data for political analysis
@@ -271,6 +326,7 @@ GDP[GDP$Recess == 1,]
 #the impact of political party on the performance of the market. 
 
 regime <- lm(DJI$diffs~DJI$Republican + DJI$Recession)
+####{Add'l Points #14}
 #At first glance, it looks like republican regimes tend to be negatively correlated with growth in the Dow.
 #But let us look a little closer:
 summary(regime)
@@ -327,6 +383,7 @@ library(stats4)
 results <- mle(MLL, start = list(alpha = 0, beta = 0)) #an initial guess is required
 results@coef
 curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + results@coef[2]*x)),col = "blue", add=TRUE)
+####{Add'l Points #15}
 ###This is a fairly interesting result because its graph looks different than the normal logistic curve.
 ###Of course, this becomes obvious when one considers the nature of the regression, namely that recessions
 ###are events that are expected to correlate with negative values of first differences (i.e. price drops).
@@ -334,7 +391,9 @@ curve( exp(results@coef[1] + results@coef[2]*x) / (1 + exp(results@coef[1] + res
 ###correlate with economic recessions.
 
 
-## Hypothesis Testing With Permutation Test
+## Hypothesis Testing With Permutation Test 
+####{Permutation Test Requirement}
+####{Add'l Points #12}
 
 #Set up indices for permutation test by party and president 
 index.Republican <- DJI$Republican ; sum(index.Republican) # 4822, matches
@@ -361,6 +420,7 @@ library(RColorBrewer)
 coul <- brewer.pal(5, "Set2") 
 name <- c("Republican Gains", "Democrat Gains" )
 barplot(rep.dem.gains, col = coul, main = "Barplot of Cummulative Gains by Party", names = name) #This seems to indicate that maybe the democrat regimes saw more economic prosperity. 
+####{Barplot requirement}
 
 #Let us check with a series of permutation tests:
 #First, let us consider if the observed means for republicans and democrats, respectively, are 
@@ -408,6 +468,7 @@ abline(v = Obs, col = "red")
 pvalue <-  (sum(result.Combined >= Obs) + 1)/(N + 1) ; pvalue # +1 to counts because of our Observed value
 ### 2.87% chance that this extreme of an observed difference would arise by chance, so it appears that the 
 ###DJI performed better during democratic regimes, a result that is statistically signifficant.
+####{Add'l Points # 8}
 
 ## Hypothesis Testing: Contingency table with chi-square test for political party and recession. 
 ## 
@@ -419,6 +480,7 @@ exp.tbl <- outer(rowSums(obs.tbl), colSums(obs.tbl))/sum(obs.tbl)
 colnames(exp.tbl) <- c("Expansion", "Recession")
 rownames(exp.tbl) <- c("Democrat", "Republican")
 obs.tbl ; exp.tbl
+####{Contingency Table Requirement}
 #As we can see from this contingency table, Republicans had more days in office during recessions, but 
 #they also had more days in office during expansions.
 chisq.test(DJI$Republican,DJI$Recession)
@@ -670,11 +732,13 @@ plot(rw.drift_diff, type = "l", xlab = "Time", ylab = "Differences in Random Dai
      main = "First Difference Series"); abline(h = mean(rw.drift_diff), col = "red", lwd = 3)
 hist(rw.drift_diff, prob = TRUE)
 curve(dnorm(x,rw.mu,rw.sigma), from = -500, to = 500, add = TRUE, col = "red") 
+####{Overlaying Curve Requirement}
 
 #Zooming in our plot:
 ggplot(DJI[,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
 ggplot(DJI[8000:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
 ggplot(DJI[8850:8857,c("Date", "Open")], aes(x=Date, y=Open, group=1)) + geom_line() +scale_x_discrete(breaks = 0)
+####{Add'l Points #11}
 
 #Approximately 5 Sigma Event for the average drop of the last 7 days in our data set:
 abs(mean(diffs[8851:8857]) / sd.diff) 
@@ -698,9 +762,11 @@ diffs.hiq <-  (quantile(diffs)[[4]] - quantile(diffs)[[2]]) /2; diffs.hiq # 36.4
 #uses better paramater estimation, we will use our fit.diffs values.
 fit.diffs <- as.vector(fitdist(diffs, "cauchy")$estimate); fit.diffs
 curve(dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2]), add = TRUE, lwd = 3, col = "red")
+####{Add'l Points #6}
 
 #Chi-Square Test for our Cauchy Distribution. We begin by setting up the breaks for the bins:
 cauchy.breaks <- qcauchy((0:4)*.25, location = diffs.median, scale = diffs.hiq)
+####{Add'l Points #21}
 #Get observed data
 cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs
 #Get expected data:
@@ -724,6 +790,7 @@ cauchy.obs <- table(cut(diffs, breaks = cauchy.breaks)); cauchy.obs #Get observe
 cauchy.exp <- rep(length(diffs)/8, 8); cauchy.exp #Get expected data
 cauchy.cs <- ChiSq(cauchy.obs, cauchy.exp); cauchy.cs #Get initial Chi Square Statistic
 pchisq(cauchy.cs, df = 8-3, lower.tail=FALSE) # 0 , reject null
+####{Add'l Points #9}
 
 ## Central Limit Theorem, Bootstrap and Empirical Cumulative Distribution
 #
@@ -975,6 +1042,7 @@ mean(ks.stats)#mean p-values = 0.1976958
 sum(ks.stats > 0.05)/length(ks.stats)#About 72% of the time our random samples generate a p-value greater than 0.05
 {hist(ks.stats, main = "Histogram of K-S p-values", xlab = "K-S p-values")
   abline(v = 0.05, col = "red")}
+####{Non-Classical Requirement}
 
 #Using fitdist parameters
 rand2 <- rcauchy(nn, location = fit.diffs[1], scale = fit.diffs[2]); head(rand)
@@ -1220,7 +1288,7 @@ norm.breaks <- qnorm((0:bins) * 1/bins, mean(yearlyDiffs), sd(yearlyDiffs))
 norm.obs <- table(cut(yearlyDiffs, breaks = norm.breaks)); norm.obs
 norm.exp <- rep(length(yearlyDiffs) / bins, length(norm.obs)); norm.exp
 norm.cs <- ChiSq(norm.obs, norm.exp); norm.cs # 
-pchisq(norm.cs, df = bins - 3, lower.tail = F) # fail to reject null
+pchisq(norm.cs, df = bins - 3, lower.tail = F) #reject null
 
 #Stable
 stable.Xs <- quantile(yearlyDiffs, c(.05, .25, .5, .75, .95))
@@ -1286,10 +1354,11 @@ qqPlot(logDiffs, "norm"); qqPlot(rnorm(length(logDiffs), mean(logDiffs), sd(logD
 integrand <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x
 #and now we have E(X):
 exp.x <- integrate(f = integrand, lower = -Inf, upper = Inf)$value; exp.x 
-
 #In the same manner, we can try to calculate E(X^2) so that we can get Var = E(X^2) - E(X)^2
 integrand2 <- function(x) dcauchy(x, location = fit.diffs[1], scale = fit.diffs[2])*x^2
 #And E(X^2)
 exp.x2 <- integrate(f = integrand2, lower = -Inf, upper = Inf)$value; exp.x2 
 #And it appears that the integral is divergent! This means that 
 #Var = E(X^2) - E(X)^2 also diverges, and thus Var = Inf!
+
+####{Add'l Points #7}
